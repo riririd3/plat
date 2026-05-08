@@ -63,6 +63,32 @@
 
       #game-container {
         display: none;
+
+      #controls {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+        user-select: none;
+      }
+      .middle {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      #controls button {
+        width: 70px;
+        height: 70px;
+        font-size: 30px;
+        border: none;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        backdrop-filter: blur(4px);
+      }
+      #controls button:active {
+        transform: scale(0.95);
+      }
       }
     }
   </style>
@@ -76,53 +102,17 @@
     <canvas id="game"></canvas>
   </div>
 
-  <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+  <div id="controls">
+  <button id="up">↑</button>
 
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
+  <div class="middle">
+    <button id="left">←</button>
+    <button id="down">↓</button>
+    <button id="right">→</button>
+  </div>
+  </div>
 
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    function update() {
-      // Your game logic here
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Background
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Example title text
-      ctx.fillStyle = "white";
-      ctx.font = "24px Arial";
-      ctx.fillText("Your Game Here", 20, 40);
-    }
-
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
-    }
-
-    gameLoop();
-
-    // Attempt fullscreen on mobile tap
-    document.body.addEventListener("click", async () => {
-      const elem = document.documentElement;
-
-      if (elem.requestFullscreen && !document.fullscreenElement) {
-        try {
-          await elem.requestFullscreen();
-        } catch (err) {}
-      }
-    });
-  </script>
+  <script src="kontra.min.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>

@@ -74,7 +74,7 @@ let player = Sprite({
   if (keyPressed("down") || touch.down) {
     this.y += 4;
   }
-}
+},
 
   render() {
     this.draw();

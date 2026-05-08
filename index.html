@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Landscape Mobile Game</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #111;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #1e293b, #0f172a);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #rotate-warning {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      color: white;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      z-index: 9999;
+      font-size: 24px;
+    }
+
+    /* Show warning when portrait */
+    @media screen and (orientation: portrait) {
+      #rotate-warning {
+        display: flex;
+      }
+
+      #game-container {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="rotate-warning">
+    Rotate your phone to landscape mode 🎮
+  </div>
+
+  <div id="game-container">
+    <canvas id="game"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    function update() {
+      // Your game logic here
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Example title text
+      ctx.fillStyle = "white";
+      ctx.font = "24px Arial";
+      ctx.fillText("Your Game Here", 20, 40);
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+
+    // Attempt fullscreen on mobile tap
+    document.body.addEventListener("click", async () => {
+      const elem = document.documentElement;
+
+      if (elem.requestFullscreen && !document.fullscreenElement) {
+        try {
+          await elem.requestFullscreen();
+        } catch (err) {}
+      }
+    });
+  </script>
+</body>
+</html>

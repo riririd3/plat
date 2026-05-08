@@ -8,23 +8,6 @@ const {
 
 let { canvas, context } = init("game");
 
-function resizeGame() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  canvas.style.width = "100vw";
-  canvas.style.height = "100vh";
-  canvas.style.display = "block";
-
-  dpad.y = canvas.height - 140;
-}
-
-resizeGame();
-
-window.addEventListener("resize", resizeGame);
-
-initKeys();
-
 let touch = {
   up: false,
   down: false,
@@ -37,6 +20,21 @@ const dpad = {
   y: canvas.height - 140,
   size: 60
 };
+
+function resizeGame() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  canvas.style.width = "100vw";
+  canvas.style.height = "100vh";
+  canvas.style.display = "block";
+
+  dpad.y = canvas.height - 140;
+}
+
+resizeGame();
+window.addEventListener("resize", resizeGame);
+initKeys();
 
 function drawDpad() {
   context.globalAlpha = 0.5;

@@ -94,12 +94,18 @@ let loop = GameLoop({
 loop.start();
 
 // fullscreen on tap
-document.body.addEventListener("click", async () => {
+async function goFullscreen() {
   const elem = document.documentElement;
 
-  if (elem.requestFullscreen && !document.fullscreenElement) {
+  if (!document.fullscreenElement) {
     try {
       await elem.requestFullscreen();
     } catch (err) {}
   }
-});
+}
+
+// first touch anywhere
+document.addEventListener("touchstart", goFullscreen, { once: true });
+
+// desktop fallback
+document.addEventListener("mousedown", goFullscreen, { once: true });

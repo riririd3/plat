@@ -65,32 +65,36 @@
         display: none;
 
       #controls {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        z-index: 1000;
-        user-select: none;
-      }
-      .middle {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
-      }
-      #controls button {
-        width: 70px;
-        height: 70px;
-        font-size: 30px;
-        border: none;
-        border-radius: 16px;
-        background: rgba(255,255,255,0.2);
-        color: white;
-        backdrop-filter: blur(4px);
-      }
-      #controls button:active {
-        transform: scale(0.95);
-      }
-      }
-    }
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 9999;
+  user-select: none;
+  touch-action: none;
+}
+
+#controls .row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#controls .middle {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#controls button {
+  width: 70px;
+  height: 70px;
+  border: none;
+  border-radius: 18px;
+  font-size: 28px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  backdrop-filter: blur(4px);
+}
   </style>
 </head>
 <body>
@@ -103,14 +107,16 @@
   </div>
 
   <div id="controls">
-  <button id="up">↑</button>
+  <div class="row">
+    <button id="up">↑</button>
+  </div>
 
   <div class="middle">
     <button id="left">←</button>
     <button id="down">↓</button>
     <button id="right">→</button>
   </div>
-  </div>
+</div>
 
   <script src="kontra.min.js"></script>
   <script src="game.js"></script>

@@ -41,13 +41,18 @@ setupButton("right", "right");
 
 let { canvas, context } = init("game");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-window.addEventListener("resize", () => {
+function resizeGame() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-});
+
+  canvas.style.width = "100vw";
+  canvas.style.height = "100vh";
+  canvas.style.display = "block";
+}
+
+resizeGame();
+
+window.addEventListener("resize", resizeGame);
 
 initKeys();
 

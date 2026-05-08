@@ -69,38 +69,6 @@
         height: 100vh;
         display: block;
       }
-
-      #controls {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        z-index: 9999;
-        user-select: none;
-        touch-action: none;
-      }
-        
-      #controls .row {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-      }
-      
-      #controls .middle {
-        display: flex;
-        gap: 10px;       
-        margin-top: 10px;
-      }
-   
-      #controls button {
-        width: 70px;
-        height: 70px;
-        border: none;
-        border-radius: 18px;
-        font-size: 28px;
-        background: rgba(255,255,255,0.2);
-        color: white;
-        backdrop-filter: blur(4px);
-      }
   </style>
 </head>
 <body>
@@ -111,18 +79,6 @@
   <div id="game-container">
     <canvas id="game"></canvas>
   </div>
-
-  <div id="controls">
-  <div class="row">
-    <button id="up">↑</button>
-  </div>
-
-  <div class="middle">
-    <button id="left">←</button>
-    <button id="down">↓</button>
-    <button id="right">→</button>
-  </div>
-</div>
 
   <script src="kontra.min.js"></script>
   <script src="game.js"></script>

@@ -42,6 +42,9 @@ const jumpBtn = {
   size: 90
 };
 
+const fullscreenBtn = {
+  size: 60
+};
 // player
 let player = Sprite({
   x: GAME_X() + 100,
@@ -167,27 +170,51 @@ function drawDpad() {
 }
 
 function drawJumpButton() {
-  const x = canvas.width - RIGHT_UI() / 2;
+  const x = canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
   const y = canvas.height - 140;
 
   context.globalAlpha = 0.5;
 
-  context.beginPath();
+  context.fillStyle = "red";
 
-  context.arc(
+  context.fillRect(
     x,
     y,
-    jumpBtn.size / 2,
-    0,
-    Math.PI * 2
+    jumpBtn.size,
+    jumpBtn.size
   );
-
-  context.fillStyle = "red";
-  context.fill();
 
   context.globalAlpha = 1;
 }
 
+function drawFullscreenButton() {
+  const x = canvas.width - RIGHT_UI() / 2;
+  const y = canvas.height - 260;
+
+  context.globalAlpha = 0.5;
+
+  context.fillStyle = "white";
+
+  context.fillRect(
+    x - fullscreenBtn.size / 2,
+    y - fullscreenBtn.size / 2,
+    fullscreenBtn.size,
+    fullscreenBtn.size
+  );
+
+  // icon corners
+  context.strokeStyle = "black";
+  context.lineWidth = 4;
+
+  context.strokeRect(
+    x - 16,
+    y - 16,
+    32,
+    32
+  );
+
+  context.globalAlpha = 1;
+}
 // touch controls
 function resetTouch() {
   touch.left = false;
@@ -199,6 +226,13 @@ canvas.addEventListener("touchstart", handleTouch);
 canvas.addEventListener("touchmove", handleTouch);
 
 canvas.addEventListener("touchend", resetTouch);
+async function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    await document.documentElement.requestFullscreen();
+  } else {
+    await document.exitFullscreen();
+  }
+}
 
 function handleTouch(e) {
   e.preventDefault();
@@ -217,12 +251,31 @@ function handleTouch(e) {
         touch.right = true;
       }
     }
+    const fullscreenX = canvas.width - RIGHT_UI() / 2;
+const fullscreenY = canvas.height - 260;
+
+const fullscreenDist = Math.hypot(
+  x - fullscreenX,
+  y - fullscreenY
+);
+
+if (fullscreenDist < fullscreenBtn.size / 2) {
+  toggleFullscreen();
+}
 
     // jump button
-    if (x > canvas.width - RIGHT_UI()) {
-      touch.jump = true;
-    }
-  }
+    const jumpX =
+  canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
+
+const jumpY = canvas.height - 140;
+
+if (
+  x > jumpX &&
+  x < jumpX + jumpBtn.size &&
+  y > jumpY &&
+  y < jumpY + jumpBtn.size
+) {
+  touch.jump = true;
 }
 
 // loop
@@ -245,6 +298,8 @@ let loop = GameLoop({
     drawDpad();
 
     drawJumpButton();
+    
+    drawFullscreenButton();
   }
 });
 

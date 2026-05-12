@@ -8,57 +8,116 @@ const {
 
 let { canvas, context } = init("game");
 
+initKeys();
+
+const SIDE_UI = window.innerWidth / 6;
+
+canvas.width = window.innerWidth - SIDE_UI * 2;
+canvas.height = window.innerHeight;
+
+canvas.style.position = "absolute";
+canvas.style.left = SIDE_UI + "px";
+canvas.style.top = "0px";
+
+function resizeGame() {
+  const side = window.innerWidth / 6;
+
+  canvas.width = window.innerWidth - side * 2;
+  canvas.height = window.innerHeight;
+
+  canvas.style.left = side + "px";
+
+  dpad.y = canvas.height - 160;
+
+  jumpBtn.x = window.innerWidth - 100;
+  jumpBtn.y = canvas.height - 120;
+}
+
+window.addEventListener("resize", resizeGame);
+
 let touch = {
-  up: false,
-  down: false,
   left: false,
-  right: false
+  right: false,
+  jump: false
 };
 
 const dpad = {
-  x: 110,
-  y: canvas.height - 140,
+  x: 90,
+  y: canvas.height - 160,
   size: 60
 };
 
-function resizeGame() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+const jumpBtn = {
+  x: window.innerWidth - 100,
+  y: canvas.height - 120,
+  size: 80
+};
 
-  canvas.style.width = "100vw";
-  canvas.style.height = "100vh";
-  canvas.style.display = "block";
+let player = Sprite({
+  x: 100,
+  y: 300,
 
-  dpad.y = canvas.height - 140;
+  width: 40,
+  height: 40,
+
+  color: "lime",
+
+  dy: 0,
+  grounded: false,
+
+  update() {
+    // movement
+    if (keyPressed("left") || touch.left) {
+      this.x -= 4;
+    }
+
+    if (keyPressed("right") || touch.right) {
+      this.x += 4;
+    }
+
+    // jump
+    if ((keyPressed("space") || touch.jump) && this.grounded) {
+      this.dy = -12;
+      this.grounded = false;
+    }
+
+    // gravity
+    this.dy += 0.6;
+    this.y += this.dy;
+
+    // floor
+    if (this.y + this.height >= canvas.height - 50) {
+      this.y = canvas.height - 50 - this.height;
+
+      this.dy = 0;
+      this.grounded = true;
+    }
+  },
+
+  render() {
+    this.draw();
+  }
+});
+
+function drawGround() {
+  context.fillStyle = "#444";
+
+  context.fillRect(
+    0,
+    canvas.height - 50,
+    canvas.width,
+    50
+  );
 }
-
-resizeGame();
-window.addEventListener("resize", resizeGame);
-initKeys();
 
 function drawDpad() {
   context.globalAlpha = 0.5;
-  context.fillStyle = "black";
 
-  // up
-  context.fillRect(
-    dpad.x,
-    dpad.y - dpad.size,
-    dpad.size,
-    dpad.size
-  );
+  context.fillStyle = "black";
 
   // left
   context.fillRect(
     dpad.x - dpad.size,
-    dpad.y,
-    dpad.size,
-    dpad.size
-  );
-
-  // down
-  context.fillRect(
-    dpad.x,
     dpad.y,
     dpad.size,
     dpad.size
@@ -75,52 +134,29 @@ function drawDpad() {
   context.globalAlpha = 1;
 }
 
-let player = Sprite({
-  x: 100,
-  y: 100,
-  width: 40,
-  height: 40,
-  color: "lime",
+function drawJumpButton() {
+  context.globalAlpha = 0.5;
 
-  update() {
-    if (keyPressed("left") || touch.left) {
-      this.x -= 4;
-    }
+  context.beginPath();
 
-    if (keyPressed("right") || touch.right) {
-      this.x += 4;
-    }
+  context.arc(
+    jumpBtn.x,
+    jumpBtn.y,
+    jumpBtn.size / 2,
+    0,
+    Math.PI * 2
+  );
 
-    if (keyPressed("up") || touch.up) {
-      this.y -= 4;
-    }
+  context.fillStyle = "red";
+  context.fill();
 
-    if (keyPressed("down") || touch.down) {
-      this.y += 4;
-    }
-  },
-
-  render() {
-    this.draw();
-  }
-});
-
-let loop = GameLoop({
-  update() {
-    player.update();
-  },
-
-  render() {
-    player.render();
-    drawDpad();
-  }
-});
+  context.globalAlpha = 1;
+}
 
 function resetTouch() {
-  touch.up = false;
-  touch.down = false;
   touch.left = false;
   touch.right = false;
+  touch.jump = false;
 }
 
 canvas.addEventListener("touchstart", handleTouch);
@@ -138,68 +174,59 @@ function handleTouch(e) {
   const rect = canvas.getBoundingClientRect();
 
   for (let t of e.touches) {
-    const x = t.clientX - rect.left;
-    const y = t.clientY - rect.top;
+    const x = t.clientX;
+    const y = t.clientY;
 
-    // UP
+    // LEFT SIDE
     if (
-      x > dpad.x &&
-      x < dpad.x + dpad.size &&
-      y > dpad.y - dpad.size &&
-      y < dpad.y
+      x < SIDE_UI
     ) {
-      touch.up = true;
+      if (y > dpad.y) {
+        if (x < dpad.x) {
+          touch.left = true;
+        } else {
+          touch.right = true;
+        }
+      }
     }
 
-    // LEFT
+    // RIGHT SIDE
     if (
-      x > dpad.x - dpad.size &&
-      x < dpad.x &&
-      y > dpad.y &&
-      y < dpad.y + dpad.size
+      x > window.innerWidth - SIDE_UI
     ) {
-      touch.left = true;
-    }
+      const dist = Math.hypot(
+        x - jumpBtn.x,
+        y - jumpBtn.y
+      );
 
-    // DOWN
-    if (
-      x > dpad.x &&
-      x < dpad.x + dpad.size &&
-      y > dpad.y &&
-      y < dpad.y + dpad.size
-    ) {
-      touch.down = true;
-    }
-
-    // RIGHT
-    if (
-      x > dpad.x + dpad.size &&
-      x < dpad.x + dpad.size * 2 &&
-      y > dpad.y &&
-      y < dpad.y + dpad.size
-    ) {
-      touch.right = true;
+      if (dist < jumpBtn.size) {
+        touch.jump = true;
+      }
     }
   }
 }
+
+let loop = GameLoop({
+  update() {
+    player.update();
+  },
+
+  render() {
+    context.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    drawGround();
+
+    player.render();
+
+    drawDpad();
+
+    drawJumpButton();
+  }
+});
 
 loop.start();
-
-// fullscreen
-async function goFullscreen() {
-  const elem = document.documentElement;
-
-  if (!document.fullscreenElement) {
-    try {
-      await elem.requestFullscreen();
-    } catch (err) {}
-  }
-}
-
-document.addEventListener("touchstart", goFullscreen, {
-  once: true
-});
-
-document.addEventListener("mousedown", goFullscreen, {
-  once: true
-});

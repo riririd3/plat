@@ -25,7 +25,7 @@ const RIGHT_UI = () => canvas.width / 6;
 
 const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
-
+const SAFE = 50;
 // touch
 let touch = {
   left: false,
@@ -145,7 +145,7 @@ function drawControlsBackground() {
 
 function drawDpad() {
   const centerX = LEFT_UI() / 2;
-  const centerY = canvas.height - 140;
+  const centerY = canvas.height - 140 - SAFE;
 
   context.globalAlpha = 0.5;
   context.fillStyle = "white";
@@ -171,7 +171,7 @@ function drawDpad() {
 
 function drawJumpButton() {
   const x = canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
-  const y = canvas.height - 140;
+  const y = canvas.height - 140 - SAFE;
 
   context.globalAlpha = 0.5;
 
@@ -189,7 +189,7 @@ function drawJumpButton() {
 
 function drawFullscreenButton() {
   const x = canvas.width - RIGHT_UI() / 2;
-  const y = canvas.height - 260;
+  const y = canvas.height - 260 - SAFE;
 
   context.globalAlpha = 0.5;
 
@@ -252,7 +252,7 @@ function handleTouch(e) {
       }
     }
     const fullscreenX = canvas.width - RIGHT_UI() / 2;
-const fullscreenY = canvas.height - 260;
+const fullscreenY = canvas.height - 260 -SAFE;
 
 const fullscreenDist = Math.hypot(
   x - fullscreenX,

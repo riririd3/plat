@@ -277,6 +277,8 @@ if (
 ) {
   touch.jump = true;
 }
+  }
+}
 
 // loop
 let loop = GameLoop({

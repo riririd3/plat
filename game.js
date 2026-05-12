@@ -10,52 +10,42 @@ let { canvas, context } = init("game");
 
 initKeys();
 
-const SIDE_UI = window.innerWidth / 6;
-
-canvas.width = window.innerWidth - SIDE_UI * 2;
-canvas.height = window.innerHeight;
-
-canvas.style.position = "absolute";
-canvas.style.left = SIDE_UI + "px";
-canvas.style.top = "0px";
-
 function resizeGame() {
-  const side = window.innerWidth / 6;
-
-  canvas.width = window.innerWidth - side * 2;
+  canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
-  canvas.style.left = side + "px";
-
-  dpad.y = canvas.height - 160;
-
-  jumpBtn.x = window.innerWidth - 100;
-  jumpBtn.y = canvas.height - 120;
 }
+
+resizeGame();
 
 window.addEventListener("resize", resizeGame);
 
+// layout
+const LEFT_UI = () => canvas.width / 6;
+const RIGHT_UI = () => canvas.width / 6;
+
+const GAME_X = () => LEFT_UI();
+const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
+
+// touch
 let touch = {
   left: false,
   right: false,
   jump: false
 };
 
+// controls
 const dpad = {
-  x: 90,
-  y: canvas.height - 160,
-  size: 60
+  size: 70
 };
 
 const jumpBtn = {
-  x: window.innerWidth - 100,
-  y: canvas.height - 120,
-  size: 80
+  size: 90
 };
 
+// player
 let player = Sprite({
-  x: 100,
-  y: 300,
+  x: GAME_X() + 100,
+  y: 200,
 
   width: 40,
   height: 40,
@@ -66,7 +56,6 @@ let player = Sprite({
   grounded: false,
 
   update() {
-    // movement
     if (keyPressed("left") || touch.left) {
       this.x -= 4;
     }
@@ -75,7 +64,6 @@ let player = Sprite({
       this.x += 4;
     }
 
-    // jump
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       this.dy = -12;
       this.grounded = false;
@@ -86,11 +74,21 @@ let player = Sprite({
     this.y += this.dy;
 
     // floor
-    if (this.y + this.height >= canvas.height - 50) {
-      this.y = canvas.height - 50 - this.height;
+    const floor = canvas.height - 60;
 
+    if (this.y + this.height >= floor) {
+      this.y = floor - this.height;
       this.dy = 0;
       this.grounded = true;
+    }
+
+    // keep inside game area
+    if (this.x < GAME_X()) {
+      this.x = GAME_X();
+    }
+
+    if (this.x + this.width > GAME_X() + GAME_WIDTH()) {
+      this.x = GAME_X() + GAME_WIDTH() - this.width;
     }
   },
 
@@ -99,34 +97,68 @@ let player = Sprite({
   }
 });
 
+// drawing
+function drawGameArea() {
+  context.fillStyle = "#1e293b";
+
+  context.fillRect(
+    GAME_X(),
+    0,
+    GAME_WIDTH(),
+    canvas.height
+  );
+}
+
 function drawGround() {
   context.fillStyle = "#444";
 
   context.fillRect(
+    GAME_X(),
+    canvas.height - 60,
+    GAME_WIDTH(),
+    60
+  );
+}
+
+function drawControlsBackground() {
+  context.fillStyle = "#111";
+
+  // left panel
+  context.fillRect(
     0,
-    canvas.height - 50,
-    canvas.width,
-    50
+    0,
+    LEFT_UI(),
+    canvas.height
+  );
+
+  // right panel
+  context.fillRect(
+    canvas.width - RIGHT_UI(),
+    0,
+    RIGHT_UI(),
+    canvas.height
   );
 }
 
 function drawDpad() {
-  context.globalAlpha = 0.5;
+  const centerX = LEFT_UI() / 2;
+  const centerY = canvas.height - 140;
 
-  context.fillStyle = "black";
+  context.globalAlpha = 0.5;
+  context.fillStyle = "white";
 
   // left
   context.fillRect(
-    dpad.x - dpad.size,
-    dpad.y,
+    centerX - dpad.size - 10,
+    centerY,
     dpad.size,
     dpad.size
   );
 
   // right
   context.fillRect(
-    dpad.x + dpad.size,
-    dpad.y,
+    centerX + 10,
+    centerY,
     dpad.size,
     dpad.size
   );
@@ -135,13 +167,16 @@ function drawDpad() {
 }
 
 function drawJumpButton() {
+  const x = canvas.width - RIGHT_UI() / 2;
+  const y = canvas.height - 140;
+
   context.globalAlpha = 0.5;
 
   context.beginPath();
 
   context.arc(
-    jumpBtn.x,
-    jumpBtn.y,
+    x,
+    y,
     jumpBtn.size / 2,
     0,
     Math.PI * 2
@@ -153,6 +188,7 @@ function drawJumpButton() {
   context.globalAlpha = 1;
 }
 
+// touch controls
 function resetTouch() {
   touch.left = false;
   touch.right = false;
@@ -162,62 +198,45 @@ function resetTouch() {
 canvas.addEventListener("touchstart", handleTouch);
 canvas.addEventListener("touchmove", handleTouch);
 
-canvas.addEventListener("touchend", () => {
-  resetTouch();
-});
+canvas.addEventListener("touchend", resetTouch);
 
 function handleTouch(e) {
   e.preventDefault();
 
   resetTouch();
 
-  const rect = canvas.getBoundingClientRect();
-
   for (let t of e.touches) {
     const x = t.clientX;
     const y = t.clientY;
 
-    // LEFT SIDE
-    if (
-      x < SIDE_UI
-    ) {
-      if (y > dpad.y) {
-        if (x < dpad.x) {
-          touch.left = true;
-        } else {
-          touch.right = true;
-        }
+    // left controls
+    if (x < LEFT_UI()) {
+      if (x < LEFT_UI() / 2) {
+        touch.left = true;
+      } else {
+        touch.right = true;
       }
     }
 
-    // RIGHT SIDE
-    if (
-      x > window.innerWidth - SIDE_UI
-    ) {
-      const dist = Math.hypot(
-        x - jumpBtn.x,
-        y - jumpBtn.y
-      );
-
-      if (dist < jumpBtn.size) {
-        touch.jump = true;
-      }
+    // jump button
+    if (x > canvas.width - RIGHT_UI()) {
+      touch.jump = true;
     }
   }
 }
 
+// loop
 let loop = GameLoop({
   update() {
     player.update();
   },
 
   render() {
-    context.clearRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawControlsBackground();
+
+    drawGameArea();
 
     drawGround();
 

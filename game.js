@@ -35,15 +35,15 @@ let touch = {
 
 // controls
 const dpad = {
-  size: 70
+  size: 50
 };
 
 const jumpBtn = {
-  size: 90
+  size: 50
 };
 
 const fullscreenBtn = {
-  size: 60
+  size: 50
 };
 // player
 let player = Sprite({

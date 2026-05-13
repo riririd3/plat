@@ -25,7 +25,7 @@ const RIGHT_UI = () => canvas.width / 6;
 
 const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
-const SAFE = 50;
+const SAFE = 25;
 // touch
 let touch = {
   left: false,

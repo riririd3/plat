@@ -257,14 +257,15 @@ function handleTouch(e) {
 
   resetTouch();
 
+  const rect = canvas.getBoundingClientRect();
+
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
   for (let t of e.touches) {
-    const rect = canvas.getBoundingClientRect();
 
-const scaleX = canvas.width / rect.width;
-const scaleY = canvas.height / rect.height;
-
-const x = (t.clientX - rect.left) * scaleX;
-const y = (t.clientY - rect.top) * scaleY;
+    const x = (t.clientX - rect.left) * scaleX;
+    const y = (t.clientY - rect.top) * scaleY;
     // left controls
     if (x < LEFT_UI()) {
       if (x < LEFT_UI() / 2) {
@@ -289,7 +290,7 @@ if (fullscreenDist < fullscreenBtn.size / 2) {
     const jumpX =
   canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
 
-const jumpY = canvas.height - 140;
+const jumpY = canvas.height - 140 - SAFE;
 
 if (
   x > jumpX &&

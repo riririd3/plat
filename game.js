@@ -258,9 +258,13 @@ function handleTouch(e) {
   resetTouch();
 
   for (let t of e.touches) {
-    const x = t.clientX;
-    const y = t.clientY;
+    const rect = canvas.getBoundingClientRect();
 
+const scaleX = canvas.width / rect.width;
+const scaleY = canvas.height / rect.height;
+
+const x = (t.clientX - rect.left) * scaleX;
+const y = (t.clientY - rect.top) * scaleY;
     // left controls
     if (x < LEFT_UI()) {
       if (x < LEFT_UI() / 2) {

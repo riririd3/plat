@@ -9,10 +9,28 @@ const {
 let { canvas, context } = init("game");
 
 initKeys();
-
+const BASE_WIDTH = 960;
+const BASE_HEIGHT = 540;
 function resizeGame() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const scale = Math.min(
+    window.innerWidth / BASE_WIDTH,
+    window.innerHeight / BASE_HEIGHT
+  );
+
+  canvas.width = BASE_WIDTH;
+  canvas.height = BASE_HEIGHT;
+
+  canvas.style.width = BASE_WIDTH * scale + "px";
+  canvas.style.height = BASE_HEIGHT * scale + "px";
+
+  canvas.style.position = "absolute";
+  canvas.style.left =
+    (window.innerWidth - BASE_WIDTH * scale) / 2 + "px";
+
+  canvas.style.top =
+    (window.innerHeight - BASE_HEIGHT * scale) / 2 + "px";
+
+  canvas.style.imageRendering = "pixelated";
 }
 
 resizeGame();
@@ -20,8 +38,8 @@ resizeGame();
 window.addEventListener("resize", resizeGame);
 
 // layout
-const LEFT_UI = () => canvas.width / 6;
-const RIGHT_UI = () => canvas.width / 6;
+const LEFT_UI = () => 160;
+const RIGHT_UI = () => 160;
 
 const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();

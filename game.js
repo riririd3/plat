@@ -52,13 +52,14 @@ resizeGame();
 window.addEventListener("resize", resizeGame);
 
 // =====================================
-// LAYOUT
+// UI LAYOUT
 // =====================================
 
 const LEFT_UI = () => 160;
 const RIGHT_UI = () => 160;
 
 const GAME_X = () => LEFT_UI();
+
 const GAME_WIDTH = () =>
   BASE_WIDTH - LEFT_UI() - RIGHT_UI();
 
@@ -81,6 +82,7 @@ function nextLevel() {
   player.x = level.playerSpawn.x;
   player.y = level.playerSpawn.y;
 
+  player.dx = 0;
   player.dy = 0;
 }
 
@@ -110,18 +112,6 @@ function resetTouch() {
 }
 
 // =====================================
-// CONTROLS
-// =====================================
-
-const dpad = {
-  size: 70
-};
-
-const jumpBtn = {
-  size: 90
-};
-
-// =====================================
 // PLAYER
 // =====================================
 
@@ -140,7 +130,8 @@ let player = Sprite({
   grounded: false,
 
   update() {
-    // movement
+
+    // horizontal movement
     this.dx = 0;
 
     if (keyPressed("left") || touch.left) {
@@ -154,48 +145,72 @@ let player = Sprite({
     this.x += this.dx;
 
     // jump
-    if ((keyPressed("space") || touch.jump) && this.grounded) {
+    if (
+      (keyPressed("space") || touch.jump) &&
+      this.grounded
+    ) {
       this.dy = -12;
       this.grounded = false;
     }
 
     // variable jump
-    if (!touch.jump && this.dy < 0) {
-      this.dy += 0.4;
+    if (
+      !keyPressed("space") &&
+      !touch.jump &&
+      this.dy < 0
+    ) {
+      this.dy += 0.5;
     }
 
     // gravity
     this.dy += 0.6;
+
+    if (this.dy > 14) {
+      this.dy = 14;
+    }
+
     this.y += this.dy;
 
+    // reset grounded
+    this.grounded = false;
+
     // platform collision
-this.grounded = false;
+    for (let p of level.platforms) {
 
-for (let p of level.platforms) {
+      const overlapX =
+        this.x + this.width > p.x &&
+        this.x < p.x + p.width;
 
-  const overlapX =
-    this.x + this.width > p.x &&
-    this.x < p.x + p.width;
+      const falling =
+        this.dy >= 0;
 
-  const touchingTop =
-    this.y + this.height >= p.y &&
-    this.y + this.height <= p.y + 20;
+      const touchingTop =
+        this.y + this.height >= p.y &&
+        this.y + this.height <= p.y + 20;
 
-  if (overlapX && touchingTop && this.dy >= 0) {
-    this.y = p.y - this.height;
-    this.dy = 0;
-    this.grounded = true;
-  }
-}
+      if (
+        overlapX &&
+        falling &&
+        touchingTop
+      ) {
+        this.y = p.y - this.height;
+        this.dy = 0;
+        this.grounded = true;
+      }
+    }
 
     // world bounds
-if (this.x < 0) {
-  this.x = 0;
-}
+    if (this.x < 0) {
+      this.x = 0;
+    }
 
-if (this.x + this.width > level.width) {
-  this.x = level.width - this.width;
-}
+    if (
+      this.x + this.width >
+      level.width
+    ) {
+      this.x =
+        level.width - this.width;
+    }
 
     // goal collision
     if (
@@ -208,38 +223,39 @@ if (this.x + this.width > level.width) {
     }
 
     // camera follow
-camera.x =
-  this.x - GAME_WIDTH() / 2 + this.width / 2;
+    camera.x =
+      this.x - GAME_WIDTH() / 2;
 
-// camera clamp
-if (camera.x < 0) {
-  camera.x = 0;
-}
+    // clamp camera
+    if (camera.x < 0) {
+      camera.x = 0;
+    }
 
-const maxCamera =
-  level.width - GAME_WIDTH();
+    const maxCamera =
+      level.width - GAME_WIDTH();
 
-if (camera.x > maxCamera) {
-  camera.x = maxCamera;
-}
+    if (camera.x > maxCamera) {
+      camera.x = maxCamera;
+    }
+  },
 
   render() {
-  context.fillStyle = this.color;
 
-  const drawX =
-    Math.floor(this.x - camera.x + GAME_X());
+    const drawX =
+      this.x - camera.x + GAME_X();
 
-  const drawY =
-    Math.floor(this.y);
+    const drawY =
+      this.y;
 
-  context.fillRect(
-    drawX,
-    drawY,
-    this.width,
-    this.height
-  );
-}
+    context.fillStyle = this.color;
 
+    context.fillRect(
+      drawX,
+      drawY,
+      this.width,
+      this.height
+    );
+  }
 });
 
 // =====================================
@@ -247,8 +263,10 @@ if (camera.x > maxCamera) {
 // =====================================
 
 function drawControlsBackground() {
+
   context.fillStyle = "#111";
 
+  // left panel
   context.fillRect(
     0,
     0,
@@ -256,6 +274,7 @@ function drawControlsBackground() {
     canvas.height
   );
 
+  // right panel
   context.fillRect(
     canvas.width - RIGHT_UI(),
     0,
@@ -265,6 +284,7 @@ function drawControlsBackground() {
 }
 
 function drawGameArea() {
+
   context.fillStyle = "#1e293b";
 
   context.fillRect(
@@ -276,9 +296,11 @@ function drawGameArea() {
 }
 
 function drawPlatforms() {
+
   context.fillStyle = "#666";
 
   for (let p of level.platforms) {
+
     context.fillRect(
       p.x - camera.x + GAME_X(),
       p.y,
@@ -289,6 +311,7 @@ function drawPlatforms() {
 }
 
 function drawGoal() {
+
   context.fillStyle = "yellow";
 
   context.fillRect(
@@ -300,36 +323,45 @@ function drawGoal() {
 }
 
 function drawDpad() {
-  const centerX = LEFT_UI() / 2;
-  const centerY = canvas.height - 140 - SAFE_Y;
+
+  const centerX =
+    LEFT_UI() / 2;
+
+  const centerY =
+    canvas.height - 140 - SAFE_Y;
 
   context.globalAlpha = 0.5;
+
   context.fillStyle = "white";
 
   // left
   context.fillRect(
-    centerX - dpad.size - 10,
+    centerX - 80,
     centerY,
-    dpad.size,
-    dpad.size
+    70,
+    70
   );
 
   // right
   context.fillRect(
     centerX + 10,
     centerY,
-    dpad.size,
-    dpad.size
+    70,
+    70
   );
 
   context.globalAlpha = 1;
 }
 
 function drawJumpButton() {
-  const x =
-    canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
 
-  const y = canvas.height - 140 - SAFE_Y;
+  const x =
+    canvas.width -
+    RIGHT_UI() / 2 -
+    45;
+
+  const y =
+    canvas.height - 140 - SAFE_Y;
 
   context.globalAlpha = 0.5;
 
@@ -338,40 +370,59 @@ function drawJumpButton() {
   context.fillRect(
     x,
     y,
-    jumpBtn.size,
-    jumpBtn.size
+    90,
+    90
   );
 
   context.globalAlpha = 1;
 }
 
 // =====================================
-// TOUCH EVENTS
+// TOUCH
 // =====================================
 
-canvas.addEventListener("touchstart", handleTouch);
-canvas.addEventListener("touchmove", handleTouch);
-canvas.addEventListener("touchend", handleTouch);
+canvas.addEventListener(
+  "touchstart",
+  handleTouch
+);
+
+canvas.addEventListener(
+  "touchmove",
+  handleTouch
+);
+
+canvas.addEventListener(
+  "touchend",
+  resetTouch
+);
 
 function handleTouch(e) {
+
   e.preventDefault();
 
   resetTouch();
 
-  const rect = canvas.getBoundingClientRect();
+  const rect =
+    canvas.getBoundingClientRect();
 
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
+  const scaleX =
+    canvas.width / rect.width;
+
+  const scaleY =
+    canvas.height / rect.height;
 
   for (let t of e.touches) {
-    const x = (t.clientX - rect.left) * scaleX;
-    const y = (t.clientY - rect.top) * scaleY;
 
-    // dpad
+    const x =
+      (t.clientX - rect.left) * scaleX;
+
+    const y =
+      (t.clientY - rect.top) * scaleY;
+
+    // left/right controls
     if (x < LEFT_UI()) {
-      const centerX = LEFT_UI() / 2;
 
-      if (x < centerX) {
+      if (x < LEFT_UI() / 2) {
         touch.left = true;
       } else {
         touch.right = true;
@@ -380,15 +431,18 @@ function handleTouch(e) {
 
     // jump
     const jumpX =
-      canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
+      canvas.width -
+      RIGHT_UI() / 2 -
+      45;
 
-    const jumpY = canvas.height - 140 - SAFE_Y;
+    const jumpY =
+      canvas.height - 140 - SAFE_Y;
 
     if (
       x > jumpX &&
-      x < jumpX + jumpBtn.size &&
+      x < jumpX + 90 &&
       y > jumpY &&
-      y < jumpY + jumpBtn.size
+      y < jumpY + 90
     ) {
       touch.jump = true;
     }
@@ -396,16 +450,23 @@ function handleTouch(e) {
 }
 
 // =====================================
-// LOOP
+// GAME LOOP
 // =====================================
 
 let loop = GameLoop({
+
   update() {
     player.update();
   },
 
   render() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    context.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
     drawControlsBackground();
 
@@ -424,4 +485,3 @@ let loop = GameLoop({
 });
 
 loop.start();
-

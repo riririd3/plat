@@ -43,7 +43,7 @@ const RIGHT_UI = () => 160;
 
 const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
-const SAFE = 25;
+const SAFE = 10;
 // touch
 let touch = {
   left: false,
@@ -243,7 +243,7 @@ function resetTouch() {
 canvas.addEventListener("touchstart", handleTouch);
 canvas.addEventListener("touchmove", handleTouch);
 
-canvas.addEventListener("touchend", resetTouch);
+canvas.addEventListener("touchend", handleTouch);
 async function toggleFullscreen() {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen();
@@ -263,27 +263,50 @@ function handleTouch(e) {
   const scaleY = canvas.height / rect.height;
 
   for (let t of e.touches) {
-
     const x = (t.clientX - rect.left) * scaleX;
     const y = (t.clientY - rect.top) * scaleY;
-    // left controls
+
+    // LEFT / RIGHT DPAD
     if (x < LEFT_UI()) {
-      if (x < LEFT_UI() / 2) {
+
+      const centerX = LEFT_UI() / 2;
+
+      if (x < centerX) {
         touch.left = true;
       } else {
         touch.right = true;
       }
     }
+
+    // FULLSCREEN BUTTON
     const fullscreenX = canvas.width - RIGHT_UI() / 2;
-const fullscreenY = canvas.height - 260 -SAFE;
+    const fullscreenY = canvas.height - 260 - SAFE;
 
-const fullscreenDist = Math.hypot(
-  x - fullscreenX,
-  y - fullscreenY
-);
+    const fullscreenDist = Math.hypot(
+      x - fullscreenX,
+      y - fullscreenY
+    );
 
-if (fullscreenDist < fullscreenBtn.size / 2) {
-  toggleFullscreen();
+    if (fullscreenDist < fullscreenBtn.size / 2) {
+      toggleFullscreen();
+    }
+
+    // JUMP BUTTON
+    const jumpX =
+      canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
+
+    const jumpY =
+      canvas.height - 140 - SAFE;
+
+    if (
+      x > jumpX &&
+      x < jumpX + jumpBtn.size &&
+      y > jumpY &&
+      y < jumpY + jumpBtn.size
+    ) {
+      touch.jump = true;
+    }
+  }
 }
 
     // jump button

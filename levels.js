@@ -1,66 +1,46 @@
 const levels = [
   {
+    width: 2000,
+    height: 540,
+
     playerSpawn: {
-      x: 220,
+      x: 100,
       y: 300
     },
 
     goal: {
-      x: 700,
-      y: 380,
+      x: 900,
+      y: 420,
       width: 40,
       height: 40
     },
 
     platforms: [
       {
-        x: 160,
-        y: 480,
-        width: 640,
-        height: 60
-      },
-
-      {
-        x: 420,
-        y: 380,
-        width: 120,
-        height: 20
-      }
-    ]
-  },
-
-  {
-    playerSpawn: {
-      x: 220,
-      y: 300
-    },
-
-    goal: {
-      x: 600,
-      y: 260,
-      width: 40,
-      height: 40
-    },
-
-    platforms: [
-      {
-        x: 160,
-        y: 480,
-        width: 640,
-        height: 60
+        x: 0,
+        y: 500,
+        width: 1200,
+        height: 40
       },
 
       {
         x: 300,
-        y: 400,
-        width: 100,
+        y: 420,
+        width: 120,
         height: 20
       },
 
       {
-        x: 500,
-        y: 320,
-        width: 100,
+        x: 520,
+        y: 340,
+        width: 120,
+        height: 20
+      },
+
+      {
+        x: 760,
+        y: 260,
+        width: 120,
         height: 20
       }
     ]

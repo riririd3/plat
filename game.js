@@ -7,6 +7,8 @@ const {
 } = kontra;
 
 let { canvas, context } = init("game");
+let currentLevel = 0;
+let level = levels[currentLevel];
 
 initKeys();
 const BASE_WIDTH = 960;
@@ -65,8 +67,8 @@ const fullscreenBtn = {
 };
 // player
 let player = Sprite({
-  x: GAME_X() + 100,
-  y: 200,
+  x: level.playerSpawn.x,
+  y: level.playerSpawn.y,
 
   width: 40,
   height: 40,
@@ -158,6 +160,30 @@ function drawControlsBackground() {
     0,
     RIGHT_UI(),
     canvas.height
+  );
+}
+
+function drawPlatforms() {
+  context.fillStyle = "#666";
+
+  for (let p of level.platforms) {
+    context.fillRect(
+      p.x,
+      p.y,
+      p.width,
+      p.height
+    );
+  }
+}
+
+function drawGoal() {
+  context.fillStyle = "yellow";
+
+  context.fillRect(
+    level.goal.x,
+    level.goal.y,
+    level.goal.width,
+    level.goal.height
   );
 }
 
@@ -312,6 +338,30 @@ function handleTouch(e) {
 let loop = GameLoop({
   update() {
     player.update();
+    if (
+  this.x < level.goal.x + level.goal.width &&
+  this.x + this.width > level.goal.x &&
+  this.y < level.goal.y + level.goal.height &&
+  this.y + this.height > level.goal.y
+) {
+  nextLevel();
+    }
+
+    function nextLevel() {
+  currentLevel++;
+
+  if (currentLevel >= levels.length) {
+    currentLevel = 0;
+  }
+
+  level = levels[currentLevel];
+
+  player.x = level.playerSpawn.x;
+  player.y = level.playerSpawn.y;
+
+  player.dy = 0;
+    }
+    
   },
 
   render() {
@@ -322,6 +372,10 @@ let loop = GameLoop({
     drawGameArea();
 
     drawGround();
+
+    drawPlatforms();
+    
+    drawGoal();
 
     player.render();
 

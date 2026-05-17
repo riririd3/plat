@@ -169,28 +169,24 @@ let player = Sprite({
     this.y += this.dy;
 
     // platform collision
-    this.grounded = false;
-    for (let p of level.platforms) {
-      
-    // horizontal overlap
-    const overlapX =
-    this.x < p.x + p.width &&
-    this.x + this.width > p.x;
+this.grounded = false;
 
-    // vertical collision from above
-    const falling =
-    this.dy >= 0;
+for (let p of level.platforms) {
 
-    const hitPlatform =
+  const overlapX =
+    this.x + this.width > p.x &&
+    this.x < p.x + p.width;
+
+  const touchingTop =
     this.y + this.height >= p.y &&
-    this.y + this.height <= p.y + p.height + this.dy;
+    this.y + this.height <= p.y + 20;
 
-    if (overlapX && falling && hitPlatform) {
+  if (overlapX && touchingTop && this.dy >= 0) {
     this.y = p.y - this.height;
     this.dy = 0;
     this.grounded = true;
-    }
   }
+}
 
     // world bounds
 if (this.x < 0) {
@@ -409,6 +405,8 @@ let loop = GameLoop({
     drawPlatforms();
 
     drawGoal();
+    
+    console.log(player.x, player.y);
 
     player.render();
 

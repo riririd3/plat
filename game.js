@@ -60,7 +60,7 @@ const RIGHT_UI = () => 160;
 
 const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () =>
-  canvas.width - LEFT_UI() - RIGHT_UI();
+  BASE_WIDTH - LEFT_UI() - RIGHT_UI();
 
 // =====================================
 // LEVELS
@@ -208,9 +208,20 @@ if (this.x + this.width > level.width) {
     }
 
     // camera follow
-    camera.x =
-      this.x - GAME_WIDTH() / 2 + this.width / 2;
+    // camera follow
+camera.x =
+  player.x - level.width / 2;
 
+if (camera.x < 0) {
+  camera.x = 0;
+}
+
+const maxCamera =
+  level.width - GAME_WIDTH();
+
+if (camera.x > maxCamera) {
+  camera.x = maxCamera;
+}
     // camera clamp
     if (camera.x < 0) {
       camera.x = 0;
@@ -222,15 +233,22 @@ if (this.x + this.width > level.width) {
   },
 
   render() {
-    context.fillStyle = this.color;
+  context.fillStyle = this.color;
 
-    context.fillRect(
-      this.x - camera.x + GAME_X(),
-      this.y,
-      this.width,
-      this.height
-    );
-  }
+  const drawX =
+    Math.floor(this.x - camera.x + GAME_X());
+
+  const drawY =
+    Math.floor(this.y);
+
+  context.fillRect(
+    drawX,
+    drawY,
+    this.width,
+    this.height
+  );
+}
+
 });
 
 // =====================================
@@ -405,8 +423,6 @@ let loop = GameLoop({
     drawPlatforms();
 
     drawGoal();
-    
-    console.log(player.x, player.y);
 
     player.render();
 

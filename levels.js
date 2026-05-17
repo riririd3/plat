@@ -1,8 +1,5 @@
 const levels = [
   {
-    width: 2000,
-    height: 540,
-
     playerSpawn: {
       x: 100,
       y: 300

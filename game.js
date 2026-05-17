@@ -170,19 +170,36 @@ let player = Sprite({
 
     // platform collision
     this.grounded = false;
-
     for (let p of level.platforms) {
-      if (
-        this.x < p.x + p.width &&
-        this.x + this.width > p.x &&
-        this.y + this.height < p.y + 20 &&
-        this.y + this.height + this.dy >= p.y
-      ) {
-        this.y = p.y - this.height;
-        this.dy = 0;
-        this.grounded = true;
-      }
+      
+    // horizontal overlap
+    const overlapX =
+    this.x < p.x + p.width &&
+    this.x + this.width > p.x;
+
+    // vertical collision from above
+    const falling =
+    this.dy >= 0;
+
+    const hitPlatform =
+    this.y + this.height >= p.y &&
+    this.y + this.height <= p.y + p.height + this.dy;
+
+    if (overlapX && falling && hitPlatform) {
+    this.y = p.y - this.height;
+    this.dy = 0;
+    this.grounded = true;
     }
+  }
+
+    // world bounds
+if (this.x < 0) {
+  this.x = 0;
+}
+
+if (this.x + this.width > level.width) {
+  this.x = level.width - this.width;
+}
 
     // goal collision
     if (

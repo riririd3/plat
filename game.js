@@ -308,24 +308,6 @@ function handleTouch(e) {
     }
   }
 }
-
-    // jump button
-    const jumpX =
-  canvas.width - RIGHT_UI() / 2 - jumpBtn.size / 2;
-
-const jumpY = canvas.height - 140 - SAFE;
-
-if (
-  x > jumpX &&
-  x < jumpX + jumpBtn.size &&
-  y > jumpY &&
-  y < jumpY + jumpBtn.size
-) {
-  touch.jump = true;
-}
-  }
-}
-
 // loop
 let loop = GameLoop({
   update() {

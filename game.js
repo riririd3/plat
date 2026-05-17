@@ -208,10 +208,10 @@ if (this.x + this.width > level.width) {
     }
 
     // camera follow
-    // camera follow
 camera.x =
-  player.x - level.width / 2;
+  this.x - GAME_WIDTH() / 2 + this.width / 2;
 
+// camera clamp
 if (camera.x < 0) {
   camera.x = 0;
 }
@@ -222,15 +222,6 @@ const maxCamera =
 if (camera.x > maxCamera) {
   camera.x = maxCamera;
 }
-    // camera clamp
-    if (camera.x < 0) {
-      camera.x = 0;
-    }
-
-    if (camera.x > level.width - GAME_WIDTH()) {
-      camera.x = level.width - GAME_WIDTH();
-    }
-  },
 
   render() {
   context.fillStyle = this.color;

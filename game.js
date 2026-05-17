@@ -87,15 +87,6 @@ function nextLevel() {
 }
 
 // =====================================
-// CAMERA
-// =====================================
-
-const camera = {
-  x: 0,
-  y: 0
-};
-
-// =====================================
 // TOUCH
 // =====================================
 
@@ -199,18 +190,17 @@ let player = Sprite({
       }
     }
 
-    // world bounds
     if (this.x < 0) {
-      this.x = 0;
-    }
+  this.x = 0;
+}
 
-    if (
-      this.x + this.width >
-      level.width
-    ) {
-      this.x =
-        level.width - this.width;
-    }
+if (
+  this.x + this.width >
+  GAME_WIDTH()
+) {
+  this.x =
+    GAME_WIDTH() - this.width;
+}
 
     // goal collision
     if (
@@ -222,39 +212,16 @@ let player = Sprite({
       nextLevel();
     }
 
-    // camera follow
-    camera.x =
-      this.x - GAME_WIDTH() / 2;
-
-    // clamp camera
-    if (camera.x < 0) {
-      camera.x = 0;
-    }
-
-    const maxCamera =
-      level.width - GAME_WIDTH();
-
-    if (camera.x > maxCamera) {
-      camera.x = maxCamera;
-    }
-  },
-
   render() {
 
-    const drawX =
-      this.x - camera.x + GAME_X();
+  context.fillStyle = this.color;
 
-    const drawY =
-      this.y;
-
-    context.fillStyle = this.color;
-
-    context.fillRect(
-      drawX,
-      drawY,
-      this.width,
-      this.height
-    );
+  context.fillRect(
+    this.x + GAME_X(),
+    this.y,
+    this.width,
+    this.height
+  );
   }
 });
 
@@ -302,7 +269,7 @@ function drawPlatforms() {
   for (let p of level.platforms) {
 
     context.fillRect(
-      p.x - camera.x + GAME_X(),
+      p.x + GAME_X(),
       p.y,
       p.width,
       p.height
@@ -315,7 +282,7 @@ function drawGoal() {
   context.fillStyle = "yellow";
 
   context.fillRect(
-    level.goal.x - camera.x + GAME_X(),
+    level.goal.x + GAME_X(),
     level.goal.y,
     level.goal.width,
     level.goal.height

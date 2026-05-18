@@ -409,5 +409,6 @@ let loop = GameLoop({
       );
     }
   }
+});
 
 loop.start();

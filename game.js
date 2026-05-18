@@ -76,14 +76,13 @@ let player = Sprite({
 });
 
 function loadLevel(index) {
-  // VICTORY CONDITION: Checked when passing the final level index array bound
   if (index >= LEVEL_MAPS.length) {
     gameState = "victory";
     return;
   }
 
   gameState = "memorize";
-  stateTimer = 2.0;
+  stateTimer = 3.0;
 
   resetTouch();
   platforms = [];
@@ -116,15 +115,11 @@ function loadLevel(index) {
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
-        x: GAME_X() + s.x,
-        y: s.y,
-        width: s.w,
-        height: s.h,
-        color: "#ef4444",
+        x: GAME_X() + s.x, y: s.y, width: s.w, height: s.h, color: "#ef4444",
         render() {
           context.save();
           
-          // 1. Sharp white outline stencil base (using 'this.width' and 'this.height')
+          // 1. Sharp white high-contrast outline stencil base
           context.fillStyle = "white";
           context.beginPath();
           context.moveTo(this.x - 2, this.y + this.height);
@@ -133,7 +128,7 @@ function loadLevel(index) {
           context.closePath();
           context.fill();
 
-          // 2. Dangerous bright red inner spike core fill layer
+          // 2. Bright red core fill layer
           context.fillStyle = this.color;
           context.beginPath();
           context.moveTo(this.x, this.y + this.height);
@@ -229,6 +224,7 @@ function resetTouch() {
   touch.left = false; touch.right = false; touch.jump = false;
 }
 
+// Global Fullscreen handler definition
 async function toggleFullscreen() {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen();
@@ -245,17 +241,13 @@ function handleTouch(e) {
   // Handle Main Menu or Victory Screen Reset clicks
   if (gameState === "menu" || gameState === "victory") {
     if (e.type === "touchstart") {
-      
-      // 1. Just CALL the function by name and trigger the promise chain
       toggleFullscreen()
         .then(() => {
-          // 2. This runs if fullscreen is successful
           currentLevelIndex = 0;
           totalPlayTime = 0.0; 
           loadLevel(currentLevelIndex);
         })
         .catch(err => {
-          // 3. Fallback: If the browser blocks it, still let them play anyway!
           currentLevelIndex = 0;
           totalPlayTime = 0.0; 
           loadLevel(currentLevelIndex);
@@ -284,7 +276,7 @@ function handleTouch(e) {
       const rstX = canvas.width - RIGHT_UI() / 2;
       const rstY = 60;
       if (Math.hypot(x - rstX, y - rstY) < restartBtn.size / 2 && e.type === "touchstart") {
-        loadLevel(currentLevelIndex); // Quick map refresh (Stopwatch keeps tracking!)
+        loadLevel(currentLevelIndex); 
         return;
       }
 
@@ -302,15 +294,16 @@ canvas.addEventListener("touchstart", handleTouch, { passive: false });
 canvas.addEventListener("touchmove", handleTouch, { passive: false });
 canvas.addEventListener("touchend", handleTouch, { passive: false });
 
+// Initial Level Boot configuration path
+loadLevel(currentLevelIndex);
+
 // Core Loop Engine
 let loop = GameLoop({
   update() {
     if (gameState === "menu" || gameState === "victory") return;
 
-    // The Stopwatch ticks up continuously during BOTH the memorization phase and the blind run phase!
     totalPlayTime += 1 / 60;
 
-    // Handle Memorization Phase countdown step
     if (gameState === "memorize") {
       stateTimer -= 1 / 60;
       if (stateTimer <= 0) gameState = "play";
@@ -347,7 +340,7 @@ let loop = GameLoop({
       }
     }
 
-    // Spike Collision Detection (Forces a checkpoint restart)
+    // Spike Collision Detection
     for (let spike of spikes) {
       if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
           player.y < spike.y + spike.height && player.y + player.height > spike.y) {
@@ -369,26 +362,24 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Layer 1: Draw the base background sheet
+    // Layer 1 & 2: Background Sheet and Floor Foundation
     drawGameArea();
-
-    // Layer 2: Draw the main floor foundation BEFORE objects sit on it
     drawGround();
 
-    // Layer 3: Draw all level environmental elements on top of the ground
+    // Layer 3: Environment Assets drawn on top of the floor
     platforms.forEach(p => p.render());
     spikes.forEach(s => s.render());
     stars.forEach(star => star.render());
 
-    // Layer 4: Overlay the solid Fog Mask (Hides everything outside the spotlight)
+    // Layer 4: Fog Mask Overlay
     drawFog();
 
-    // Layer 5: Draw the player sprite last so they stay lit and bright
+    // Layer 5: Character Sprite
     if (gameState !== "menu" && gameState !== "victory") {
       player.render();
     }
 
-    // Layer 6: Draw the absolute sidebar UI boxes and touch buttons
+    // Layer 6: Sidebar UI Panels and Mobile Overlays
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") {
       drawDpad();
@@ -396,7 +387,7 @@ let loop = GameLoop({
       drawRestartButton();
     }
 
-    // Layer 7: HUD Texts and Overlays
+    // Layer 7: HUD Texts
     context.fillStyle = "white";
     context.font = "bold 16px Arial";
     context.textAlign = "center";
@@ -433,6 +424,6 @@ let loop = GameLoop({
       context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }
   }
-}); // FIXED: Cleaned up trailing brackets perfectly
+});
 
 loop.start();

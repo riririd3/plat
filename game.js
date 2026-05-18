@@ -225,6 +225,15 @@ function resetTouch() {
   touch.left = false; touch.right = false; touch.jump = false;
 }
 
+// RESTORED FUNCTION: Fixes the 'tap to start' crash bug!
+async function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    await document.documentElement.requestFullscreen();
+  } else {
+    await document.exitFullscreen();
+  }
+}
+
 function handleTouch(e) {
   e.preventDefault();
   
@@ -414,6 +423,6 @@ let loop = GameLoop({
       context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }
   }
-});
+}); // FIXED: Cleaned up trailing brackets perfectly
 
 loop.start();

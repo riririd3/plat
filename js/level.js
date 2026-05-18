@@ -70,19 +70,8 @@ export function loadLevel(index) {
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(kontra.Sprite({
-        x: GAME_X() + s.x, 
-        y: s.y, 
-        width: s.w, 
-        height: s.h, 
-        color: "#ef4444",
-        render() {
-          context.save();
-          context.fillStyle = "white";
-          context.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
-          context.fillStyle = this.color;
-          context.fillRect(this.x, this.y, this.width, this.height);
-          context.restore();
-        }
+        x: GAME_X() + s.x, y: s.y, width: s.w, height: s.h, color: "#ef4444",
+        render() { this.draw(); }
       }));
     });
   }

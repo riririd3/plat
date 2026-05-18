@@ -115,18 +115,15 @@ function loadLevel(index) {
   }
   
   if (currentLevel.spikes) {
-  console.log('Loading spikes:', currentLevel.spikes); // See what data you have
   currentLevel.spikes.forEach(s => {
-    console.log('Spike position:', s.x, s.y, 'size:', s.w, s.h); // Check values
     spikes.push(Sprite({
       x: GAME_X() + s.x, 
       y: s.y, 
       width: s.w,
       height: s.h,
       color: "#ef4444",
-      render() {
-        context.fillStyle = "#ef4444";
-        context.fillRect(this.x, this.y, this.width, this.height);
+      render() { 
+        this.draw();  // ← Use this instead of custom fillRect
       }
     }));
   });
@@ -405,7 +402,7 @@ let loop = GameLoop({
     stars.forEach(star => star.render());
 
     // Layer 4: Flashlight Overlay Filter
-   // drawFog();
+    drawFog();
 
     // Layer 5: Character Box
     if (gameState !== "menu" && gameState !== "victory") {

@@ -88,8 +88,8 @@ function loadLevel(index) {
   stateTimer = 3.0;
 
   resetTouch();
-  platforms = [];
-  spikes = [];
+  platforms = []; // We will put BOTH platforms and spikes in here!
+  spikes = [];    // Keep this empty so old references don't crash
   stars = [];
 
   const currentLevel = LEVEL_MAPS[index];
@@ -104,28 +104,46 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // Load Platforms
+  // 1. Load Normal Platforms
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
-        x: GAME_X() + p.x, y: p.y, width: p.w, height: p.h, color: "#64748b",
+        x: GAME_X() + p.x, 
+        y: p.y, 
+        width: p.w, 
+        height: p.h, 
+        color: "#64748b",
+        isSpike: false, // Tag it as safe
         render() { this.draw(); }
       }));
     });
   }
 
-  // Load Spikes
+  // 2. Load Spikes AS Platforms (TRICKED!)
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
-      spikess.push(Sprite({
-        x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "red",
-        render() { this.draw(); }
+      platforms.push(Sprite({
+        x: GAME_X() + s.x, 
+        y: s.y, 
+        width: s.w, 
+        height: s.h, 
+        color: "#ef4444", // Give it a dangerous bright red color
+        isSpike: true,    // Tag it as deadly!
+        render() {
+          context.save();
+          // Draw a high-contrast white border box
+          context.fillStyle = "white";
+          context.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
+          // Draw the main red box
+          context.fillStyle = this.color;
+          context.fillRect(this.x, this.y, this.width, this.height);
+          context.restore();
+        }
       }));
     });
   }
-}
 
-  // Load Stars
+  // 3. Load Stars
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {
       stars.push(Sprite({
@@ -346,10 +364,18 @@ let loop = GameLoop({
       player.grounded = true;
     }
 
-    // Platform Block resolution
+    // Platform & Spike Collision Resolution Loop
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
+        
+        // IF WE HIT A TRICKED SPIKE -> INSTANT DEATH RESET!
+        if (p.isSpike) {
+          loadLevel(currentLevelIndex);
+          return; // Stop processing this frame immediately
+        }
+
+        // Otherwise, process normal solid platform physics
         let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
         let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
 
@@ -363,14 +389,6 @@ let loop = GameLoop({
             player.y += overlapY; player.dy = 0;
           }
         }
-      }
-    }
-
-    // Spike Collision Detection
-    for (let spike of spikes) {
-      if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
-          player.y < spike.y + spike.height && player.y + player.height > spike.y) {
-        loadLevel(currentLevelIndex); 
       }
     }
 

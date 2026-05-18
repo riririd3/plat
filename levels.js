@@ -9,7 +9,7 @@ const LEVEL_MAPS = [
       { x: 350, y: 80, w: 160, h: 20 }
     ],
     spikes: [
-    { x: 350, y: 460, w: 40, h: 20 } // Dangerous obstacle on the floor!
+    { x: 300, y: 460, w: 40, h: 40 } // Dangerous obstacle on the floor!
     ],
     stars: [
       { x: 200, y: 480 }

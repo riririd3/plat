@@ -8,7 +8,7 @@ const LEVEL_MAPS = [
       { x: 350, y: 280, w: 160, h: 20 }
     ],
     spikes: [
-      { x: 300, y: 460, w:120, h:15 } // Now perfectly visible sitting on the floor!
+      { x: 400, y: 400, w:50, h:50 } // Now perfectly visible sitting on the floor!
     ],
     stars: [
       { x: 420, y: 460 }

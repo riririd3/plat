@@ -116,11 +116,15 @@ function loadLevel(index) {
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
-        x: GAME_X() + s.x, y: s.y, width: s.w, height: s.h, color: "#ef4444",
+        x: GAME_X() + s.x,
+        y: s.y,
+        width: s.w,
+        height: s.h,
+        color: "#ef4444",
         render() {
           context.save();
           
-          // 1. Draw the sharp white outline first (making it slightly larger)
+          // 1. Sharp white outline stencil base (using 'this.width' and 'this.height')
           context.fillStyle = "white";
           context.beginPath();
           context.moveTo(this.x - 2, this.y + this.height);
@@ -129,7 +133,7 @@ function loadLevel(index) {
           context.closePath();
           context.fill();
 
-          // 2. Draw the dangerous bright red inner spike right on top
+          // 2. Dangerous bright red inner spike core fill layer
           context.fillStyle = this.color;
           context.beginPath();
           context.moveTo(this.x, this.y + this.height);
@@ -225,12 +229,9 @@ function resetTouch() {
   touch.left = false; touch.right = false; touch.jump = false;
 }
 
-// RESTORED FUNCTION: Fixes the 'tap to start' crash bug!
 async function toggleFullscreen() {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen();
-  } else {
-    await document.exitFullscreen();
   }
 }
 
@@ -244,16 +245,17 @@ function handleTouch(e) {
   // Handle Main Menu or Victory Screen Reset clicks
   if (gameState === "menu" || gameState === "victory") {
     if (e.type === "touchstart") {
-      // 1. Force the engine to WAIT until the browser handles the fullscreen switch
+      
+      // 1. Just CALL the function by name and trigger the promise chain
       toggleFullscreen()
         .then(() => {
-          // 2. Only load the level once fullscreen is locked down!
+          // 2. This runs if fullscreen is successful
           currentLevelIndex = 0;
           totalPlayTime = 0.0; 
           loadLevel(currentLevelIndex);
         })
         .catch(err => {
-          // Fallback: If browser blocks fullscreen, still let them play anyway!
+          // 3. Fallback: If the browser blocks it, still let them play anyway!
           currentLevelIndex = 0;
           totalPlayTime = 0.0; 
           loadLevel(currentLevelIndex);

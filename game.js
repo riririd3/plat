@@ -73,6 +73,11 @@ let player = Sprite({
   grounded: false,
 
   update() {
+    // FREEZE PLAYER DURING MEMORIZATION WINDOW
+    if (gameState === "memorize") {
+      this.dy = 0; // stop gravity from pulling them down during countdown
+      return;      // exit the update function early
+    }
     if (keyPressed("left") || touch.left) {
       this.x -= 4;
     }
@@ -234,7 +239,7 @@ function drawFog() {
 
   context.save();
   // Fill entire game board view dark
-  context.fillStyle = "rgba(10, 15, 26, 0.96)";
+  context.fillStyle = "rgba(10, 15, 26, 1.0)";
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
   // Mask cutout to highlight player's structural surroundings

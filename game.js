@@ -121,50 +121,49 @@ function loadLevel(index) {
   gameState = "memorize";
   stateTimer = 3.0;
 
-  // Set safe initial spawning point
-  player.x = GAME_X() + 40;
-  player.y = canvas.height - 120;
-  player.dy = 0;
-  player.grounded = false;
-
   platforms = [];
   stars = [];
 
   const currentLevel = LEVEL_MAPS[index];
 
-  // Loop through rows and columns of your string layout map
-  for (let row = 0; row < currentLevel.map.length; row++) {
-    const line = currentLevel.map[row];
-    for (let col = 0; col < line.length; col++) {
-      const char = line[col];
-      const posX = GAME_X() + col * TILE_SIZE;
-      const posY = row * TILE_SIZE;
-
-      // Ensure elements don't overflow past right UI panel layout bounds
-      if (posX + TILE_SIZE > GAME_X() + GAME_WIDTH()) continue;
-
-      if (char === "#" || char === "=") {
-        platforms.push(Sprite({
-          x: posX,
-          y: posY,
-          width: TILE_SIZE,
-          height: TILE_SIZE,
-          color: char === "#" ? "#334155" : "#64748b",
-          render() { this.draw(); }
-        }));
-      } else if (char === "*") {
-        stars.push(Sprite({
-          x: posX + TILE_SIZE / 4,
-          y: posY + TILE_SIZE / 4,
-          width: TILE_SIZE / 2,
-          height: TILE_SIZE / 2,
-          color: "gold",
-          pickedUp: false,
-          render() { if (!this.pickedUp) this.draw(); }
-        }));
-      }
-    }
+  // Dynamically set the player spawn point from the level file!
+  // If a level doesn't have a playerSpawn defined, it defaults to a safe backup.
+  if (currentLevel.playerSpawn) {
+    player.x = GAME_X() + currentLevel.playerSpawn.x;
+    player.y = currentLevel.playerSpawn.y;
+  } else {
+    // Default fallback spawn point
+    player.x = GAME_X() + 40;
+    player.y = canvas.height - 120;
   }
+  
+  player.dy = 0;
+  player.grounded = false;
+
+  // 1. Load Pixel-Based Platforms
+  currentLevel.platforms.forEach(p => {
+    platforms.push(Sprite({
+      x: GAME_X() + p.x,
+      y: p.y,
+      width: p.w,
+      height: p.h,
+      color: "#64748b",
+      render() { this.draw(); }
+    }));
+  });
+
+  // 2. Load Pixel-Based Stars
+  currentLevel.stars.forEach(s => {
+    stars.push(Sprite({
+      x: GAME_X() + s.x,
+      y: s.y,
+      width: 20,
+      height: 20,
+      color: "gold",
+      pickedUp: false,
+      render() { if (!this.pickedUp) this.draw(); }
+    }));
+  });
 }
 
 // Initial Level Boot

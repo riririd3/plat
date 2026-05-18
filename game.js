@@ -75,15 +75,18 @@ let player = Sprite({
   update() {
     // FREEZE PLAYER DURING MEMORIZATION WINDOW
     if (gameState === "memorize") {
-      this.dy = 0; // stop gravity from pulling them down during countdown
-      return;      // exit the update function early
+      this.dy = 0; 
+      return;      
     }
+
     if (keyPressed("left") || touch.left) {
       this.x -= 4;
     }
     if (keyPressed("right") || touch.right) {
       this.x += 4;
     }
+    
+    // Jump Execution Check
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       this.dy = -11;
       this.grounded = false;
@@ -92,14 +95,6 @@ let player = Sprite({
     // Gravity application
     this.dy += 0.5;
     this.y += this.dy;
-
-    // Hard floor boundary (Fallback)
-    const floor = canvas.height - 40;
-    if (this.y + this.height >= floor) {
-      this.y = floor - this.height;
-      this.dy = 0;
-      this.grounded = true;
-    }
 
     // Restrict within the active game viewport boundaries
     if (this.x < GAME_X()) {
@@ -126,18 +121,18 @@ function loadLevel(index) {
   gameState = "memorize";
   stateTimer = 3.0;
 
+  // Clear touch inputs between level loading states
+  resetTouch();
+
   platforms = [];
   stars = [];
 
   const currentLevel = LEVEL_MAPS[index];
 
-  // Dynamically set the player spawn point from the level file!
-  // If a level doesn't have a playerSpawn defined, it defaults to a safe backup.
   if (currentLevel.playerSpawn) {
     player.x = GAME_X() + currentLevel.playerSpawn.x;
     player.y = currentLevel.playerSpawn.y;
   } else {
-    // Default fallback spawn point
     player.x = GAME_X() + 40;
     player.y = canvas.height - 120;
   }
@@ -171,9 +166,6 @@ function loadLevel(index) {
   });
 }
 
-// Initial Level Boot
-loadLevel(currentLevelIndex);
-
 // Graphics Rendering Blocks
 function drawGameArea() {
   context.fillStyle = "#1e293b";
@@ -182,9 +174,7 @@ function drawGameArea() {
 
 function drawControlsBackground() {
   context.fillStyle = "#111";
-  // Left Sidebar Panel
   context.fillRect(0, 0, LEFT_UI(), canvas.height);
-  // Right Sidebar Panel
   context.fillRect(canvas.width - RIGHT_UI(), 0, RIGHT_UI(), canvas.height);
 }
 
@@ -195,11 +185,9 @@ function drawDpad() {
   context.save();
   context.globalAlpha = touch.left ? 0.8 : 0.4;
   context.fillStyle = "white";
-  // Left Button Arrow
   context.fillRect(centerX - dpad.size - 10, centerY, dpad.size, dpad.size);
 
   context.globalAlpha = touch.right ? 0.8 : 0.4;
-  // Right Button Arrow
   context.fillRect(centerX + 10, centerY, dpad.size, dpad.size);
   context.restore();
 }
@@ -212,7 +200,6 @@ function drawJumpButton() {
   context.globalAlpha = touch.jump ? 0.8 : 0.4;
   context.fillStyle = "#ef4444";
   
-  // Clean ergonomic circle button design
   context.beginPath();
   context.arc(x, y, jumpBtn.size / 2, 0, Math.PI * 2);
   context.fill();
@@ -250,7 +237,6 @@ function drawFog() {
   context.restore();
 }
 
-// Touch Handling Logic & Precision Layout Updates
 function resetTouch() {
   touch.left = false;
   touch.right = false;
@@ -269,9 +255,8 @@ function handleTouch(e) {
   e.preventDefault();
   resetTouch();
 
-  // Handle auto-fullscreen on initial game play input interaction
   if (!hasInteracted) {
-    toggleFullscreen().catch(err => console.log("Engine Focus Notification: Fullscreen deferred."));
+    toggleFullscreen().catch(err => console.log("Fullscreen request deferred."));
     hasInteracted = true;
   }
 
@@ -279,11 +264,14 @@ function handleTouch(e) {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
 
-  for (let t of e.touches) {
+  // Use e.targetTouches so we don't accidentally check dropped tracking data during touchend
+  let activeTouches = e.type === "touchend" ? e.touches : e.targetTouches;
+
+  for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX;
     const y = (t.clientY - rect.top) * scaleY;
 
-    // 1. LEFT PANEL (D-PAD) TOUCH DETECTION
+    // Left Panel D-pad
     if (x < LEFT_UI()) {
       const centerX = LEFT_UI() / 2;
       if (x < centerX) {
@@ -293,9 +281,8 @@ function handleTouch(e) {
       }
     }
 
-    // 2. RIGHT PANEL TOUCH DETECTION
+    // Right Panel Buttons
     if (x > canvas.width - RIGHT_UI()) {
-      // Fullscreen Button Bounds Hit check
       const fsX = canvas.width - RIGHT_UI() / 2;
       const fsY = canvas.height - 260 - SAFE;
       if (Math.hypot(x - fsX, y - fsY) < fullscreenBtn.size / 2) {
@@ -303,7 +290,6 @@ function handleTouch(e) {
         continue;
       }
 
-      // Jump Button Radial Touch Bounds Hit check
       const jumpX = canvas.width - RIGHT_UI() / 2;
       const jumpY = canvas.height - 140 - SAFE + jumpBtn.size / 2;
       if (Math.hypot(x - jumpX, y - jumpY) < jumpBtn.size / 2) {
@@ -317,12 +303,14 @@ canvas.addEventListener("touchstart", handleTouch, { passive: false });
 canvas.addEventListener("touchmove", handleTouch, { passive: false });
 canvas.addEventListener("touchend", handleTouch, { passive: false });
 
+// Initial Level Boot
+loadLevel(currentLevelIndex);
+
 // Core Loop
 let loop = GameLoop({
   update() {
-    // 1. Run timer countdown if in memorization mode
     if (gameState === "memorize") {
-      stateTimer -= 1 / 60; // Assumes targeted standard 60fps refresh step rate
+      stateTimer -= 1 / 60; 
       if (stateTimer <= 0) {
         gameState = "play";
       }
@@ -333,7 +321,7 @@ let loop = GameLoop({
     // --- ADVANCED 4-SIDED SOLID PLATFORM COLLISIONS ---
     player.grounded = false;
 
-    // Hard floor boundary fallback (Ensures you can jump on the main floor)
+    // Hard floor boundary fallback 
     const floor = canvas.height - 40;
     if (player.y + player.height >= floor) {
       player.y = floor - player.height;
@@ -361,7 +349,7 @@ let loop = GameLoop({
           if (player.y + player.height / 2 < p.y + p.height / 2) {
             player.y -= overlapY;
             player.dy = 0;
-            player.grounded = true; // Grounded on a custom platform!
+            player.grounded = true; 
           } else {
             player.y += overlapY;
             player.dy = 0; // Head bonk!
@@ -370,7 +358,7 @@ let loop = GameLoop({
       }
     }
 
-    // Star dynamic score goal checking logic loop
+    // Star collection detection
     for (let star of stars) {
       if (
         !star.pickedUp &&
@@ -380,8 +368,6 @@ let loop = GameLoop({
         player.y + player.height > star.y
       ) {
         star.pickedUp = true;
-        
-        // Progress into next stage
         currentLevelIndex++;
         loadLevel(currentLevelIndex);
       }
@@ -391,24 +377,23 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw level gameplay layers beneath mask layers
+    // 1. Draw level layers
     drawGameArea();
     platforms.forEach(p => p.render());
     stars.forEach(star => star.render());
 
-    // 2. Render Blind Fog layout immediately overlaying items inside game area viewport
+    // 2. Render Blind Fog
     drawFog();
 
-    // 3. Render the player AFTER the fog so they stay perfectly bright and visible!
+    // 3. Render Player on top of Fog
     player.render();
 
-    // 4. Render persistent UI elements completely clear above darkness
+    // 4. Render UI Elements
     drawControlsBackground();
     drawDpad();
     drawJumpButton();
     drawFullscreenButton();
 
-    // Context Notice layout feedback texts
     if (gameState === "memorize") {
       context.fillStyle = "#fbbf24";
       context.font = "bold 22px Arial";

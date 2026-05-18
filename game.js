@@ -114,29 +114,16 @@ function loadLevel(index) {
     });
   }
 
-  // Load Spikes (Direct structural mapping)
+  // Load Spikes
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
-      spikes.push(Sprite({
-        x: GAME_X() + s.x, 
-        y: s.y, 
-        width: s.w,  // Maps 's.w' directly to Kontra's internal 'width'
-        height: s.h, // Maps 's.h' directly to Kontra's internal 'height'
-        color: "#ef4444",
-        render() {
-          context.save();
-          // 1. High-contrast white safety border outline
-          context.fillStyle = "white";
-          context.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
-          
-          // 2. Core red danger box
-          context.fillStyle = this.color;
-          context.fillRect(this.x, this.y, this.width, this.height);
-          context.restore();
-        }
+      spikess.push(Sprite({
+        x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "red",
+        render() { this.draw(); }
       }));
     });
   }
+}
 
   // Load Stars
   if (currentLevel.stars) {

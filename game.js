@@ -113,23 +113,24 @@ function loadLevel(index) {
       }));
     });
   }
-
-  // Load Spikes (Direct structural mapping)
+  
   if (currentLevel.spikes) {
-    currentLevel.spikes.forEach(s => {
-      spikes.push(Sprite({
-        x: GAME_X() + s.x, 
-        y: s.y, 
-        width: s.w,  // Maps 's.w' directly to Kontra's internal 'width'
-        height: s.h, // Maps 's.h' directly to Kontra's internal 'height'
-        color: "#ef4444",
-        render() {
-  context.fillStyle = "#ef4444";
-  context.fillRect(this.x, this.y, this.width, this.height);
-        }
-      }));
-    });
-  }
+  console.log('Loading spikes:', currentLevel.spikes); // See what data you have
+  currentLevel.spikes.forEach(s => {
+    console.log('Spike position:', s.x, s.y, 'size:', s.w, s.h); // Check values
+    spikes.push(Sprite({
+      x: GAME_X() + s.x, 
+      y: s.y, 
+      width: s.w,
+      height: s.h,
+      color: "#ef4444",
+      render() {
+        context.fillStyle = "#ef4444";
+        context.fillRect(this.x, this.y, this.width, this.height);
+      }
+    }));
+  });
+}
 
   // Load Stars
   if (currentLevel.stars) {
@@ -404,7 +405,7 @@ let loop = GameLoop({
     stars.forEach(star => star.render());
 
     // Layer 4: Flashlight Overlay Filter
-    drawFog();
+   // drawFog();
 
     // Layer 5: Character Box
     if (gameState !== "menu" && gameState !== "victory") {

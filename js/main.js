@@ -10,12 +10,16 @@ let { canvas, context } = init("game");
 const BASE_WIDTH = 960;
 const BASE_HEIGHT = 540;
 
+// Make canvas and context global
+window.canvas = canvas;
+window.context = context;
+
 initKeys();
 
-// Global game state
-let gameState = "menu";
-let stateTimer = 3.0;
-let totalPlayTime = 0.0;
+// Global game state - make them window properties
+window.gameState = "menu";
+window.stateTimer = 3.0;
+window.totalPlayTime = 0.0;
 
 // Initialize
 resizeGame();
@@ -29,13 +33,13 @@ canvas.addEventListener("touchend", handleTouch, { passive: false });
 // Game Loop
 let loop = GameLoop({
   update() {
-    if (gameState === "menu" || gameState === "victory") return;
+    if (window.gameState === "menu" || window.gameState === "victory") return;
 
-    totalPlayTime += 1 / 60;
+    window.totalPlayTime += 1 / 60;
 
-    if (gameState === "memorize") {
-      stateTimer -= 1 / 60;
-      if (stateTimer <= 0) gameState = "play";
+    if (window.gameState === "memorize") {
+      window.stateTimer -= 1 / 60;
+      if (window.stateTimer <= 0) window.gameState = "play";
     }
 
     player.update();
@@ -60,12 +64,12 @@ let loop = GameLoop({
 
     drawFog();
 
-    if (gameState !== "menu" && gameState !== "victory") {
+    if (window.gameState !== "menu" && window.gameState !== "victory") {
       player.render();
     }
 
     drawControlsBackground();
-    if (gameState !== "menu" && gameState !== "victory") {
+    if (window.gameState !== "menu" && window.gameState !== "victory") {
       drawDpad();
       drawJumpButton();
       drawRestartButton();
@@ -76,5 +80,5 @@ let loop = GameLoop({
 });
 
 // Start the game
-gameState = "menu";
+window.gameState = "menu";
 loop.start();

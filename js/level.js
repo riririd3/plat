@@ -1,16 +1,16 @@
-let currentLevelIndex = 0;
+window.currentLevelIndex = 0;
 let platforms = [];
 let spikes = [];
 let stars = [];
 
-function loadLevel(index) {
+window.loadLevel = function(index) {
   if (index >= LEVEL_MAPS.length) {
-    gameState = "victory";
+    window.gameState = "victory";
     return;
   }
 
-  gameState = "memorize";
-  stateTimer = 3.0;
+  window.gameState = "memorize";
+  window.stateTimer = 3.0;
 
   resetTouch();
   platforms = [];
@@ -53,7 +53,7 @@ function loadLevel(index) {
     });
   }
 
-  // Load Stars (single star per level)
+  // Load Stars
   if (currentLevel.stars && currentLevel.stars.length > 0) {
     const s = currentLevel.stars[0];
     stars.push(Sprite({
@@ -66,4 +66,4 @@ function loadLevel(index) {
       render() { if (!this.pickedUp) this.draw(); }
     }));
   }
-}
+};

@@ -11,7 +11,7 @@ const LEVEL_MAPS = [
       { x: 300, y: 460, w: 40, h: 40 } // Now perfectly visible sitting on the floor!
     ],
     stars: [
-      { x: 420, y: 220 }
+      { x: 420, y: 460 }
     ]
   },
   {

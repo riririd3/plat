@@ -124,15 +124,8 @@ function loadLevel(index) {
         height: s.h, // Maps 's.h' directly to Kontra's internal 'height'
         color: "#ef4444",
         render() {
-          context.save();
-          // 1. High-contrast white safety border outline
-          context.fillStyle = "white";
-          context.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
-          
-          // 2. Core red danger box
-          context.fillStyle = this.color;
-          context.fillRect(this.x, this.y, this.width, this.height);
-          context.restore();
+  context.fillStyle = "#ef4444";
+  context.fillRect(this.x, this.y, this.width, this.height);
         }
       }));
     });

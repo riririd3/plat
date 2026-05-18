@@ -238,22 +238,15 @@ function drawFog() {
   if (gameState !== "play") return;
 
   context.save();
-  // Fill entire game board view dark
   context.fillStyle = "rgba(0, 0, 0, 1.0)";
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // Mask cutout to highlight player's structural surroundings
   context.globalCompositeOperation = 'destination-out';
   context.beginPath();
   const maskRadius = 75;
-  context.arc(
-    player.x + player.width / 2,
-    player.y + player.height / 2,
-    maskRadius,
-    0,
-    Math.PI * 2
-  );
+  context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
   context.fill();
+  
   context.restore();
 }
 
@@ -327,7 +320,7 @@ canvas.addEventListener("touchend", handleTouch, { passive: false });
 // Core Loop
 let loop = GameLoop({
   update() {
-    // Run timer countdown if in memorization mode
+    // 1. Run timer countdown if in memorization mode
     if (gameState === "memorize") {
       stateTimer -= 1 / 60; // Assumes targeted standard 60fps refresh step rate
       if (stateTimer <= 0) {
@@ -340,7 +333,7 @@ let loop = GameLoop({
     // --- ADVANCED 4-SIDED SOLID PLATFORM COLLISIONS ---
     player.grounded = false;
 
-    // Hard floor boundary fallback (FIXES THE JUMP BUG!)
+    // Hard floor boundary fallback (Ensures you can jump on the main floor)
     const floor = canvas.height - 40;
     if (player.y + player.height >= floor) {
       player.y = floor - player.height;
@@ -368,7 +361,7 @@ let loop = GameLoop({
           if (player.y + player.height / 2 < p.y + p.height / 2) {
             player.y -= overlapY;
             player.dy = 0;
-            player.grounded = true; // Grounded on a platform!
+            player.grounded = true; // Grounded on a custom platform!
           } else {
             player.y += overlapY;
             player.dy = 0; // Head bonk!
@@ -405,9 +398,11 @@ let loop = GameLoop({
 
     // 2. Render Blind Fog layout immediately overlaying items inside game area viewport
     drawFog();
+
+    // 3. Render the player AFTER the fog so they stay perfectly bright and visible!
     player.render();
 
-    // 3. Render persistent UI elements completely clear above darkness
+    // 4. Render persistent UI elements completely clear above darkness
     drawControlsBackground();
     drawDpad();
     drawJumpButton();

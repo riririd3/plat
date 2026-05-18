@@ -114,24 +114,24 @@ function loadLevel(index) {
     });
   }
 
-  // Load Spikes (TRICKED: Rendered cleanly as solid red danger boxes with borders!)
+  // Load Spikes (Direct structural mapping)
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
         x: GAME_X() + s.x, 
         y: s.y, 
-        width: s.w, 
-        height: s.h, 
+        width: s.w,  // Maps 's.w' directly to Kontra's internal 'width'
+        height: s.h, // Maps 's.h' directly to Kontra's internal 'height'
         color: "#ef4444",
         render() {
           context.save();
-          // Draw high-contrast warning backing box
+          // 1. High-contrast white safety border outline
           context.fillStyle = "white";
-          context.fillRect(this.x - 2, this.y - 2, s.w + 4, s.h + 4);
+          context.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
           
-          // Draw main core red box
+          // 2. Core red danger box
           context.fillStyle = this.color;
-          context.fillRect(this.x, this.y, s.w, s.h);
+          context.fillRect(this.x, this.y, this.width, this.height);
           context.restore();
         }
       }));

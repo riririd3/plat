@@ -2,7 +2,7 @@
 let player = Sprite({
   x: 0, y: 0, width: 32, height: 32, color: "lime", dy: 0, grounded: false,
   update() {
-    if (gameState !== "play") {
+    if (window.gameState !== "play") {
       this.dy = 0;
       return;
     }

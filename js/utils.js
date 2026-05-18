@@ -1,3 +1,7 @@
+// Add these at the top
+const BASE_WIDTH = 960;
+const BASE_HEIGHT = 540;
+
 // Layout settings
 const LEFT_UI = () => 160;
 const RIGHT_UI = () => 160;

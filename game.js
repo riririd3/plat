@@ -118,12 +118,27 @@ function loadLevel(index) {
       spikes.push(Sprite({
         x: GAME_X() + s.x, y: s.y, width: s.w, height: s.h, color: "#ef4444",
         render() {
+          context.save();
+          
+          // 1. Draw the sharp white outline first (making it slightly larger)
+          context.fillStyle = "white";
+          context.beginPath();
+          context.moveTo(this.x - 2, this.y + this.height);
+          context.lineTo(this.x + this.width / 2, this.y - 3);
+          context.lineTo(this.x + this.width + 2, this.y + this.height);
+          context.closePath();
+          context.fill();
+
+          // 2. Draw the dangerous bright red inner spike right on top
           context.fillStyle = this.color;
           context.beginPath();
           context.moveTo(this.x, this.y + this.height);
           context.lineTo(this.x + this.width / 2, this.y);
           context.lineTo(this.x + this.width, this.y + this.height);
+          context.closePath();
           context.fill();
+
+          context.restore();
         }
       }));
     });
@@ -220,6 +235,9 @@ function handleTouch(e) {
   // Handle Main Menu or Victory Screen Reset clicks
   if (gameState === "menu" || gameState === "victory") {
     if (e.type === "touchstart") {
+      // Trigger fullscreen right as they start the speedrun!
+      toggleFullscreen().catch(err => console.log("Fullscreen request deferred."));
+      
       currentLevelIndex = 0;
       totalPlayTime = 0.0; // Reset stopwatch
       loadLevel(currentLevelIndex);

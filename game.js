@@ -83,7 +83,7 @@ function loadLevel(index) {
   }
 
   gameState = "memorize";
-  stateTimer = 3.0;
+  stateTimer = 2.0;
 
   resetTouch();
   platforms = [];
@@ -244,12 +244,20 @@ function handleTouch(e) {
   // Handle Main Menu or Victory Screen Reset clicks
   if (gameState === "menu" || gameState === "victory") {
     if (e.type === "touchstart") {
-      // Trigger fullscreen right as they start the speedrun!
-      toggleFullscreen().catch(err => console.log("Fullscreen request deferred."));
-      
-      currentLevelIndex = 0;
-      totalPlayTime = 0.0; // Reset stopwatch
-      loadLevel(currentLevelIndex);
+      // 1. Force the engine to WAIT until the browser handles the fullscreen switch
+      toggleFullscreen()
+        .then(() => {
+          // 2. Only load the level once fullscreen is locked down!
+          currentLevelIndex = 0;
+          totalPlayTime = 0.0; 
+          loadLevel(currentLevelIndex);
+        })
+        .catch(err => {
+          // Fallback: If browser blocks fullscreen, still let them play anyway!
+          currentLevelIndex = 0;
+          totalPlayTime = 0.0; 
+          loadLevel(currentLevelIndex);
+        });
     }
     return;
   }
@@ -359,22 +367,26 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw Environment Viewports
+    // Layer 1: Draw the base background sheet
     drawGameArea();
+
+    // Layer 2: Draw the main floor foundation BEFORE objects sit on it
+    drawGround();
+
+    // Layer 3: Draw all level environmental elements on top of the ground
     platforms.forEach(p => p.render());
     spikes.forEach(s => s.render());
     stars.forEach(star => star.render());
 
-    // 2. Draw Fog Overlay
+    // Layer 4: Overlay the solid Fog Mask (Hides everything outside the spotlight)
     drawFog();
 
-    // 3. Draw Character & Floor above darkness
-    drawGround();
+    // Layer 5: Draw the player sprite last so they stay lit and bright
     if (gameState !== "menu" && gameState !== "victory") {
       player.render();
     }
 
-    // 4. Render UI Panels
+    // Layer 6: Draw the absolute sidebar UI boxes and touch buttons
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") {
       drawDpad();
@@ -382,22 +394,18 @@ let loop = GameLoop({
       drawRestartButton();
     }
 
-    // 5. HUD Text Layout Displays
+    // Layer 7: HUD Texts and Overlays
     context.fillStyle = "white";
     context.font = "bold 16px Arial";
     context.textAlign = "center";
     
-    // Level display counter
     context.fillText(`STAGE: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 45);
 
-    // Live Stopwatch View: displays current elapsed time down to two decimal spots!
     if (gameState === "play" || gameState === "memorize") {
       context.fillStyle = "#38bdf8";
       context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 85);
     }
 
-    // State Banner Screens overlay texts
-    context.textAlign = "center";
     if (gameState === "menu") {
       context.fillStyle = "#06b6d4";
       context.font = "bold 32px Arial";

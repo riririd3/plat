@@ -239,7 +239,7 @@ function drawFog() {
 
   context.save();
   // Fill entire game board view dark
-  context.fillStyle = "rgba(10, 15, 26, 1.0)";
+  context.fillStyle = "rgba(0, 0, 0, 1.0)";
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
   // Mask cutout to highlight player's structural surroundings
@@ -337,24 +337,44 @@ let loop = GameLoop({
 
     player.update();
 
-    // Standard platform vertical collision resolution step loops
-    let hitAnyPlatform = false;
+    // --- ADVANCED 4-SIDED SOLID PLATFORM COLLISIONS ---
+    player.grounded = false;
+
     for (let p of platforms) {
+      // Check if player and platform are overlapping at all
       if (
         player.x < p.x + p.width &&
         player.x + player.width > p.x &&
-        player.y + player.height >= p.y &&
-        player.y + player.height <= p.y + 12 &&
-        player.dy >= 0
+        player.y < p.y + p.height &&
+        player.y + player.height > p.y
       ) {
-        player.y = p.y - player.height;
-        player.dy = 0;
-        hitAnyPlatform = true;
+        // Calculate how deep the player has overlapped into the platform on both axes
+        let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
+        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
+
+        // Resolve collision along the axis with the SMALLEST overlap (prevents glitchy snapping)
+        if (overlapX < overlapY) {
+          // Horizontal collision (Left or Right wall hit)
+          if (player.x + player.width / 2 < p.x + p.width / 2) {
+            player.x -= overlapX; // Pushed left
+          } else {
+            player.x += overlapX; // Pushed right
+          }
+        } else {
+          // Vertical collision (Floor or Ceiling hit)
+          if (player.y + player.height / 2 < p.y + p.height / 2) {
+            // Landing on top of a platform
+            player.y -= overlapY;
+            player.dy = 0;
+            player.grounded = true;
+          } else {
+            // BONK! Hitting your head from below
+            player.y += overlapY;
+            player.dy = 0; // kill upward momentum immediately so they drop
+          }
+        }
       }
-    }
-    if (hitAnyPlatform) {
-      player.grounded = true;
-    }
+        }
 
     // Star dynamic score goal checking logic loop
     for (let star of stars) {

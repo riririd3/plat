@@ -18,8 +18,8 @@ function handleTouch(e) {
       const rstX = canvas.width - RIGHT_UI() / 2;
       const rstY = 60;
       if (Math.hypot(x - rstX, y - rstY) < restartBtn.size / 2 && e.type === "touchstart") {
-        if (gameState === "play" || gameState === "memorize") {
-          loadLevel(currentLevelIndex);
+        if (window.gameState === "play" || window.gameState === "memorize") {
+          window.loadLevel(window.currentLevelIndex);
         }
         return;
       }
@@ -27,7 +27,7 @@ function handleTouch(e) {
   }
 
   // Menu buttons
-  if (gameState === "menu" || gameState === "victory") {
+  if (window.gameState === "menu" || window.gameState === "victory") {
     if (e.type === "touchstart") {
       for (let t of e.targetTouches) {
         const x = (t.clientX - rect.left) * scaleX;
@@ -40,9 +40,9 @@ function handleTouch(e) {
         const fullY = startY + startMenuBtn.h + 15;
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
-          currentLevelIndex = 0;
-          totalPlayTime = 0.0;
-          loadLevel(currentLevelIndex);
+          window.currentLevelIndex = 0;
+          window.totalPlayTime = 0.0;
+          window.loadLevel(window.currentLevelIndex);
           return;
         }
 

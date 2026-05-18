@@ -4,12 +4,12 @@ const LEVEL_MAPS = [
     // Level 1: Spawn near the bottom left
     playerSpawn: { x: 40, y: 300 }, 
     platforms: [
-      { x: 0,   y: 530, w: 640, h: 40 },
+      { x: 0,   y: 500, w: 640, h: 40 },
       { x: 150, y: 380, w: 120, h: 15 },
       { x: 350, y: 80, w: 160, h: 20 }
     ],
     stars: [
-      { x: 200, y: 550 }
+      { x: 200, y: 480 }
     ]
   },
   {

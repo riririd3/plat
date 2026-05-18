@@ -112,28 +112,28 @@ function loadLevel(index) {
     });
   }
 
-  // Load Spikes
+  // Load Spikes (Fixed property mapping drawing logic)
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
         x: GAME_X() + s.x, y: s.y, width: s.w, height: s.h, color: "#ef4444",
         render() {
           context.save();
-          // High-contrast white safety border base
+          // 1. High-contrast white safety border background block
           context.fillStyle = "white";
           context.beginPath();
-          context.moveTo(this.x - 2, this.y + this.height);
-          context.lineTo(this.x + this.width / 2, this.y - 3);
-          context.lineTo(this.x + this.width + 2, this.y + this.height);
+          context.moveTo(this.x - 2, this.y + s.h);
+          context.lineTo(this.x + s.w / 2, this.y - 3);
+          context.lineTo(this.x + s.w + 2, this.y + s.h);
           context.closePath();
           context.fill();
 
-          // Danger red center cone
+          // 2. Danger red center cone fill
           context.fillStyle = this.color;
           context.beginPath();
-          context.moveTo(this.x, this.y + this.height);
-          context.lineTo(this.x + this.width / 2, this.y);
-          context.lineTo(this.x + this.width, this.y + this.height);
+          context.moveTo(this.x, this.y + s.h);
+          context.lineTo(this.x + s.w / 2, this.y);
+          context.lineTo(this.x + s.w, this.y + s.h);
           context.closePath();
           context.fill();
           context.restore();
@@ -267,22 +267,20 @@ function handleTouch(e) {
 
   let activeTouches = e.type === "touchend" ? e.touches : e.targetTouches;
 
-  // 1. GLOBAL OVERLAY TOUCH CHECKS (Left/Right Sidebar Menus work independently of game state)
+  // 1. GLOBAL INTERACTIONS (Fullscreen Button handles independent context)
   for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX;
     const y = (t.clientY - rect.top) * scaleY;
 
-    // Left Panel Hit Check (Fullscreen Button)
     if (x < LEFT_UI()) {
       const fsX = LEFT_UI() / 2;
       const fsY = 60;
       if (Math.hypot(x - fsX, y - fsY) < fullscreenBtn.size / 2 && e.type === "touchstart") {
-        toggleFullscreen().catch(err => console.log("Device fullscreen error noted."));
+        toggleFullscreen().catch(err => console.log("Fullscreen action skipped."));
         return;
       }
     }
 
-    // Right Panel Hit Check (Restart Button)
     if (x > canvas.width - RIGHT_UI()) {
       const rstX = canvas.width - RIGHT_UI() / 2;
       const rstY = 60;
@@ -406,24 +404,24 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Layer 1 & 2: Background Sheet and Base Ground Floor
+    // Layer 1 & 2: Background Canvas Layouts
     drawGameArea();
     drawGround();
 
-    // Layer 3: Level Elements
+    // Layer 3: Active Map Components
     platforms.forEach(p => p.render());
     spikes.forEach(s => s.render());
     stars.forEach(star => star.render());
 
-    // Layer 4: Fog Mask Overlay
+    // Layer 4: Flashlight Overlay Filter
     drawFog();
 
-    // Layer 5: Character Sprite
+    // Layer 5: Character Box
     if (gameState !== "menu" && gameState !== "victory") {
       player.render();
     }
 
-    // Layer 6: Sidebar Panels and Persistent Buttons
+    // Layer 6: Static Controls Context
     drawControlsBackground();
     drawFullscreenButton();
     if (gameState !== "menu" && gameState !== "victory") {
@@ -432,7 +430,7 @@ let loop = GameLoop({
       drawRestartButton();
     }
 
-    // Layer 7: HUD Texts and Screen Menus
+    // Layer 7: Head-up Display Panels
     context.fillStyle = "white";
     context.font = "bold 16px Arial";
     context.textAlign = "center";
@@ -467,4 +465,5 @@ let loop = GameLoop({
 });
 
 loadLevel(currentLevelIndex);
+gameState = "menu"; // Explicitly block automatic loading sequence until button is hit
 loop.start();

@@ -336,7 +336,130 @@ canvas.addEventListener("touchstart", handleTouch, { passive: false });
 canvas.addEventListener("touchmove", handleTouch, { passive: false });
 canvas.addEventListener("touchend", handleTouch, { passive: false });
 
-// Initial Level Boot configuration path
-loadLevel(currentLevelIndex);
-gameState = "menu"; // Lock in menu screen state initially
+// Core Loop Engine
+let loop = GameLoop({
+  update() {
+    if (gameState === "menu" || gameState === "victory") return;
+
+    totalPlayTime += 1 / 60;
+
+    if (gameState === "memorize") {
+      stateTimer -= 1 / 60;
+      if (stateTimer <= 0) gameState = "play";
+    }
+
+    player.update();
+
+    // Floor Boundary resolution
+    player.grounded = false;
+    const floor = canvas.height - 40;
+    if (player.y + player.height >= floor) {
+      player.y = floor - player.height;
+      player.dy = 0;
+      player.grounded = true;
+    }
+
+    // Platform Block resolution
+    for (let p of platforms) {
+      if (player.x < p.x + p.width && player.x + player.width > p.x &&
+          player.y < p.y + p.height && player.y + player.height > p.y) {
+        let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
+        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
+
+        if (overlapX < overlapY) {
+          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX;
+          else player.x += overlapX;
+        } else {
+          if (player.y + player.height / 2 < p.y + p.height / 2) {
+            player.y -= overlapY; player.dy = 0; player.grounded = true;
+          } else {
+            player.y += overlapY; player.dy = 0;
+          }
+        }
+      }
+    }
+
+    // Spike Collision Detection
+    for (let spike of spikes) {
+      if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
+          player.y < spike.y + spike.height && player.y + player.height > spike.y) {
+        loadLevel(currentLevelIndex); 
+      }
+    }
+
+    // Star Collection Detection
+    for (let star of stars) {
+      if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
+          player.y < star.y + star.height && player.y + player.height > star.y) {
+        star.pickedUp = true;
+        currentLevelIndex++;
+        loadLevel(currentLevelIndex);
+      }
+    }
+  },
+
+  render() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Layer 1 & 2: Background Canvas Layouts
+    drawGameArea();
+    drawGround();
+
+    // Layer 3: Active Map Components
+    platforms.forEach(p => p.render());
+    spikes.forEach(s => s.render());
+    stars.forEach(star => star.render());
+
+    // Layer 4: Flashlight Overlay Filter
+    drawFog();
+
+    // Layer 5: Character Box
+    if (gameState !== "menu" && gameState !== "victory") {
+      player.render();
+    }
+
+    // Layer 6: Static Controls Context
+    drawControlsBackground();
+    if (gameState !== "menu" && gameState !== "victory") {
+      drawDpad();
+      drawJumpButton();
+      drawRestartButton();
+    }
+
+    // Layer 7: Head-up Display Panels
+    context.fillStyle = "white";
+    context.font = "bold 16px Arial";
+    context.textAlign = "center";
+    
+    context.fillText(`STAGE: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);
+
+    if (gameState === "play" || gameState === "memorize") {
+      context.fillStyle = "#38bdf8";
+      context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 150);
+    }
+
+    if (gameState === "menu") {
+      context.fillStyle = "#06b6d4";
+      context.font = "bold 36px Arial";
+      context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40);
+      drawMenuButtons();
+    } else if (gameState === "victory") {
+      context.fillStyle = "#22c55e";
+      context.font = "bold 36px Arial";
+      context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 50);
+      
+      context.fillStyle = "white";
+      context.font = "bold 20px Arial";
+      context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 10);
+      drawMenuButtons();
+    } else if (gameState === "memorize") {
+      context.fillStyle = "#fbbf24";
+      context.font = "bold 24px Arial";
+      context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
+    }
+  }
+});
+
+// Setup initial structural properties safely before kicking off engine
+gameState = "menu"; 
 loop.start();

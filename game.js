@@ -433,7 +433,7 @@ let loop = GameLoop({
     } else if (gameState === "victory") {
       context.fillStyle = "#22c55e";
       context.font = "bold 36px Arial";
-      context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 50);
+      context.fillText("VICTORYY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 50);
       
       context.fillStyle = "white";
       context.font = "bold 20px Arial";

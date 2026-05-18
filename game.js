@@ -400,12 +400,11 @@ let loop = GameLoop({
 
     // Layer 3: Active Map Components
     platforms.forEach(p => p.render());
-
+    spikes.forEach(s => s.render());
     stars.forEach(star => star.render());
 
     // Layer 4: Flashlight Overlay Filter
     drawFog();
-    spikes.forEach(s => s.render());
 
     // Layer 5: Character Box
     if (gameState !== "menu" && gameState !== "victory") {

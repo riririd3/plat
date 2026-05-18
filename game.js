@@ -231,15 +231,27 @@ function drawFog() {
   if (gameState !== "play") return;
 
   context.save();
-  context.fillStyle = "rgba(0, 0, 0, 1.0)";
-  context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  context.globalCompositeOperation = 'destination-out';
+  // Create an off-screen path for the mask clipping area
   context.beginPath();
-  const maskRadius = 75;
-  context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
-  context.fill();
+  // 1. Draw a massive rectangle around the whole gameplay space (clockwise)
+  context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
   
+  // 2. Draw the player's sight window circle (counter-clockwise)
+  const maskRadius = 75;
+  context.arc(
+    player.x + player.width / 2, 
+    player.y + player.height / 2, 
+    maskRadius, 
+    0, 
+    Math.PI * 2, 
+    true // This 'true' reverses the drawing direction to punch a hole!
+  );
+
+  // 3. Fill it with solid black. Because the circle is reversed, it stays empty!
+  context.fillStyle = "rgba(0, 0, 0, 1.0)";
+  context.fill();
+
   context.restore();
 }
 
@@ -382,21 +394,21 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw background elements first
+    // Layer 1: Draw the game arena background
     drawGameArea();
 
-    // 2. Draw level environment parts
+    // Layer 2: Draw the map pieces (They will look beautifully normal)
     platforms.forEach(p => p.render());
     stars.forEach(star => star.render());
 
-    // 3. Render Fog over the environment (Hides elements outside spotlight window)
+    // Layer 3: Overlay the new black mask (Punches a neat spotlight over the items)
     drawFog();
 
-    // 4. Render the safe floor terrain and the player sprite completely visible on top of dark mask
+    // Layer 4: Draw the safe floor and player on top of the mask scene
     drawGround();
     player.render();
 
-    // 5. Render side bars and mobile input control buttons overlay
+    // Layer 5: UI Elements & Sidebar Panels
     drawControlsBackground();
     drawDpad();
     drawJumpButton();

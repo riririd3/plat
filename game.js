@@ -340,41 +340,42 @@ let loop = GameLoop({
     // --- ADVANCED 4-SIDED SOLID PLATFORM COLLISIONS ---
     player.grounded = false;
 
+    // Hard floor boundary fallback (FIXES THE JUMP BUG!)
+    const floor = canvas.height - 40;
+    if (player.y + player.height >= floor) {
+      player.y = floor - player.height;
+      player.dy = 0;
+      player.grounded = true;
+    }
+
     for (let p of platforms) {
-      // Check if player and platform are overlapping at all
       if (
         player.x < p.x + p.width &&
         player.x + player.width > p.x &&
         player.y < p.y + p.height &&
         player.y + player.height > p.y
       ) {
-        // Calculate how deep the player has overlapped into the platform on both axes
         let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
         let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
 
-        // Resolve collision along the axis with the SMALLEST overlap (prevents glitchy snapping)
         if (overlapX < overlapY) {
-          // Horizontal collision (Left or Right wall hit)
           if (player.x + player.width / 2 < p.x + p.width / 2) {
-            player.x -= overlapX; // Pushed left
+            player.x -= overlapX;
           } else {
-            player.x += overlapX; // Pushed right
+            player.x += overlapX;
           }
         } else {
-          // Vertical collision (Floor or Ceiling hit)
           if (player.y + player.height / 2 < p.y + p.height / 2) {
-            // Landing on top of a platform
             player.y -= overlapY;
             player.dy = 0;
-            player.grounded = true;
+            player.grounded = true; // Grounded on a platform!
           } else {
-            // BONK! Hitting your head from below
             player.y += overlapY;
-            player.dy = 0; // kill upward momentum immediately so they drop
+            player.dy = 0; // Head bonk!
           }
         }
       }
-        }
+    }
 
     // Star dynamic score goal checking logic loop
     for (let star of stars) {
@@ -401,10 +402,10 @@ let loop = GameLoop({
     drawGameArea();
     platforms.forEach(p => p.render());
     stars.forEach(star => star.render());
-    player.render();
 
     // 2. Render Blind Fog layout immediately overlaying items inside game area viewport
     drawFog();
+    player.render();
 
     // 3. Render persistent UI elements completely clear above darkness
     drawControlsBackground();

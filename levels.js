@@ -5,8 +5,11 @@ const LEVEL_MAPS = [
     playerSpawn: { x: 40, y: 300 }, 
     platforms: [
       { x: 0,   y: 500, w: 640, h: 40 },
-      { x: 150, y: 380, w: 120, h: 15 },
+      { x: 150, y: 400, w: 120, h: 15 },
       { x: 350, y: 80, w: 160, h: 20 }
+    ],
+    spikes: [
+    { x: 350, y: 480, w: 40, h: 20 } // Dangerous obstacle on the floor!
     ],
     stars: [
       { x: 200, y: 480 }

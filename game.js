@@ -172,6 +172,12 @@ function drawGameArea() {
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 }
 
+// Fixed floor drawing layout function
+function drawGround() {
+  context.fillStyle = "#334155";
+  context.fillRect(GAME_X(), canvas.height - 40, GAME_WIDTH(), 40);
+}
+
 function drawControlsBackground() {
   context.fillStyle = "#111";
   context.fillRect(0, 0, LEFT_UI(), canvas.height);
@@ -264,7 +270,6 @@ function handleTouch(e) {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
 
-  // Use e.targetTouches so we don't accidentally check dropped tracking data during touchend
   let activeTouches = e.type === "touchend" ? e.touches : e.targetTouches;
 
   for (let t of activeTouches) {
@@ -377,22 +382,21 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw the basic dark blue game background
+    // 1. Draw the basic dark blue game background layout sheet
     drawGameArea();
+    drawGround();
 
-    // 2. Draw platforms and stars (they are drawn on the background first)
+    // 2. Draw platforms and stars directly onto that background layer
     platforms.forEach(p => p.render());
     stars.forEach(star => star.render());
 
-    // 3. Render the Blind Fog directly over the background and objects
-    // This will paint black over EVERYTHING, then punch out a clean window 
-    // revealing the platforms, stars, and background only inside the circle!
+    // 3. Render the solid Fog directly on top of the elements
     drawFog();
 
-    // 4. Render the player last so they are always perfectly visible on top
+    // 4. Render the player last so they always stay on top of the fog shadow mask
     player.render();
 
-    // 5. Render your absolute UI sidebars and touch controls over the top of the fog
+    // 5. Render side bars and mobile input layout controls
     drawControlsBackground();
     drawDpad();
     drawJumpButton();

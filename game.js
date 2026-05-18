@@ -377,18 +377,22 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw level layers
+    // 1. Draw the basic dark blue game background
     drawGameArea();
+
+    // 2. Draw platforms and stars (they are drawn on the background first)
     platforms.forEach(p => p.render());
     stars.forEach(star => star.render());
 
-    // 2. Render Blind Fog
+    // 3. Render the Blind Fog directly over the background and objects
+    // This will paint black over EVERYTHING, then punch out a clean window 
+    // revealing the platforms, stars, and background only inside the circle!
     drawFog();
 
-    // 3. Render Player on top of Fog
+    // 4. Render the player last so they are always perfectly visible on top
     player.render();
 
-    // 4. Render UI Elements
+    // 5. Render your absolute UI sidebars and touch controls over the top of the fog
     drawControlsBackground();
     drawDpad();
     drawJumpButton();
@@ -405,6 +409,5 @@ let loop = GameLoop({
       );
     }
   }
-});
 
 loop.start();

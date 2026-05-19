@@ -1,5 +1,3 @@
-import kontra from '../lib/kontra.min.js';
-const { init, initKeys, keyPressed, GameLoop } = kontra;
 import { createGameState, loadLevel, updateGameState } from './game-state.js';
 import { createPlayer, updatePlayerGround } from './player.js';
 import { handlePlatformCollision, checkSpikeCollision, checkStarCollection } from './collisions.js';

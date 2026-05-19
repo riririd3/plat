@@ -1,13 +1,17 @@
-if (typeof window.kontra === 'undefined') {
-    alert('Kontra not loaded! Check your script tags.');
-}
-
-const kontra = window.kontra;
+// js/main.js
+import { waitForKontra, getKontra } from './globals.js';
 import { createGameState, loadLevel, updateGameState } from './game-state.js';
 import { createPlayer, updatePlayerGround } from './player.js';
 import { handlePlatformCollision, checkSpikeCollision, checkStarCollection } from './collisions.js';
 import { setupRendering } from './rendering.js';
 import { setupTouchControls } from './ui-controls.js';
+
+// Wait for kontra to be ready
+let kontra;
+await waitForKontra();
+kontra = getKontra();
+
+console.log('Kontra loaded!', kontra);
 
 // Constants
 const BASE_WIDTH = 960;
@@ -18,8 +22,8 @@ const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
 
 // Initialize kontra
-let { canvas, context } = init("game");
-initKeys();
+let { canvas, context } = kontra.init("game");
+kontra.initKeys();
 
 // Resize handling
 function resizeGame() {
@@ -53,68 +57,59 @@ const gameState = createGameState();
 const gameStateRef = { current: gameState.gameState };
 
 // Create player
-const player = createPlayer(gameStateRef, { current: null }, keyPressed, getGameBounds);
+const player = createPlayer(gameStateRef, { current: null }, kontra.keyPressed, getGameBounds);
 
 // Setup touch controls
 const { touch, resetTouch } = setupTouchControls(
   canvas, getGameBounds,
-  () => loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas), // restart
+  () => loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas),
   () => {
     gameState.currentLevelIndex = 0;
     gameState.totalPlayTime = 0;
     loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas);
-  }, // start game
+  },
   async () => {
     if (!document.fullscreenElement) {
       await document.documentElement.requestFullscreen();
     } else {
       await document.exitFullscreen();
     }
-  }, // fullscreen
+  },
   gameStateRef
 );
 
-// Update touch reference
 touch.current = touch;
 gameStateRef.current = gameState.gameState;
 
-// Setup rendering
 const renderer = setupRendering(canvas, context);
 
-// Initial level load
 loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas);
 
-// Game loop
-let loop = GameLoop({
+let loop = kontra.GameLoop({
   update(dt) {
     if (gameState.gameState === "menu" || gameState.gameState === "victory") return;
     
-    // Update game state
     updateGameState(gameState, 1/60,
-      () => { // Level complete
+      () => {
         gameState.currentLevelIndex++;
         loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas);
       },
-      () => { // Death
+      () => {
         loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas);
       }
     );
     
-    // Update player
     player.update();
     updatePlayerGround(player, canvas);
     
-    // Platform collisions
     for (let platform of gameState.platforms) {
       handlePlatformCollision(player, platform);
     }
     
-    // Spike collisions
     checkSpikeCollision(player, gameState.spikes, () => {
       loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas);
     });
     
-    // Star collection
     checkStarCollection(gameState.stars, player, () => {
       gameState.currentLevelIndex++;
       loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas);
@@ -126,24 +121,19 @@ let loop = GameLoop({
     
     const { gameX, gameWidth, leftUI, rightUI } = getGameBounds();
     
-    // Background
     renderer.drawGameArea(gameX, gameWidth, canvas.height);
     renderer.drawGround(gameX, gameWidth, canvas.height);
     
-    // Game objects
     gameState.platforms.forEach(p => p.render());
     gameState.spikes.forEach(s => s.render());
     gameState.stars.forEach(star => star.render());
     
-    // Fog
     renderer.drawFog(gameX, gameWidth, canvas.height, player);
     
-    // Player
     if (gameState.gameState !== "menu" && gameState.gameState !== "victory") {
       player.render();
     }
     
-    // UI
     renderer.drawControlsBackground(leftUI, rightUI, canvas.width, canvas.height);
     if (gameState.gameState !== "menu" && gameState.gameState !== "victory") {
       renderer.drawDpad(leftUI, canvas.height, touch);
@@ -151,12 +141,10 @@ let loop = GameLoop({
       renderer.drawRestartButton(canvas.width, rightUI);
     }
     
-    // HUD
     renderer.drawUI(leftUI, canvas.height, gameState.currentLevelIndex, 
                    gameState.totalPlayTime, gameState.gameState, gameState.stateTimer,
                    gameX, gameWidth);
     
-    // Menu or victory screen
     if (gameState.gameState === "menu") {
       renderer.drawMenuScreen(gameX, gameWidth, canvas.height);
       renderer.drawMenuButtons(gameX, gameWidth, canvas.height, gameState.gameState);

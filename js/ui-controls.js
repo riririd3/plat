@@ -32,30 +32,32 @@ export function setupTouchControls(canvas, getGameBounds, onRestart, onStartGame
     }
     
     // Menu buttons
-    if (gameStateRef.current === "menu" || gameStateRef.current === "victory") {
-      if (e.type === "touchstart") {
+if (gameStateRef.current === "menu" || gameStateRef.current === "victory") {
+    if (e.type === "touchstart") {
         for (let t of e.targetTouches) {
-          const x = (t.clientX - rect.left) * scaleX;
-          const y = (t.clientY - rect.top) * scaleY;
-          const midX = gameX + gameWidth / 2;
-          
-          // Start button
-          if (x > midX - 100 && x < midX + 100 && 
-              y > canvas.height / 2 - 20 && y < canvas.height / 2 + 30) {
-            onStartGame();
-            return;
-          }
-          
-          // Fullscreen button
-          if (x > midX - 100 && x < midX + 100 && 
-              y > canvas.height / 2 + 45 && y < canvas.height / 2 + 90) {
-            onToggleFullscreen();
-            return;
-          }
+            const x = (t.clientX - rect.left) * scaleX;
+            const y = (t.clientY - rect.top) * scaleY;
+            const midX = gameX + gameWidth / 2;
+            
+            // Start button
+            if (x > midX - 100 && x < midX + 100 && 
+                y > canvas.height / 2 - 20 && y < canvas.height / 2 + 30) {
+                console.log("Start button clicked!"); // ← ADD THIS
+                onStartGame();
+                return;
+            }
+            
+            // Fullscreen button
+            if (x > midX - 100 && x < midX + 100 && 
+                y > canvas.height / 2 + 45 && y < canvas.height / 2 + 90) {
+                console.log("Fullscreen button clicked!"); // ← ADD THIS
+                onToggleFullscreen();
+                return;
+            }
         }
-      }
-      return;
     }
+    return;
+}
     
     // Gameplay controls
     resetTouch();

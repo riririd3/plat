@@ -61,12 +61,18 @@ export function createPlayer(gameStateRef, touchRef, keyPressed, getGameBounds, 
     return player;
 }
 
+// js/player.js
 export function updatePlayerGround(player, canvas, groundHeight = 40) {
     const floor = canvas.height - groundHeight;
+    const wasGrounded = player.grounded;
+    
     if (player.y + player.height >= floor) {
         player.y = floor - player.height;
         player.dy = 0;
         player.grounded = true;
+        if (!wasGrounded) {
+            console.log("Landed on ground at Y:", floor);
+        }
     } else {
         player.grounded = false;
     }

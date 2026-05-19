@@ -1,4 +1,5 @@
 import { LEVEL_MAPS } from './levels.js';
+const kontra = window.kontra;
 
 export function createGameState() {
   return {

@@ -1,12 +1,8 @@
-// Wait for Kontra to be available
-if (typeof kontra === 'undefined') {
-  alert('Waiting for Kontra to load...');
-  // Wait a bit and reload
-  setTimeout(() => {
-    location.reload();
-  }, 100);
+if (typeof window.kontra === 'undefined') {
+    alert('Kontra not loaded! Check your script tags.');
 }
 
+const kontra = window.kontra;
 import { createGameState, loadLevel, updateGameState } from './game-state.js';
 import { createPlayer, updatePlayerGround } from './player.js';
 import { handlePlatformCollision, checkSpikeCollision, checkStarCollection } from './collisions.js';

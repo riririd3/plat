@@ -117,28 +117,29 @@ let loop = kontra.GameLoop({
     update(dt) {
         if (gameState.gameState === "menu" || gameState.gameState === "victory") return;
         
-        // Update game state
-        updateGameState(gameState, 1/60,
-            () => { // Level complete
-                gameState.currentLevelIndex++;
-                loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
-            },
-            () => { // Death
-                loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
-            }
-        );
-        
-        // Update player
-        //player.update();
-        //updatePlayerGround(player, canvas);
-        // In the game loop's update section, add debug:
-player.update();
-console.log("Player position:", player.x, player.y, "Grounded:", player.grounded); // Add this temporarily
-        
-        // Platform collisions
-        for (let platform of gameState.platforms) {
-            handlePlatformCollision(player, platform);
+        // In the game loop update section
+update(dt) {
+    if (gameState.gameState === "menu" || gameState.gameState === "victory") return;
+    
+    // Update game state
+    updateGameState(gameState, 1/60,
+        () => {
+            gameState.currentLevelIndex++;
+            loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
+        },
+        () => {
+            loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
         }
+    );
+    
+    // Update player
+    player.update();
+    updatePlayerGround(player, canvas);  // ← MAKE SURE THIS LINE EXISTS
+    
+    // Platform collisions
+    for (let platform of gameState.platforms) {
+        handlePlatformCollision(player, platform);
+    }
         
         // Spike collisions
         checkSpikeCollision(player, gameState.spikes, () => {

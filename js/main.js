@@ -1,7 +1,7 @@
 import { init, initKeys, keyPressed, GameLoop } from '../lib/kontra.min.js';
 import { createGameState, loadLevel, updateGameState } from './game-state.js';
 import { createPlayer, updatePlayerGround } from './player.js';
-import { handlePlatformCollision, checkSpikeCollision, checkStarCollection } from './collision.js';
+import { handlePlatformCollision, checkSpikeCollision, checkStarCollection } from './collisions.js';
 import { setupRendering } from './rendering.js';
 import { setupTouchControls } from './ui-controls.js';
 

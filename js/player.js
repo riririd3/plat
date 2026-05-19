@@ -1,6 +1,3 @@
-import kontra from '../lib/kontra.min.js';
-const { Sprite } = kontra;
-
 export function createPlayer(gameStateRef, touchRef, keyPressed, getGameBounds) {
   const player = Sprite({
     x: 0, y: 0, width: 32, height: 32, color: "lime", dy: 0, grounded: false,

@@ -1,22 +1,22 @@
 // levels.js
-const LEVEL_MAPS = [
+export const LEVEL_MAPS = [
   {
-    // Level 1: Quick platform step over a floor hazard spike pit
-    playerSpawn: { x: 40, y: 300 }, 
+    // Level 1
+    playerSpawn: { x: 40, y: 300 },
     platforms: [
       { x: 150, y: 400, w: 120, h: 15 },
       { x: 350, y: 280, w: 160, h: 20 }
     ],
     spikes: [
-      { x: 400, y: 400, w:50, h:50 } // Now perfectly visible sitting on the floor!
+      { x: 400, y: 400, w: 50, h: 50 }
     ],
     stars: [
-      { x: 420, y: 460 }
+      { x: 420, y: 460, w: 20, h: 20 }
     ]
   },
   {
-    // Level 2: Higher climbs
-    playerSpawn: { x: 60, y: 400 }, 
+    // Level 2
+    playerSpawn: { x: 60, y: 400 },
     platforms: [
       { x: 80,  y: 380, w: 80,  h: 15 },
       { x: 220, y: 290, w: 80,  h: 15 },
@@ -26,7 +26,7 @@ const LEVEL_MAPS = [
       { x: 240, y: 460, w: 40, h: 40 }
     ],
     stars: [
-      { x: 470, y: 140 }
+      { x: 470, y: 140, w: 20, h: 20 }
     ]
   }
 ];

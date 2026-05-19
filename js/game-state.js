@@ -1,5 +1,3 @@
-import kontra from '../lib/kontra.min.js';
-const { Sprite } = kontra;
 import { LEVEL_MAPS } from './levels.js';
 
 export function createGameState() {

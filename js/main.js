@@ -152,6 +152,7 @@ update(dt) {
             loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
         });
     },
+}
     
     render() {
         context.clearRect(0, 0, canvas.width, canvas.height);

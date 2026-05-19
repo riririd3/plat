@@ -134,25 +134,24 @@ update(dt) {
     
     // Update player
     player.update();
-    updatePlayerGround(player, canvas);  // ← MAKE SURE THIS LINE EXISTS
+    updatePlayerGround(player, canvas);
     
     // Platform collisions
     for (let platform of gameState.platforms) {
         handlePlatformCollision(player, platform);
     }
-        
-        // Spike collisions
-        checkSpikeCollision(player, gameState.spikes, () => {
-            loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
-        });
-        
-        // Star collection
-        checkStarCollection(gameState.stars, player, () => {
-            gameState.currentLevelIndex++;
-            loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
-        });
-    },
-}
+    
+    // Spike collisions
+    checkSpikeCollision(player, gameState.spikes, () => {
+        loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
+    });
+    
+    // Star collection
+    checkStarCollection(gameState.stars, player, () => {
+        gameState.currentLevelIndex++;
+        loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
+    });
+},
     
     render() {
         context.clearRect(0, 0, canvas.width, canvas.height);

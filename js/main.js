@@ -22,7 +22,20 @@ const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
 // Initialize kontra
 let { canvas, context } = kontra.init("game");
 kontra.initKeys();
-
+// Add this right after kontra.initKeys() in main.js
+// Custom keyboard handling for additional keys
+window.addEventListener('keydown', function(e) {
+    if (gameState.gameState === "play") {
+        const key = e.key;
+        if (key === 'ArrowLeft') {
+            // Already handled by kontra
+        } else if (key === 'ArrowRight') {
+            // Already handled by kontra
+        } else if (key === 'ArrowUp' || key === ' ') {
+            e.preventDefault(); // Prevent page scroll
+        }
+    }
+});
 window.canvas = canvas;
 window.context = context;
 

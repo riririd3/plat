@@ -9,7 +9,7 @@ import { setupTouchControls } from './ui-controls.js';
 // Wait for kontra
 await waitForKontra();
 const kontra = getKontra();
-setKontra(kontra); // Make sure it's set globally
+setKontra(kontra);
 
 // Constants
 const BASE_WIDTH = 960;
@@ -23,7 +23,6 @@ const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
 let { canvas, context } = kontra.init("game");
 kontra.initKeys();
 
-// Make canvas globally available for other modules
 window.canvas = canvas;
 window.context = context;
 
@@ -54,8 +53,10 @@ function getGameBounds() {
     };
 }
 
-// Create game state
+// Create game state - FORCE MENU MODE
 const gameState = createGameState();
+gameState.gameState = "menu";  // ← FORCE MENU
+gameState.currentLevelIndex = 0;
 const gameStateRef = { current: gameState.gameState };
 
 // Touch reference
@@ -69,13 +70,14 @@ const { touch, resetTouch } = setupTouchControls(
     canvas, getGameBounds,
     () => {
         // Restart current level
+        console.log("Restarting level");
         loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
     },
     () => {
-        // Start new game
+        // Start new game - THIS IS THE START BUTTON
+        console.log("START GAME clicked!");
         gameState.currentLevelIndex = 0;
         gameState.totalPlayTime = 0;
-        gameState.gameState = "menu";
         loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
     },
     async () => {
@@ -94,9 +96,8 @@ touchRef.current = touch;
 // Setup rendering
 const renderer = setupRendering(canvas, context);
 
-// Initial level load
-console.log("Loading initial level...");
-loadLevel(gameState, player, GAME_X(), GAME_WIDTH(), canvas, kontra);
+// DO NOT load level here - wait for start button!
+console.log("Game ready - waiting for START button");
 
 // Game loop
 let loop = kontra.GameLoop({
@@ -144,20 +145,24 @@ let loop = kontra.GameLoop({
         renderer.drawGameArea(gameX, gameWidth, canvas.height);
         renderer.drawGround(gameX, gameWidth, canvas.height);
         
-        // Game objects
-        gameState.platforms.forEach(p => p.render());
-        gameState.spikes.forEach(s => s.render());
-        gameState.stars.forEach(star => star.render());
+        // Game objects (only render if not in menu)
+        if (gameState.gameState !== "menu") {
+            gameState.platforms.forEach(p => p.render());
+            gameState.spikes.forEach(s => s.render());
+            gameState.stars.forEach(star => star.render());
+        }
         
-        // Fog
-        renderer.drawFog(gameX, gameWidth, canvas.height, player);
+        // Fog (only in play mode)
+        if (gameState.gameState === "play" && player) {
+            renderer.drawFog(gameX, gameWidth, canvas.height, player);
+        }
         
-        // Player
+        // Player (only if not in menu)
         if (gameState.gameState !== "menu" && gameState.gameState !== "victory") {
             player.render();
         }
         
-        // UI
+        // UI Controls (only in game)
         renderer.drawControlsBackground(leftUI, rightUI, canvas.width, canvas.height);
         if (gameState.gameState !== "menu" && gameState.gameState !== "victory") {
             renderer.drawDpad(leftUI, canvas.height, touch);
@@ -165,10 +170,12 @@ let loop = kontra.GameLoop({
             renderer.drawRestartButton(canvas.width, rightUI);
         }
         
-        // HUD
-        renderer.drawUI(leftUI, canvas.height, gameState.currentLevelIndex, 
-                       gameState.totalPlayTime, gameState.gameState, gameState.stateTimer,
-                       gameX, gameWidth);
+        // HUD (only in game)
+        if (gameState.gameState !== "menu") {
+            renderer.drawUI(leftUI, canvas.height, gameState.currentLevelIndex, 
+                           gameState.totalPlayTime, gameState.gameState, gameState.stateTimer,
+                           gameX, gameWidth);
+        }
         
         // Menu or victory screen
         if (gameState.gameState === "menu") {

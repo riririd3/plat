@@ -1,28 +1,34 @@
 // js/globals.js
-// This file waits for kontra to be available
-
-let kontraReady = false;
 let kontraInstance = null;
+let waitPromise = null;
+
+export function setKontra(kontra) {
+    kontraInstance = kontra;
+}
 
 export function getKontra() {
+    if (!kontraInstance) {
+        throw new Error('Kontra not initialized yet!');
+    }
     return kontraInstance;
 }
 
 export function waitForKontra() {
-    return new Promise((resolve) => {
+    if (waitPromise) return waitPromise;
+    
+    waitPromise = new Promise((resolve) => {
         if (window.kontra) {
             kontraInstance = window.kontra;
-            kontraReady = true;
             resolve(kontraInstance);
         } else {
             const checkInterval = setInterval(() => {
                 if (window.kontra) {
                     clearInterval(checkInterval);
                     kontraInstance = window.kontra;
-                    kontraReady = true;
                     resolve(kontraInstance);
                 }
             }, 50);
         }
     });
+    return waitPromise;
 }

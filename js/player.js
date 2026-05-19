@@ -1,4 +1,5 @@
-import { Sprite } from '../lib/kontra.min.js';
+import kontra from '../lib/kontra.min.js';
+const { Sprite } = kontra;
 
 export function createPlayer(gameStateRef, touchRef, keyPressed, getGameBounds) {
   const player = Sprite({

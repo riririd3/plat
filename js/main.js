@@ -116,8 +116,11 @@ let loop = kontra.GameLoop({
         );
         
         // Update player
-        player.update();
-        updatePlayerGround(player, canvas);
+        //player.update();
+        //updatePlayerGround(player, canvas);
+        // In the game loop's update section, add debug:
+player.update();
+console.log("Player position:", player.x, player.y, "Grounded:", player.grounded); // Add this temporarily
         
         // Platform collisions
         for (let platform of gameState.platforms) {

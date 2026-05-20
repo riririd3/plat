@@ -45,6 +45,7 @@ let stars = [];
 
 // Cosmetic Trail System
 let playerTrail = [];
+let starPulseTime = 0; // Global clock to animate stars smoothly
 
 // Touch state
 let touch = { left: false, right: false, jump: false };
@@ -77,8 +78,7 @@ let player = Sprite({
 
     if (this.x < GAME_X()) this.x = GAME_X();
     if (this.x + this.width > GAME_X() + GAME_WIDTH()) this.x = GAME_X() + GAME_WIDTH() - this.width;
-  },
-  render() { this.draw(); }
+  }
 });
 
 function loadLevel(index) {
@@ -94,7 +94,7 @@ function loadLevel(index) {
   platforms = [];
   spikes = [];
   stars = [];
-  playerTrail = []; // Reset visual effects trail on stage swap
+  playerTrail = []; // Reset trail effects
 
   const currentLevel = LEVEL_MAPS[index];
 
@@ -108,7 +108,7 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // 1. Load Platforms (Upgraded Neon Retro Trim Aesthetics)
+  // 1. Load Platforms
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
@@ -116,27 +116,12 @@ function loadLevel(index) {
         y: p.y, 
         width: p.w, 
         height: p.h, 
-        color: "#334155",
-        render() {
-          context.save();
-          // Drop Shadow Canvas Blueprint Accent Layer
-          context.fillStyle = "#1e293b";
-          context.fillRect(this.x + 4, this.y + 4, this.width, this.height);
-          
-          // Primary core geometry fill
-          context.fillStyle = this.color;
-          context.fillRect(this.x, this.y, this.width, this.height);
-          
-          // Cyberpunk glowing ledge top rim highlights
-          context.fillStyle = "#6366f1"; 
-          context.fillRect(this.x, this.y, this.width, 3);
-          context.restore();
-        }
+        color: "#334155"
       }));
     });
   }
 
-  // 2. Load Spikes (Fixed Math Precision Transformations)
+  // 2. Load Spikes
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
@@ -144,25 +129,12 @@ function loadLevel(index) {
         y: s.y, 
         width: s.w,
         height: s.h,
-        color: "#ef4444",
-        render() {
-          context.save();
-          context.translate(this.x + this.width / 2, this.y + this.height / 2);
-          
-          context.fillStyle = this.color;
-          context.beginPath();
-          context.moveTo(0, -this.height / 2);
-          context.lineTo(-this.width / 2, this.height / 2);
-          context.lineTo(this.width / 2, this.height / 2);
-          context.closePath();
-          context.fill();
-          context.restore();
-        }
+        color: "#ef4444"
       }));
     });
   }
 
-  // 3. Load Stars (Upgraded Smooth Hover and Diamond Rotation)
+  // 3. Load Stars
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {
       stars.push(Sprite({
@@ -171,31 +143,7 @@ function loadLevel(index) {
         width: 20, 
         height: 20, 
         color: "gold", 
-        pickedUp: false,
-        pulseTime: 0,
-        render() { 
-          if (this.pickedUp) return;
-          
-          this.pulseTime += 0.05;
-          let hoverY = Math.sin(this.pulseTime) * 4;
-          let auraScale = 1.0 + Math.abs(Math.sin(this.pulseTime * 0.5)) * 0.6;
-
-          context.save();
-          context.translate(this.x + this.width / 2, this.y + this.height / 2 + hoverY);
-          
-          // Ambient Glow Background Radar Circle Layer
-          context.globalAlpha = 0.25;
-          context.fillStyle = this.color;
-          context.beginPath();
-          context.arc(0, 0, (this.width / 2) * auraScale, 0, Math.PI * 2);
-          context.fill();
-          
-          // Spinning Diamond Prismatic Token Core Layer
-          context.globalAlpha = 1.0;
-          context.rotate(this.pulseTime * 0.2);
-          context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-          context.restore();
-        }
+        pickedUp: false
       }));
     });
   }
@@ -209,7 +157,7 @@ function drawGameArea() {
   context.fillStyle = gradient;
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // Dynamic moving tech background wire lines configuration
+  // Dynamic moving gridlines
   context.save();
   context.strokeStyle = "rgba(99, 102, 241, 0.08)"; 
   context.lineWidth = 1;
@@ -404,6 +352,7 @@ let loop = GameLoop({
     if (gameState === "menu" || gameState === "victory") return;
 
     totalPlayTime += 1 / 60;
+    starPulseTime += 0.05; // Animate global cosmetic clock timer
 
     if (gameState === "memorize") {
       stateTimer -= 1 / 60;
@@ -412,7 +361,7 @@ let loop = GameLoop({
 
     player.update();
 
-    // Player ghost speed trail positioning matrix tracker
+    // Player ghost trail array management
     if (gameState === "play") {
       playerTrail.push({ x: player.x, y: player.y, alpha: 0.45 });
       if (playerTrail.length > 8) playerTrail.shift();
@@ -466,16 +415,66 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Layer 1: Background Universe
     drawGameArea();
     drawGround();
 
-    platforms.forEach(p => p.render());
-    spikes.forEach(s => s.render());
-    stars.forEach(star => star.render());
+    // Layer 2: Custom Render Platforms (Forced Canvas Overrides)
+    platforms.forEach(p => {
+      context.save();
+      // Drop Shadow
+      context.fillStyle = "#1e293b";
+      context.fillRect(p.x + 4, p.y + 4, p.width, p.height);
+      // Main Platform Block Fill
+      context.fillStyle = p.color;
+      context.fillRect(p.x, p.y, p.width, p.height);
+      // Cyber Glowing Neon Rim Ledge
+      context.fillStyle = "#6366f1"; 
+      context.fillRect(p.x, p.y, p.width, 3);
+      context.restore();
+    });
 
+    // Layer 3: Custom Render Spikes
+    spikes.forEach(s => {
+      context.save();
+      context.translate(s.x + s.width / 2, s.y + s.height / 2);
+      context.fillStyle = s.color;
+      context.beginPath();
+      context.moveTo(0, -s.height / 2);
+      context.lineTo(-s.width / 2, s.height / 2);
+      context.lineTo(s.width / 2, s.height / 2);
+      context.closePath();
+      context.fill();
+      context.restore();
+    });
+
+    // Layer 4: Custom Render Stars (Floating Wave Matrix Calculations)
+    stars.forEach(star => {
+      if (star.pickedUp) return;
+      let hoverY = Math.sin(starPulseTime) * 4;
+      let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
+
+      context.save();
+      context.translate(star.x + star.width / 2, star.y + star.height / 2 + hoverY);
+      
+      // Outer Glow Aura Circular Pulse
+      context.globalAlpha = 0.25;
+      context.fillStyle = star.color;
+      context.beginPath();
+      context.arc(0, 0, (star.width / 2) * auraScale, 0, Math.PI * 2);
+      context.fill();
+      
+      // Central Spinning Diamond Core
+      context.globalAlpha = 1.0;
+      context.rotate(starPulseTime * 0.2);
+      context.fillRect(-star.width / 2, -star.height / 2, star.width, star.height);
+      context.restore();
+    });
+
+    // Layer 5: Blind Spotlight Masking Fog
     drawFog();
 
-    // Render Speed Ghost trail steps right behind active player asset context
+    // Layer 6: Player Speed Ghost Trail Effects & Active Character Render
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {
@@ -487,9 +486,14 @@ let loop = GameLoop({
         }
       });
       
-      player.render();
+      // Render main character block container safely
+      context.save();
+      context.fillStyle = player.color;
+      context.fillRect(player.x, player.y, player.width, player.height);
+      context.restore();
     }
 
+    // Layer 7: Control Panels Overlay
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") {
       drawDpad();
@@ -497,7 +501,7 @@ let loop = GameLoop({
       drawRestartButton();
     }
 
-    // UI Panel Render Text
+    // Layer 8: Text Overlays UI Layout Frame Engine
     context.fillStyle = "white";
     context.font = "bold 16px Arial";
     context.textAlign = "center";

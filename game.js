@@ -122,13 +122,18 @@ function loadLevel(index) {
       width: s.w,
       height: s.h,
       color: "#ef4444",
-      render() { 
-        this.draw();  // ← Use this instead of custom fillRect
+      render() {
+        context.fillStyle = this.color;
+        context.beginPath();
+        context.moveTo(this.x + this.width/2, this.y);      // Top point
+        context.lineTo(this.x, this.y + this.height);       // Bottom left
+        context.lineTo(this.x + this.width, this.y + this.height); // Bottom right
+        context.closePath();
+        context.fill();
       }
     }));
   });
 }
-
   // Load Stars
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {

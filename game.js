@@ -43,6 +43,9 @@ let platforms = [];
 let spikes = [];
 let stars = [];
 
+// Cosmetic Trail System
+let playerTrail = [];
+
 // Touch state
 let touch = { left: false, right: false, jump: false };
 
@@ -91,126 +94,122 @@ function loadLevel(index) {
   platforms = [];
   spikes = [];
   stars = [];
+  playerTrail = []; // Reset visual effects trail on stage swap
 
   const currentLevel = LEVEL_MAPS[index];
 
-if (currentLevel.playerSpawn) {
-  player.x = GAME_X() + currentLevel.playerSpawn.x;
-  player.y = currentLevel.playerSpawn.y;
-} else {
-  player.x = GAME_X() + 40;
-  player.y = canvas.height - 120;
-}
-player.dy = 0;
-player.grounded = false;
+  if (currentLevel.playerSpawn) {
+    player.x = GAME_X() + currentLevel.playerSpawn.x;
+    player.y = currentLevel.playerSpawn.y;
+  } else {
+    player.x = GAME_X() + 40;
+    player.y = canvas.height - 120;
+  }
+  player.dy = 0;
+  player.grounded = false;
 
-// 1. Load Platforms (Properly Separated)
-if (currentLevel.platforms) {
-  currentLevel.platforms.forEach(p => {
-    platforms.push(Sprite({
-      x: GAME_X() + p.x, 
-      y: p.y, 
-      width: p.w, 
-      height: p.h, 
-      color: "#334155",
-      render() {
-        context.save();
-        // Dark Core Drop Shadow
-        context.fillStyle = "#1e293b";
-        context.fillRect(this.x + 4, this.y + 4, this.width, this.height);
-        
-        // Main Platform Fill
-        context.fillStyle = this.color;
-        context.fillRect(this.x, this.y, this.width, this.height);
-        
-        // Cyber Neon Top Rim Trim Glow
-        context.fillStyle = "#6366f1"; 
-        context.fillRect(this.x, this.y, this.width, 3);
-        context.restore();
-      }
-    }));
-  }); // <-- Fixed: Closes the platform forEach loop cleanly
-}
+  // 1. Load Platforms (Upgraded Neon Retro Trim Aesthetics)
+  if (currentLevel.platforms) {
+    currentLevel.platforms.forEach(p => {
+      platforms.push(Sprite({
+        x: GAME_X() + p.x, 
+        y: p.y, 
+        width: p.w, 
+        height: p.h, 
+        color: "#334155",
+        render() {
+          context.save();
+          // Drop Shadow Canvas Blueprint Accent Layer
+          context.fillStyle = "#1e293b";
+          context.fillRect(this.x + 4, this.y + 4, this.width, this.height);
+          
+          // Primary core geometry fill
+          context.fillStyle = this.color;
+          context.fillRect(this.x, this.y, this.width, this.height);
+          
+          // Cyberpunk glowing ledge top rim highlights
+          context.fillStyle = "#6366f1"; 
+          context.fillRect(this.x, this.y, this.width, 3);
+          context.restore();
+        }
+      }));
+    });
+  }
 
-// 2. Load Spikes (Properly Separated & Math Fixed)
-if (currentLevel.spikes) {
-  currentLevel.spikes.forEach(s => {
-    spikes.push(Sprite({
-      x: GAME_X() + s.x, 
-      y: s.y, 
-      width: s.w,
-      height: s.h,
-      color: "#ef4444",
-      render() {
-        context.save();
-        // Move canvas origin to the middle of the spike box bounding box
-        context.translate(this.x + this.width / 2, this.y + this.height / 2);
-        
-        // Note: Removing the 45-degree rotation because rotating a standard triangle 
-        // makes it sideways! If you want classic sharp upward spikes, leave rotation out.
-        
-        context.fillStyle = this.color;
-        context.beginPath();
-        // Since origin is center (0,0):
-        context.moveTo(0, -this.height / 2);                  // Top Point
-        context.lineTo(-this.width / 2, this.height / 2);    // Bottom Left Point
-        context.lineTo(this.width / 2, this.height / 2);     // Bottom Right Point
-        context.closePath();
-        context.fill();
-        context.restore();
-      }
-    }));
-  }); // <-- Fixed: Closes the spike forEach loop cleanly
-}
+  // 2. Load Spikes (Fixed Math Precision Transformations)
+  if (currentLevel.spikes) {
+    currentLevel.spikes.forEach(s => {
+      spikes.push(Sprite({
+        x: GAME_X() + s.x, 
+        y: s.y, 
+        width: s.w,
+        height: s.h,
+        color: "#ef4444",
+        render() {
+          context.save();
+          context.translate(this.x + this.width / 2, this.y + this.height / 2);
+          
+          context.fillStyle = this.color;
+          context.beginPath();
+          context.moveTo(0, -this.height / 2);
+          context.lineTo(-this.width / 2, this.height / 2);
+          context.lineTo(this.width / 2, this.height / 2);
+          context.closePath();
+          context.fill();
+          context.restore();
+        }
+      }));
+    });
+  }
 
-// 3. Load Stars (Properly Separated)
-if (currentLevel.stars) {
-  currentLevel.stars.forEach(s => {
-    stars.push(Sprite({
-      x: GAME_X() + s.x, 
-      y: s.y, 
-      width: 20, 
-      height: 20, 
-      color: "gold", 
-      pickedUp: false,
-      pulseTime: 0,
-      render() { 
-        if (this.pickedUp) return;
-        
-        this.pulseTime += 0.05;
-        let hoverY = Math.sin(this.pulseTime) * 4;
-        let auraScale = 1.0 + Math.abs(Math.sin(this.pulseTime * 0.5)) * 0.6;
+  // 3. Load Stars (Upgraded Smooth Hover and Diamond Rotation)
+  if (currentLevel.stars) {
+    currentLevel.stars.forEach(s => {
+      stars.push(Sprite({
+        x: GAME_X() + s.x, 
+        y: s.y, 
+        width: 20, 
+        height: 20, 
+        color: "gold", 
+        pickedUp: false,
+        pulseTime: 0,
+        render() { 
+          if (this.pickedUp) return;
+          
+          this.pulseTime += 0.05;
+          let hoverY = Math.sin(this.pulseTime) * 4;
+          let auraScale = 1.0 + Math.abs(Math.sin(this.pulseTime * 0.5)) * 0.6;
 
-        context.save();
-        context.translate(this.x + this.width / 2, this.y + this.height / 2 + hoverY);
-        
-        // Glowing Background Aura Ring
-        context.globalAlpha = 0.25;
-        context.fillStyle = this.color;
-        context.beginPath();
-        context.arc(0, 0, (this.width / 2) * auraScale, 0, Math.PI * 2);
-        context.fill();
-        
-        // Rotating Core Gem
-        context.globalAlpha = 1.0;
-        context.rotate(this.pulseTime * 0.2);
-        context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        context.restore();
-      }
-    }));
-  }); // <-- Fixed: Closes the star forEach loop cleanly
+          context.save();
+          context.translate(this.x + this.width / 2, this.y + this.height / 2 + hoverY);
+          
+          // Ambient Glow Background Radar Circle Layer
+          context.globalAlpha = 0.25;
+          context.fillStyle = this.color;
+          context.beginPath();
+          context.arc(0, 0, (this.width / 2) * auraScale, 0, Math.PI * 2);
+          context.fill();
+          
+          // Spinning Diamond Prismatic Token Core Layer
+          context.globalAlpha = 1.0;
+          context.rotate(this.pulseTime * 0.2);
+          context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+          context.restore();
+        }
+      }));
+    });
+  }
 }
 
-// 4. Cyberpunk Grid Rendering Layout Blocks
+// 4. Cyberpunk Grid Rendering Space Layouts
 function drawGameArea() {
-  // Deep Tech Purple Base Gradient
   let gradient = context.createLinearGradient(GAME_X(), 0, GAME_X(), canvas.height);
   gradient.addColorStop(0, "#0f172a"); 
   gradient.addColorStop(1, "#1e1e38"); 
   context.fillStyle = gradient;
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // Parallax Moving Matrix Grid Lines
+  // Dynamic moving tech background wire lines configuration
   context.save();
   context.strokeStyle = "rgba(99, 102, 241, 0.08)"; 
   context.lineWidth = 1;
@@ -276,7 +275,6 @@ function drawRestartButton() {
 function drawMenuButtons() {
   const midX = GAME_X() + GAME_WIDTH() / 2;
   
-  // 1. START GAME BUTTON LAYER
   const startX = midX - startMenuBtn.w / 2;
   const startY = canvas.height / 2 - 20;
   context.save();
@@ -287,7 +285,6 @@ function drawMenuButtons() {
   context.textAlign = "center";
   context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31);
 
-  // 2. FULLSCREEN BUTTON LAYER (Moved beside/underneath start button)
   const fullX = midX - centerFullBtn.w / 2;
   const fullY = startY + startMenuBtn.h + 15;
   context.fillStyle = "#3b82f6";
@@ -331,7 +328,6 @@ function handleTouch(e) {
 
   let activeTouches = e.type === "touchend" ? e.touches : e.targetTouches;
 
-  // 1. SIDEBAR INTERACTIONS (Restart button active check)
   for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX;
     const y = (t.clientY - rect.top) * scaleY;
@@ -348,7 +344,6 @@ function handleTouch(e) {
     }
   }
 
-  // 2. CENTRAL MENU SCREEN OVERLAY INTERSECTIONS
   if (gameState === "menu" || gameState === "victory") {
     if (e.type === "touchstart") {
       for (let t of e.targetTouches) {
@@ -362,7 +357,6 @@ function handleTouch(e) {
         const fullX = midX - centerFullBtn.w / 2;
         const fullY = startY + startMenuBtn.h + 15;
 
-        // Check if user clicked START GAME box
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           currentLevelIndex = 0;
           totalPlayTime = 0.0;
@@ -370,7 +364,6 @@ function handleTouch(e) {
           return;
         }
 
-        // Check if user clicked FULLSCREEN box
         if (x > fullX && x < fullX + centerFullBtn.w && y > fullY && y < fullY + centerFullBtn.h) {
           toggleFullscreen().catch(err => console.log("Fullscreen blocked"));
           return;
@@ -380,7 +373,6 @@ function handleTouch(e) {
     return;
   }
 
-  // 3. RUNNING STAGE MOVEMENT INPUTS
   resetTouch();
   for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX;
@@ -420,7 +412,13 @@ let loop = GameLoop({
 
     player.update();
 
-    // Floor Boundary resolution
+    // Player ghost speed trail positioning matrix tracker
+    if (gameState === "play") {
+      playerTrail.push({ x: player.x, y: player.y, alpha: 0.45 });
+      if (playerTrail.length > 8) playerTrail.shift();
+      playerTrail.forEach(t => t.alpha -= 0.04);
+    }
+
     player.grounded = false;
     const floor = canvas.height - 40;
     if (player.y + player.height >= floor) {
@@ -429,7 +427,6 @@ let loop = GameLoop({
       player.grounded = true;
     }
 
-    // Platform Block resolution
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -449,7 +446,6 @@ let loop = GameLoop({
       }
     }
 
-    // Spike Collision Detection
     for (let spike of spikes) {
       if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
           player.y < spike.y + spike.height && player.y + player.height > spike.y) {
@@ -457,7 +453,6 @@ let loop = GameLoop({
       }
     }
 
-    // Star Collection Detection
     for (let star of stars) {
       if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
           player.y < star.y + star.height && player.y + player.height > star.y) {
@@ -471,24 +466,30 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Layer 1 & 2: Background Canvas Layouts
     drawGameArea();
     drawGround();
 
-    // Layer 3: Active Map Components
     platforms.forEach(p => p.render());
     spikes.forEach(s => s.render());
     stars.forEach(star => star.render());
 
-    // Layer 4: Flashlight Overlay Filter
     drawFog();
 
-    // Layer 5: Character Box
+    // Render Speed Ghost trail steps right behind active player asset context
     if (gameState !== "menu" && gameState !== "victory") {
+      playerTrail.forEach(t => {
+        if (t.alpha > 0) {
+          context.save();
+          context.globalAlpha = t.alpha;
+          context.fillStyle = "#22c55e"; 
+          context.fillRect(t.x, t.y, player.width, player.height);
+          context.restore();
+        }
+      });
+      
       player.render();
     }
 
-    // Layer 6: Static Controls Context
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") {
       drawDpad();
@@ -496,7 +497,7 @@ let loop = GameLoop({
       drawRestartButton();
     }
 
-    // Layer 7: Head-up Display Panels
+    // UI Panel Render Text
     context.fillStyle = "white";
     context.font = "bold 16px Arial";
     context.textAlign = "center";
@@ -530,6 +531,5 @@ let loop = GameLoop({
   }
 });
 
-// Setup initial structural properties safely before kicking off engine
 gameState = "menu"; 
 loop.start();

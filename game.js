@@ -104,16 +104,31 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // Load Platforms
-  if (currentLevel.platforms) {
-    currentLevel.platforms.forEach(p => {
-      platforms.push(Sprite({
-        x: GAME_X() + p.x, y: p.y, width: p.w, height: p.h, color: "#64748b",
-        render() { this.draw(); }
-      }));
-    });
+if (currentLevel.platforms) {
+  currentLevel.platforms.forEach(p => {
+platforms.push(Sprite({
+  x: GAME_X() + p.x, 
+  y: p.y, 
+  width: p.w, 
+  height: p.h, 
+  color: "#334155",
+  render() {
+    context.save();
+    // 1. Dark Core Drop Shadow
+    context.fillStyle = "#1e293b";
+    context.fillRect(this.x + 4, this.y + 4, this.width, this.height);
+    
+    // 2. Main Platform Fill
+    context.fillStyle = this.color;
+    context.fillRect(this.x, this.y, this.width, this.height);
+    
+    // 3. Cyber Neon Top Rim Trim Glow
+    context.fillStyle = "#6366f1"; // Bright Indigo Edge
+    context.fillRect(this.x, this.y, this.width, 3);
+    context.restore();
   }
-  
+}));
+
   if (currentLevel.spikes) {
   currentLevel.spikes.forEach(s => {
     spikes.push(Sprite({
@@ -122,17 +137,18 @@ function loadLevel(index) {
       width: s.w,
       height: s.h,
       color: "#ef4444",
-      render() {
-        context.fillStyle = this.color;
-        context.beginPath();
-        context.moveTo(this.x + this.width/2, this.y);      // Top point
-        context.lineTo(this.x, this.y + this.height);       // Bottom left
-        context.lineTo(this.x + this.width, this.y + this.height); // Bottom right
-        context.closePath();
-        context.fill();
-      }
-    }));
-  });
+  render() {
+  context.save();
+  context.translate(this.x + this.width/2, this.y + this.height/2);
+  context.rotate(Math.PI / 4); // 45 degree rotation
+  context.fillStyle = this.color;
+  context.beginPath();
+  context.moveTo(0, -this.height/2);
+  context.lineTo(-this.width/2, this.height/2);
+  context.lineTo(this.width/2, this.height/2);
+  context.closePath();
+  context.fill();
+  context.restore();
 }
   // Load Stars
   if (currentLevel.stars) {

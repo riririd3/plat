@@ -94,42 +94,46 @@ function loadLevel(index) {
 
   const currentLevel = LEVEL_MAPS[index];
 
-  if (currentLevel.playerSpawn) {
-    player.x = GAME_X() + currentLevel.playerSpawn.x;
-    player.y = currentLevel.playerSpawn.y;
-  } else {
-    player.x = GAME_X() + 40;
-    player.y = canvas.height - 120;
-  }
-  player.dy = 0;
-  player.grounded = false;
+if (currentLevel.playerSpawn) {
+  player.x = GAME_X() + currentLevel.playerSpawn.x;
+  player.y = currentLevel.playerSpawn.y;
+} else {
+  player.x = GAME_X() + 40;
+  player.y = canvas.height - 120;
+}
+player.dy = 0;
+player.grounded = false;
 
+// 1. Load Platforms (Properly Separated)
 if (currentLevel.platforms) {
   currentLevel.platforms.forEach(p => {
-platforms.push(Sprite({
-  x: GAME_X() + p.x, 
-  y: p.y, 
-  width: p.w, 
-  height: p.h, 
-  color: "#334155",
-  render() {
-    context.save();
-    // 1. Dark Core Drop Shadow
-    context.fillStyle = "#1e293b";
-    context.fillRect(this.x + 4, this.y + 4, this.width, this.height);
-    
-    // 2. Main Platform Fill
-    context.fillStyle = this.color;
-    context.fillRect(this.x, this.y, this.width, this.height);
-    
-    // 3. Cyber Neon Top Rim Trim Glow
-    context.fillStyle = "#6366f1"; // Bright Indigo Edge
-    context.fillRect(this.x, this.y, this.width, 3);
-    context.restore();
-  }
-}));
+    platforms.push(Sprite({
+      x: GAME_X() + p.x, 
+      y: p.y, 
+      width: p.w, 
+      height: p.h, 
+      color: "#334155",
+      render() {
+        context.save();
+        // Dark Core Drop Shadow
+        context.fillStyle = "#1e293b";
+        context.fillRect(this.x + 4, this.y + 4, this.width, this.height);
+        
+        // Main Platform Fill
+        context.fillStyle = this.color;
+        context.fillRect(this.x, this.y, this.width, this.height);
+        
+        // Cyber Neon Top Rim Trim Glow
+        context.fillStyle = "#6366f1"; 
+        context.fillRect(this.x, this.y, this.width, 3);
+        context.restore();
+      }
+    }));
+  }); // <-- Fixed: Closes the platform forEach loop cleanly
+}
 
-  if (currentLevel.spikes) {
+// 2. Load Spikes (Properly Separated & Math Fixed)
+if (currentLevel.spikes) {
   currentLevel.spikes.forEach(s => {
     spikes.push(Sprite({
       x: GAME_X() + s.x, 
@@ -137,34 +141,88 @@ platforms.push(Sprite({
       width: s.w,
       height: s.h,
       color: "#ef4444",
-  render() {
-  context.save();
-  context.translate(this.x + this.width/2, this.y + this.height/2);
-  context.rotate(Math.PI / 4); // 45 degree rotation
-  context.fillStyle = this.color;
-  context.beginPath();
-  context.moveTo(0, -this.height/2);
-  context.lineTo(-this.width/2, this.height/2);
-  context.lineTo(this.width/2, this.height/2);
-  context.closePath();
-  context.fill();
-  context.restore();
-}
-  // Load Stars
-  if (currentLevel.stars) {
-    currentLevel.stars.forEach(s => {
-      stars.push(Sprite({
-        x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "gold", pickedUp: false,
-        render() { if (!this.pickedUp) this.draw(); }
-      }));
-    });
-  }
+      render() {
+        context.save();
+        // Move canvas origin to the middle of the spike box bounding box
+        context.translate(this.x + this.width / 2, this.y + this.height / 2);
+        
+        // Note: Removing the 45-degree rotation because rotating a standard triangle 
+        // makes it sideways! If you want classic sharp upward spikes, leave rotation out.
+        
+        context.fillStyle = this.color;
+        context.beginPath();
+        // Since origin is center (0,0):
+        context.moveTo(0, -this.height / 2);                  // Top Point
+        context.lineTo(-this.width / 2, this.height / 2);    // Bottom Left Point
+        context.lineTo(this.width / 2, this.height / 2);     // Bottom Right Point
+        context.closePath();
+        context.fill();
+        context.restore();
+      }
+    }));
+  }); // <-- Fixed: Closes the spike forEach loop cleanly
 }
 
-// Rendering Layout Blocks
+// 3. Load Stars (Properly Separated)
+if (currentLevel.stars) {
+  currentLevel.stars.forEach(s => {
+    stars.push(Sprite({
+      x: GAME_X() + s.x, 
+      y: s.y, 
+      width: 20, 
+      height: 20, 
+      color: "gold", 
+      pickedUp: false,
+      pulseTime: 0,
+      render() { 
+        if (this.pickedUp) return;
+        
+        this.pulseTime += 0.05;
+        let hoverY = Math.sin(this.pulseTime) * 4;
+        let auraScale = 1.0 + Math.abs(Math.sin(this.pulseTime * 0.5)) * 0.6;
+
+        context.save();
+        context.translate(this.x + this.width / 2, this.y + this.height / 2 + hoverY);
+        
+        // Glowing Background Aura Ring
+        context.globalAlpha = 0.25;
+        context.fillStyle = this.color;
+        context.beginPath();
+        context.arc(0, 0, (this.width / 2) * auraScale, 0, Math.PI * 2);
+        context.fill();
+        
+        // Rotating Core Gem
+        context.globalAlpha = 1.0;
+        context.rotate(this.pulseTime * 0.2);
+        context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        context.restore();
+      }
+    }));
+  }); // <-- Fixed: Closes the star forEach loop cleanly
+}
+
+// 4. Cyberpunk Grid Rendering Layout Blocks
 function drawGameArea() {
-  context.fillStyle = "#1e293b";
+  // Deep Tech Purple Base Gradient
+  let gradient = context.createLinearGradient(GAME_X(), 0, GAME_X(), canvas.height);
+  gradient.addColorStop(0, "#0f172a"); 
+  gradient.addColorStop(1, "#1e1e38"); 
+  context.fillStyle = gradient;
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
+
+  // Parallax Moving Matrix Grid Lines
+  context.save();
+  context.strokeStyle = "rgba(99, 102, 241, 0.08)"; 
+  context.lineWidth = 1;
+  
+  let offsetX = (GAME_X() - (player.x * 0.1)) % 40;
+  for (let x = GAME_X() + offsetX; x < GAME_X() + GAME_WIDTH(); x += 40) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, canvas.height);
+    context.stroke();
+  }
+  context.restore();
 }
 
 function drawGround() {

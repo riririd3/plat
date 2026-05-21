@@ -43,6 +43,7 @@ let platforms = [];
 let spikes = [];
 let stars = [];
 let particles = [];
+
 // Cosmetic Trail System
 let playerTrail = [];
 let starPulseTime = 0; // Global clock to animate stars smoothly
@@ -76,20 +77,18 @@ let player = Sprite({
     this.dy += 0.5;
     this.y += this.dy;
 
-    // 🔄 SCREEN WRAP-AROUND LOGIC
-// If player goes entirely off the left edge, teleport them to the far right edge
-if (this.x + this.width < GAME_X()) {
-  this.x = GAME_X() + GAME_WIDTH() - 1; 
-} 
-// If player goes entirely off the right edge, teleport them to the far left edge
-else if (this.x > GAME_X() + GAME_WIDTH()) {
-  this.x = GAME_X() - this.width + 1;
-}}
+    // SCREEN WRAP-AROUND LOGIC
+    if (this.x + this.width < GAME_X()) {
+      this.x = GAME_X() + GAME_WIDTH() - 1; 
+    } 
+    else if (this.x > GAME_X() + GAME_WIDTH()) {
+      this.x = GAME_X() - this.width + 1;
+    }
+  }
 });
 
 function spawnExplosion(originX, originY, spawnColor, count = 20) {
   for (let i = 0; i < count; i++) {
-    // Generate a random angle and explosion force
     let angle = Math.random() * Math.PI * 2;
     let speed = 1 + Math.random() * 4;
 
@@ -100,7 +99,7 @@ function spawnExplosion(originX, originY, spawnColor, count = 20) {
       vy: Math.sin(angle) * speed,
       size: 4 + Math.random() * 6,
       alpha: 1.0,
-      decay: 0.02 + Math.random() * 0.02, // How fast it fades out
+      decay: 0.02 + Math.random() * 0.02, 
       color: spawnColor
     });
   }
@@ -119,7 +118,7 @@ function loadLevel(index) {
   platforms = [];
   spikes = [];
   stars = [];
-  playerTrail = []; // Reset trail effects
+  playerTrail = []; 
 
   const currentLevel = LEVEL_MAPS[index];
 
@@ -174,7 +173,7 @@ function loadLevel(index) {
   }
 }
 
-// 4. Cyberpunk Grid Rendering Space Layouts
+// Cyberpunk Grid Rendering Space Layouts
 function drawGameArea() {
   let gradient = context.createLinearGradient(GAME_X(), 0, GAME_X(), canvas.height);
   gradient.addColorStop(0, "#0f172a"); 
@@ -182,7 +181,6 @@ function drawGameArea() {
   context.fillStyle = gradient;
   context.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // Dynamic moving gridlines
   context.save();
   context.strokeStyle = "rgba(99, 102, 241, 0.08)"; 
   context.lineWidth = 1;
@@ -373,24 +371,24 @@ canvas.addEventListener("touchend", handleTouch, { passive: false });
 
 // Core Loop Engine
 let loop = GameLoop({
-  // Update particles physics and fade cycles
-for (let i = particles.length - 1; i >= 0; i--) {
-  let p = particles[i];
-  p.x += p.vx;
-  p.y += p.vy;
-  p.vy += 0.1; // Add a tiny bit of gravity to make them arc downward nicely!
-  p.alpha -= p.decay;
-
-  // Remove dead particles from memory
-  if (p.alpha <= 0) {
-    particles.splice(i, 1);
-  }
-}
   update() {
+    // 1. Move Particle update simulation loops inside update() where they belong!
+    for (let i = particles.length - 1; i >= 0; i--) {
+      let p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.1; 
+      p.alpha -= p.decay;
+
+      if (p.alpha <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+
     if (gameState === "menu" || gameState === "victory") return;
 
     totalPlayTime += 1 / 60;
-    starPulseTime += 0.05; // Animate global cosmetic clock timer
+    starPulseTime += 0.05; 
 
     if (gameState === "memorize") {
       stateTimer -= 1 / 60;
@@ -399,7 +397,6 @@ for (let i = particles.length - 1; i >= 0; i--) {
 
     player.update();
 
-    // Player ghost trail array management
     if (gameState === "play") {
       playerTrail.push({ x: player.x, y: player.y, alpha: 0.45 });
       if (playerTrail.length > 8) playerTrail.shift();
@@ -434,57 +431,44 @@ for (let i = particles.length - 1; i >= 0; i--) {
     }
 
     for (let spike of spikes) {
-  if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
-      player.y < spike.y + spike.height && player.y + player.height > spike.y) {
-    
-    // 💥 ADD THIS LINE RIGHT HERE BEFORE RESETTING THE LEVEL:
-    spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
-
-    loadLevel(currentLevelIndex); 
-  }
-}
+      if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
+          player.y < spike.y + spike.height && player.y + player.height > spike.y) {
+        spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
+        loadLevel(currentLevelIndex); 
+      }
+    }
 
     for (let star of stars) {
-  if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
-      player.y < star.y + star.height && player.y + player.height > star.y) {
-    star.pickedUp = true;
-    
-    // 🌟 ADD THIS LINE RIGHT HERE BEFORE LOADING THE STAGE:
-    spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
-
-    currentLevelIndex++;
-    loadLevel(currentLevelIndex);
-  }
-}
+      if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
+          player.y < star.y + star.height && player.y + player.height > star.y) {
+        star.pickedUp = true;
+        spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
+        currentLevelIndex++;
+        loadLevel(currentLevelIndex);
+      }
+    }
+  }, // <-- Clean comma separating update and render methods
 
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Layer 1: Background Universe
     drawGameArea();
     drawGround();
 
-    // Layer 2: Custom Render Platforms (Upgraded: Full Border Neon Glow)
     platforms.forEach(p => {
       context.save();
-      // 1. Drop Shadow (shifted right and down)
       context.fillStyle = "#1e293b";
       context.fillRect(p.x + 4, p.y + 4, p.width, p.height);
 
-      // 2. Main Platform Body Fill
       context.fillStyle = p.color;
       context.fillRect(p.x, p.y, p.width, p.height);
 
-      // 3. Cyber Neon Border Trim (Glow Outline around all 4 sides)
-      context.strokeStyle = "#6366f1"; // Bright Indigo Edge
-      context.lineWidth = 3;           // Matches your original 3px thickness
-      
-      // We use strokeRect to draw a clean frame perfectly around the box
+      context.strokeStyle = "#6366f1"; 
+      context.lineWidth = 3;           
       context.strokeRect(p.x, p.y, p.width, p.height);
       context.restore();
     });
 
-    // Layer 3: Custom Render Spikes
     spikes.forEach(s => {
       context.save();
       context.translate(s.x + s.width / 2, s.y + s.height / 2);
@@ -498,7 +482,6 @@ for (let i = particles.length - 1; i >= 0; i--) {
       context.restore();
     });
 
-    // Layer 4: Custom Render Stars (Floating Wave Matrix Calculations)
     stars.forEach(star => {
       if (star.pickedUp) return;
       let hoverY = Math.sin(starPulseTime) * 4;
@@ -507,32 +490,28 @@ for (let i = particles.length - 1; i >= 0; i--) {
       context.save();
       context.translate(star.x + star.width / 2, star.y + star.height / 2 + hoverY);
       
-      // Outer Glow Aura Circular Pulse
       context.globalAlpha = 0.25;
       context.fillStyle = star.color;
       context.beginPath();
       context.arc(0, 0, (star.width / 2) * auraScale, 0, Math.PI * 2);
       context.fill();
       
-      // Central Spinning Diamond Core
       context.globalAlpha = 1.0;
       context.rotate(starPulseTime * 0.2);
       context.fillRect(-star.width / 2, -star.height / 2, star.width, star.height);
       context.restore();
     });
 
-    // Layer 5: Blind Spotlight Masking Fog
     drawFog();
-    // Render active ambient effects particles
-particles.forEach(p => {
-  context.save();
-  context.globalAlpha = p.alpha;
-  context.fillStyle = p.color;
-  context.fillRect(p.x, p.y, p.size, p.size);
-  context.restore();
-});
 
-    // Layer 6: Player Speed Ghost Trail Effects & Active Character Render
+    particles.forEach(p => {
+      context.save();
+      context.globalAlpha = p.alpha;
+      context.fillStyle = p.color;
+      context.fillRect(p.x, p.y, p.size, p.size);
+      context.restore();
+    });
+
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {
@@ -544,14 +523,12 @@ particles.forEach(p => {
         }
       });
       
-      // Render main character block container safely
       context.save();
       context.fillStyle = player.color;
       context.fillRect(player.x, player.y, player.width, player.height);
       context.restore();
     }
 
-    // Layer 7: Control Panels Overlay
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") {
       drawDpad();
@@ -559,7 +536,6 @@ particles.forEach(p => {
       drawRestartButton();
     }
 
-    // Layer 8: Text Overlays UI Layout Frame Engine
     context.fillStyle = "white";
     context.font = "bold 16px Arial";
     context.textAlign = "center";
@@ -590,8 +566,8 @@ particles.forEach(p => {
       context.font = "bold 24px Arial";
       context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }
-  }
-});
+  } // <-- Closes render() cleanly
+}); // <-- Closes GameLoop completely with a clean parenthesis!
 
 gameState = "menu"; 
 loop.start();

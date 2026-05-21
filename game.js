@@ -42,7 +42,7 @@ let totalPlayTime = 0.0;   // GLOBAL STOPWATCH
 let platforms = [];
 let spikes = [];
 let stars = [];
-
+let particles = [];
 // Cosmetic Trail System
 let playerTrail = [];
 let starPulseTime = 0; // Global clock to animate stars smoothly
@@ -76,10 +76,35 @@ let player = Sprite({
     this.dy += 0.5;
     this.y += this.dy;
 
-    if (this.x < GAME_X()) this.x = GAME_X();
-    if (this.x + this.width > GAME_X() + GAME_WIDTH()) this.x = GAME_X() + GAME_WIDTH() - this.width;
-  }
+    // 🔄 SCREEN WRAP-AROUND LOGIC
+// If player goes entirely off the left edge, teleport them to the far right edge
+if (this.x + this.width < GAME_X()) {
+  this.x = GAME_X() + GAME_WIDTH() - 1; 
+} 
+// If player goes entirely off the right edge, teleport them to the far left edge
+else if (this.x > GAME_X() + GAME_WIDTH()) {
+  this.x = GAME_X() - this.width + 1;
+}}
 });
+
+function spawnExplosion(originX, originY, spawnColor, count = 20) {
+  for (let i = 0; i < count; i++) {
+    // Generate a random angle and explosion force
+    let angle = Math.random() * Math.PI * 2;
+    let speed = 1 + Math.random() * 4;
+
+    particles.push({
+      x: originX,
+      y: originY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 4 + Math.random() * 6,
+      alpha: 1.0,
+      decay: 0.02 + Math.random() * 0.02, // How fast it fades out
+      color: spawnColor
+    });
+  }
+}
 
 function loadLevel(index) {
   if (index >= LEVEL_MAPS.length) {
@@ -348,6 +373,19 @@ canvas.addEventListener("touchend", handleTouch, { passive: false });
 
 // Core Loop Engine
 let loop = GameLoop({
+  // Update particles physics and fade cycles
+for (let i = particles.length - 1; i >= 0; i--) {
+  let p = particles[i];
+  p.x += p.vx;
+  p.y += p.vy;
+  p.vy += 0.1; // Add a tiny bit of gravity to make them arc downward nicely!
+  p.alpha -= p.decay;
+
+  // Remove dead particles from memory
+  if (p.alpha <= 0) {
+    particles.splice(i, 1);
+  }
+}
   update() {
     if (gameState === "menu" || gameState === "victory") return;
 
@@ -396,21 +434,28 @@ let loop = GameLoop({
     }
 
     for (let spike of spikes) {
-      if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
-          player.y < spike.y + spike.height && player.y + player.height > spike.y) {
-        loadLevel(currentLevelIndex); 
-      }
-    }
+  if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
+      player.y < spike.y + spike.height && player.y + player.height > spike.y) {
+    
+    // 💥 ADD THIS LINE RIGHT HERE BEFORE RESETTING THE LEVEL:
+    spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
+
+    loadLevel(currentLevelIndex); 
+  }
+}
 
     for (let star of stars) {
-      if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
-          player.y < star.y + star.height && player.y + player.height > star.y) {
-        star.pickedUp = true;
-        currentLevelIndex++;
-        loadLevel(currentLevelIndex);
-      }
-    }
-  },
+  if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
+      player.y < star.y + star.height && player.y + player.height > star.y) {
+    star.pickedUp = true;
+    
+    // 🌟 ADD THIS LINE RIGHT HERE BEFORE LOADING THE STAGE:
+    spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
+
+    currentLevelIndex++;
+    loadLevel(currentLevelIndex);
+  }
+}
 
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -419,18 +464,23 @@ let loop = GameLoop({
     drawGameArea();
     drawGround();
 
-    // Layer 2: Custom Render Platforms (Forced Canvas Overrides)
+    // Layer 2: Custom Render Platforms (Upgraded: Full Border Neon Glow)
     platforms.forEach(p => {
       context.save();
-      // Drop Shadow
+      // 1. Drop Shadow (shifted right and down)
       context.fillStyle = "#1e293b";
       context.fillRect(p.x + 4, p.y + 4, p.width, p.height);
-      // Main Platform Block Fill
+
+      // 2. Main Platform Body Fill
       context.fillStyle = p.color;
       context.fillRect(p.x, p.y, p.width, p.height);
-      // Cyber Glowing Neon Rim Ledge
-      context.fillStyle = "#6366f1"; 
-      context.fillRect(p.x, p.y, p.width, 3);
+
+      // 3. Cyber Neon Border Trim (Glow Outline around all 4 sides)
+      context.strokeStyle = "#6366f1"; // Bright Indigo Edge
+      context.lineWidth = 3;           // Matches your original 3px thickness
+      
+      // We use strokeRect to draw a clean frame perfectly around the box
+      context.strokeRect(p.x, p.y, p.width, p.height);
       context.restore();
     });
 
@@ -473,6 +523,14 @@ let loop = GameLoop({
 
     // Layer 5: Blind Spotlight Masking Fog
     drawFog();
+    // Render active ambient effects particles
+particles.forEach(p => {
+  context.save();
+  context.globalAlpha = p.alpha;
+  context.fillStyle = p.color;
+  context.fillRect(p.x, p.y, p.size, p.size);
+  context.restore();
+});
 
     // Layer 6: Player Speed Ghost Trail Effects & Active Character Render
     if (gameState !== "menu" && gameState !== "victory") {

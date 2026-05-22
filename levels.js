@@ -1,35 +1,44 @@
-// levels.js
 const LEVEL_MAPS = [
   {
-    // Level 1: Quick platform step over a floor hazard spike pit
-    playerSpawn: { x: 40, y: 300 }, 
+    playerSpawn: { x: 40, y: 468 },
+    // Standard and moving platforms
     platforms: [
-      { x: 150, y: 400, w: 120, h: 15 },
-      { x: 350, y: 280, w: 160, h: 20 },
-      // Fixed: Moved down into jumping range (moves up and down between Y: 180 and Y: 320)
-      { x: 200, y: 300, w: 80, h: 20, vx: 2, minX: 201, maxX: 320 }
+      { x: 100, y: 400, w: 100, h: 20 },
+      { x: 300, y: 300, w: 100, h: 20, vx: 2, minX: 250, maxX: 450 }
+    ],
+    // Optional static torches to cut holes in the fog
+    torches: [
+      { x: 150, y: 350, radius: 90 }
+    ],
+    // Networks of buttons and blocks. ID link numbers must match!
+    buttons: [
+    { x: 100, y: 490 },
+    { x: 400, y: 250 }
+    ],
+    gates: [
+    { x: 500, y: 420, w: 20, h: 80 } 
+    ],
+  // 🔄 GRAVITY PLATFORMS: 
+  // "inverter" blocks only trigger when hit from underneath.
+  // "restorer" blocks only trigger when stepped on from above.
+    gravityPlatforms: [
+    { x: 200, y: 340, w: 80, h: 20, type: "inverter" },
+    { x: 400, y: 150, w: 80, h: 20, type: "restorer" }
+    ],
+    // Fragile step blocks (break on touch, auto-respawn in 1 sec)
+    fragileBlocks: [
+      { x: 250, y: 420, w: 60, h: 15 }
+    ],
+    // Launch Pads: "jump" launches up, "dash" forces horizontal speed
+    pads: [
+      { x: 420, y: 488, type: "jump", power: -13 },
+      { x: 50,  y: 488, type: "dash", power: 15 }
     ],
     spikes: [
-      { x: 400, y: 460, w: 40, h: 40 } // Perfectly scaled sitting on the bottom floor
+      { x: 320, y: 460, w: 40, h: 40 }
     ],
     stars: [
-      { x: 420, y: 220 } // Placed safely on top of the high platform
-    ]
-  },
-  {
-    // Level 2: Higher climbs with a moving elevator platform
-    playerSpawn: { x: 60, y: 400 }, 
-    platforms: [
-      { x: 80,  y: 380, w: 80,  h: 15 },
-      { x: 220, y: 290, w: 80,  h: 15 },
-      // Fixed: Removed the stray comma before 450, and fixed boundaries to match spawn Y: 200
-      { x: 450, y: 200, w: 140, h: 20, vy: 1.5, minY: 150, maxY: 350 }
-    ],
-    spikes: [
-      { x: 240, y: 460, w: 40, h: 40 }
-    ],
-    stars: [
-      { x: 500, y: 100 }
+      { x: 580, y: 250 }
     ]
   }
 ];

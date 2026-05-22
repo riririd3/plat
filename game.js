@@ -1,3 +1,4 @@
+const zzfx=(...t)=>{let e=0,n=null;for(let r=0;r<t.length;r++){let i=t[r];if(i instanceof Array)for(let a=0;a<i.length;a++){let s=i[a];if(s instanceof Array)for(let c=0;c<s.length;c++){let u=s[c];e=e+(u?u:0)}else e=e+(s?s:0)}else e=e+(i?i:0)}let o=new AudioContext,f=o.createGain(),a=o.createOscillator();a.connect(f),f.connect(o.destination),a.start(),a.stop(o.currentTime+.1);return a};
 const {
   init,
   GameLoop,
@@ -12,6 +13,30 @@ initKeys();
 
 const BASE_WIDTH = 960;
 const BASE_HEIGHT = 540;
+const restartBtn = { size: 40 };
+let isMuted = false;
+
+// 🔊 Mute Button Drawing (Place this in your render() loop, below drawRestartButton)
+function drawMuteButton() {
+  const x = canvas.width - RIGHT_UI() / 2; 
+  const y = 120; // Positioned below the RST button (which is at y=60)
+  context.save();
+  context.fillStyle = isMuted ? "#ef4444" : "#22c55e"; 
+  context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size);
+  context.fillStyle = "black";
+  context.font = "bold 10px Arial";
+  context.textAlign = "center";
+  context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
+  context.restore();
+}
+
+// 🔊 Updated Sound trigger with mute check
+function playSound(type) {
+  if (isMuted) return; // Stop if muted
+  if (type === 'jump') zzfx(...[.6,,100,,.01,.03,1,2,,,,, .1]);
+  if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
+  if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
+}
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);
@@ -78,6 +103,7 @@ let player = Sprite({
     
     // 🤸 JUMP LOGIC: Differentiates jump vectors depending on upside-down status
     if ((keyPressed("space") || touch.jump) && this.grounded) {
+      playSound('jump');
       if (gravityDir === 1) {
         this.dy = -11; 
       } else {
@@ -229,7 +255,32 @@ function drawGround() { context.fillStyle = "#334155"; context.fillRect(GAME_X()
 function drawControlsBackground() { context.fillStyle = "#111"; context.fillRect(0, 0, LEFT_UI(), canvas.height); context.fillRect(canvas.width - RIGHT_UI(), 0, RIGHT_UI(), canvas.height); }
 function drawDpad() { const cX = LEFT_UI() / 2; const cY = canvas.height - 140 - SAFE; context.save(); context.globalAlpha = touch.left ? 0.8 : 0.4; context.fillStyle = "white"; context.fillRect(cX - dpad.size - 10, cY, dpad.size, dpad.size); context.globalAlpha = touch.right ? 0.8 : 0.4; context.fillRect(cX + 10, cY, dpad.size, dpad.size); context.restore(); }
 function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = canvas.height - 140 - SAFE + jumpBtn.size / 2; context.save(); context.globalAlpha = touch.jump ? 0.8 : 0.4; context.fillStyle = "#06b6d4"; context.beginPath(); context.arc(x, y, jumpBtn.size / 2, 0, Math.PI * 2); context.fill(); context.restore(); }
-function drawRestartButton() { const x = canvas.width - RIGHT_UI() / 2; const y = 60; context.save(); context.fillStyle = "#f59e0b"; context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); context.fillStyle = "black"; context.font = "bold 12px Arial"; context.textAlign = "center"; context.fillText("RST", x, y + 4); context.restore(); }
+// Draw the Restart Button
+function drawRestartButton() { 
+  const x = canvas.width - RIGHT_UI() / 2; 
+  const y = 60; 
+  context.save(); 
+  context.fillStyle = "#f59e0b"; 
+  context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); 
+  context.fillStyle = "black"; 
+  context.font = "bold 12px Arial"; 
+  context.textAlign = "center"; 
+  context.fillText("RST", x, y + 4); 
+  context.restore(); 
+}
+// Draw the Mute Button
+function drawMuteButton() {
+  const x = canvas.width - RIGHT_UI() / 2; 
+  const y = 120; 
+  context.save();
+  context.fillStyle = isMuted ? "#ef4444" : "#22c55e"; 
+  context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size);
+  context.fillStyle = "black";
+  context.font = "bold 10px Arial";
+  context.textAlign = "center";
+  context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
+  context.restore();
+}
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
 function drawFog() {
@@ -293,6 +344,12 @@ function handleTouch(e) {
 
   for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX; const y = (t.clientY - rect.top) * scaleY;
+    const muteX = canvas.width - RIGHT_UI() / 2; 
+    const muteY = 120;
+    if (Math.hypot(x - muteX, y - muteY) < restartBtn.size / 2 && e.type === "touchstart") {
+      isMuted = !isMuted; // Toggle sound
+      return;
+    }
     if (x > canvas.width - RIGHT_UI()) {
       const rstX = canvas.width - RIGHT_UI() / 2; const rstY = 60;
       if (Math.hypot(x - rstX, y - rstY) < restartBtn.size / 2 && e.type === "touchstart") {
@@ -639,7 +696,7 @@ let loop = GameLoop({
     }
 
     drawControlsBackground();
-    if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawRestartButton(); }
+    if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawMuteButton(); drawRestartButton(); }
 
     context.fillStyle = "white"; context.font = "bold 16px Arial"; context.textAlign = "center";
     context.fillText(`STAGE: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);

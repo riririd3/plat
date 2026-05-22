@@ -1,3 +1,4 @@
+const zzfx=(...t)=>{let e=0,n=null;for(let r=0;r<t.length;r++){let i=t[r];if(i instanceof Array)for(let a=0;a<i.length;a++){let s=i[a];if(s instanceof Array)for(let c=0;c<s.length;c++){let u=s[c];e=e+(u?u:0)}else e=e+(s?s:0)}else e=e+(i?i:0)}let o=new AudioContext,f=o.createGain(),a=o.createOscillator();a.connect(f),f.connect(o.destination),a.start(),a.stop(o.currentTime+.1);return a};
 const {
   init,
   GameLoop,

@@ -7,7 +7,7 @@ const LEVEL_MAPS = [
       { x: 150, y: 400, w: 120, h: 15 },
       { x: 350, y: 280, w: 160, h: 20 },
       // Fixed: Moved down into jumping range (moves up and down between Y: 180 and Y: 320)
-      { x: 40, y: 200, w: 80, h: 20, vy: 2, minY: 180, maxY: 320 }
+      { x: 200, y: 300, w: 80, h: 20, vx: 2, minX: 201, maxX: 320 }
     ],
     spikes: [
       { x: 400, y: 460, w: 40, h: 40 } // Perfectly scaled sitting on the bottom floor

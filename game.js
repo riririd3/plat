@@ -194,7 +194,7 @@ function loadLevel(index) {
       torches.push({ x: GAME_X() + t.x, y: t.y, radius: t.radius || 85 });
     });
   }
-
+  
   // Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
@@ -249,29 +249,29 @@ function drawFog() {
   if (gameState !== "play") return;
   
   context.save();
-  // 1. Create the dark fog overlay over the play area
+  // 1. Paint a solid dark blanket over the active gameplay screen
   context.beginPath();
   context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
   context.fillStyle = "rgba(0, 0, 0, 1.0)";
   context.fill();
   
-  // 2. Cut holes out using "destination-out" composition (clears pixels like an eraser)
+  // 2. Set the canvas to "eraser mode"
   context.globalCompositeOperation = "destination-out";
   
-  // Cut player flashlight
+  // Cut the player's mobile flashlight circle
   const maskRadius = 75;
   context.beginPath();
   context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
   context.fill();
   
-  // Cut matching static torch beams
+  // Cut holes for every static room torch smoothly without conflicting
   torches.forEach(t => {
     context.beginPath();
     context.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
     context.fill();
   });
   
-  context.restore(); // Restores normal rendering mode
+  context.restore(); // Revert back to normal painting mode
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }

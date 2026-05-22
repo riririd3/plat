@@ -76,18 +76,18 @@ let player = Sprite({
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
     
-    // 🔀 DYNAMIC JUMP: If gravity is inverted (-1), jumping multiplies by -1 
+    // DYNAMIC JUMP: If gravity is inverted (-1), jumping multiplies by -1 
     // to fling you DOWN away from the ceiling!
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       this.dy = -11 * gravityDir;
       this.grounded = false;
     }
     
-    // 🔀 DYNAMIC GRAVITY: Pulls you down if gravityDir is 1, pulls you up if -1
+    // DYNAMIC GRAVITY: Pulls you down if gravityDir is 1, pulls you up if -1
     this.dy += 0.5 * gravityDir;
     this.y += this.dy;
 
-    // SCREEN WRAP-AROUND LOGIC (Keep your existing code below)
+    // SCREEN WRAP-AROUND LOGIC
     if (this.x + this.width < GAME_X()) {
       this.x = GAME_X() + GAME_WIDTH() - 1; 
     } 
@@ -198,8 +198,7 @@ function loadLevel(index) {
   // Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
-      buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, pressed: false, color: "#eab308" 
-      });
+      buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, pressed: false, color: "#eab308" });
     });
   }
   
@@ -375,20 +374,18 @@ let loop = GameLoop({
       playerTrail.forEach(t => t.alpha -= 0.04);
     }
 
-    // 🔀 DYNAMIC SCREEN BOUNDARY RESOLVER
+    // DYNAMIC SCREEN BOUNDARY RESOLVER
     player.grounded = false;
     const floor = canvas.height - 40;
-    const ceiling = 0; // The very top of the game screen
+    const ceiling = 0; 
 
     if (gravityDir === 1) {
-      // Normal Gravity: Catch the player on the floor
       if (player.y + player.height >= floor) {
         player.y = floor - player.height;
         player.dy = 0;
         player.grounded = true;
       }
     } else {
-      // Inverted Gravity: Catch the player on the ceiling!
       if (player.y <= ceiling) {
         player.y = ceiling;
         player.dy = 0;
@@ -429,7 +426,7 @@ let loop = GameLoop({
 
     // 6. Security Gates Spatial Intersection Collisions
     gates.forEach(g => {
-      if (g.opened) return; // Ignore solid boundaries if gate is open
+      if (g.opened) return; 
       if (player.x < g.x + g.w && player.x + player.width > g.x &&
           player.y < g.y + g.h && player.y + player.height > g.y) {
         let overlapX = Math.min(player.x + player.width - g.x, g.x + g.w - player.x);
@@ -443,20 +440,56 @@ let loop = GameLoop({
       }
     });
 
-    // 7. Interactive Buttons Proximity Trigger Checks
+    // 7. COLLECTIVE BUTTONS & GATES CONTROLLER (Moved to update!)
     buttons.forEach(b => {
       if (player.x < b.x + b.w && player.x + player.width > b.x &&
           player.y < b.y + b.h && player.y + player.height > b.y) {
         if (!b.pressed) {
           b.pressed = true;
-          // Look for matching network ID Gate to open
-          gates.forEach(g => { if (g.id === b.id) g.opened = true; });
           spawnExplosion(b.x + b.w/2, b.y, "#eab308", 12);
+
+          // Check if every single button on the map is pressed
+          const allPressed = buttons.every(btn => btn.pressed);
+          if (allPressed) {
+            gates.forEach(g => {
+              if (!g.opened) {
+                g.opened = true;
+                spawnExplosion(g.x + g.w/2, g.y + g.h/2, "#3b82f6", 15);
+              }
+            });
+          }
         }
       }
     });
 
-    // 8. Launcher & Trampoline Vector Boost Pad Collisions
+    // 8. TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE (Moved to update!)
+    gravityPlatforms.forEach(p => {
+      if (player.x < p.x + p.width && player.x + player.width > p.x &&
+          player.y < p.y + p.height && player.y + player.height > p.y) {
+        
+        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
+        
+        if (player.y + player.height / 2 < p.y + p.height / 2) {
+          player.y -= overlapY; player.dy = 0; player.grounded = true;
+          
+          // RESTORER: Drops gravity back DOWN if you step on it
+          if (p.type === "restorer" && gravityDir === -1) {
+            gravityDir = 1;
+            spawnExplosion(p.x + p.width/2, p.y, "#f97316", 15);
+          }
+        } else {
+          player.y += overlapY; player.dy = 0;
+          
+          // INVERTER: Flips gravity UP if you crack your head from below
+          if (p.type === "inverter" && gravityDir === 1) {
+            gravityDir = -1;
+            spawnExplosion(p.x + p.width/2, p.y + p.height, "#06b6d4", 15);
+          }
+        }
+      }
+    });
+
+    // 9. Launcher & Trampoline Vector Boost Pad Collisions
     pads.forEach(p => {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -470,7 +503,7 @@ let loop = GameLoop({
       }
     });
 
-    // 9. Hazard Collisions
+    // 10. Hazard Collisions
     for (let spike of spikes) {
       if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
           player.y < spike.y + spike.height && player.y + player.height > spike.y) {
@@ -479,7 +512,7 @@ let loop = GameLoop({
       }
     }
 
-    // 10. Win Star Collectible Collisions
+    // 11. Win Star Collectible Collisions
     for (let star of stars) {
       if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
           player.y < star.y + star.height && player.y + player.height > star.y) {
@@ -512,77 +545,12 @@ let loop = GameLoop({
       context.save(); context.fillStyle = p.color; context.fillRect(p.x, p.y, p.width, p.height); context.restore();
     });
 
-    // 🔘 COLLECTIVE BUTTONS & GATES CONTROLLER
+    // Layer 3: Interactive Buttons Drawing
     buttons.forEach(b => {
-      if (player.x < b.x + b.w && player.x + player.width > b.x &&
-          player.y < b.y + b.h && player.y + player.height > b.y) {
-        if (!b.pressed) {
-          b.pressed = true;
-          spawnExplosion(b.x + b.w/2, b.y, "#eab308", 12);
-
-          // Check if every single button on the map is pressed
-          const allPressed = buttons.every(btn => btn.pressed);
-          if (allPressed) {
-            gates.forEach(g => {
-              if (!g.opened) {
-                g.opened = true;
-                spawnExplosion(g.x + g.w/2, g.y + g.h/2, "#3b82f6", 15);
-              }
-            });
-          }
-        }
-      }
-    });
-
-    // 🔄 TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE
-    gravityPlatforms.forEach(p => {
-      if (player.x < p.x + p.width && player.x + player.width > p.x &&
-          player.y < p.y + p.height && player.y + player.height > p.y) {
-        
-        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
-        
-        if (player.y + player.height / 2 < p.y + p.height / 2) {
-          // Standing on top of the block
-          player.y -= overlapY; player.dy = 0; player.grounded = true;
-          
-          // 💡 RESTORER: Drops gravity back DOWN if you step on it
-          if (p.type === "restorer" && gravityDir === -1) {
-            gravityDir = 1;
-            spawnExplosion(p.x + p.width/2, p.y, "#f97316", 15);
-          }
-        } else {
-          // Hitting underneath the block
-          player.y += overlapY; player.dy = 0;
-          
-          // 💡 INVERTER: Flips gravity UP if you crack your head from below
-          if (p.type === "inverter" && gravityDir === 1) {
-            gravityDir = -1;
-            spawnExplosion(p.x + p.width/2, p.y + p.height, "#06b6d4", 15);
-          }
-        }
-      }
-    });
-
-render() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    drawGameArea();
-    drawGround();
-
-    // Layer 1: Guiding Runway Wireframe Dashed Tracks
-    platforms.concat(spikes).forEach(p => {
-      if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {
-        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
-        context.beginPath(); context.moveTo(p.minX, p.y + p.height/2); context.lineTo(p.maxX, p.y + p.height/2); context.stroke(); context.restore();
-      }
-      if (p.vy !== 0 && p.minY !== null && p.maxY !== null) {
-        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
-        context.beginPath(); context.moveTo(p.x + p.width/2, p.minY); context.lineTo(p.x + p.width/2, p.maxY); context.stroke(); context.restore();
-      }
-    });
-
-    // Layer 2: Interactive Trampolines / Dash Pads
-    pads.forEach(p => {
-      context.save(); context.fillStyle = p.color; context.fillRect(p.x, p.y, p.width, p.height); context.restore();
+      context.save();
+      context.fillStyle = b.pressed ? "#475569" : b.color;
+      context.fillRect(b.x, b.y, b.w, b.h);
+      context.restore();
     });
 
     // Layer 4: Fragile Structural Blocks
@@ -647,8 +615,6 @@ render() {
       context.save();
       context.fillStyle = p.color;
       context.fillRect(p.x, p.y, p.width, p.height);
-      
-      // Cyber neon trim highlight
       context.strokeStyle = "white";
       context.lineWidth = 1;
       context.strokeRect(p.x, p.y, p.width, p.height);

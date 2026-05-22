@@ -247,23 +247,31 @@ function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const sta
 
 function drawFog() {
   if (gameState !== "play") return;
+  
   context.save();
+  // 1. Create the dark fog overlay over the play area
   context.beginPath();
   context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
-  
-  // Cut flashlight circle
-  const maskRadius = 75;
-  context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2, true);
-  
-  // Cut matching Static Torch light beams
-  torches.forEach(t => {
-    context.moveTo(t.x, t.y);
-    context.arc(t.x, t.y, t.radius, 0, Math.PI * 2, true);
-  });
-  
   context.fillStyle = "rgba(0, 0, 0, 1.0)";
   context.fill();
-  context.restore();
+  
+  // 2. Cut holes out using "destination-out" composition (clears pixels like an eraser)
+  context.globalCompositeOperation = "destination-out";
+  
+  // Cut player flashlight
+  const maskRadius = 75;
+  context.beginPath();
+  context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
+  context.fill();
+  
+  // Cut matching static torch beams
+  torches.forEach(t => {
+    context.beginPath();
+    context.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+    context.fill();
+  });
+  
+  context.restore(); // Restores normal rendering mode
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
@@ -462,26 +470,40 @@ let loop = GameLoop({
       }
     });
 
-    // 8. TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE (Moved to update!)
+    // 🔄 RE-ENGINEERED TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE
     gravityPlatforms.forEach(p => {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
         
+        let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
         let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
         
-        if (player.y + player.height / 2 < p.y + p.height / 2) {
-          player.y -= overlapY; player.dy = 0; player.grounded = true;
-          
-          // RESTORER: Drops gravity back DOWN if you step on it
-          if (p.type === "restorer" && gravityDir === -1) {
+        // Handle side-to-side bumping so you don't phase through walls
+        if (overlapX < overlapY) {
+          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; 
+          else player.x += overlapX;
+          return;
+        }
+
+        if (p.type === "restorer") {
+          // Orange blocks only block you from ABOVE (under inverted gravity)
+          if (gravityDir === -1 && player.y + player.height / 2 < p.y + p.height / 2) {
+            player.y -= overlapY; 
+            player.dy = 0; 
+            player.grounded = true;
+            
+            // Trigger drop back down
             gravityDir = 1;
             spawnExplosion(p.x + p.width/2, p.y, "#f97316", 15);
           }
-        } else {
-          player.y += overlapY; player.dy = 0;
-          
-          // INVERTER: Flips gravity UP if you crack your head from below
-          if (p.type === "inverter" && gravityDir === 1) {
+        } 
+        else if (p.type === "inverter") {
+          // Cyan blocks only block you from BELOW (under normal gravity)
+          if (gravityDir === 1 && player.y + player.height / 2 > p.y + p.height / 2) {
+            player.y += overlapY; 
+            player.dy = 0;
+            
+            // Trigger launch upward
             gravityDir = -1;
             spawnExplosion(p.x + p.width/2, p.y + p.height, "#06b6d4", 15);
           }
@@ -538,6 +560,17 @@ let loop = GameLoop({
         context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
         context.beginPath(); context.moveTo(p.x + p.width/2, p.minY); context.lineTo(p.x + p.width/2, p.maxY); context.stroke(); context.restore();
       }
+    });
+
+    // Render Cyan & Orange Gravity Platforms
+    gravityPlatforms.forEach(p => {
+      context.save();
+      context.fillStyle = p.color;
+      context.fillRect(p.x, p.y, p.width, p.height);
+      context.strokeStyle = "white";
+      context.lineWidth = 1;
+      context.strokeRect(p.x, p.y, p.width, p.height);
+      context.restore();
     });
 
     // Layer 2: Interactive Trampolines / Dash Pads
@@ -608,17 +641,6 @@ let loop = GameLoop({
     // Layer 10: Particle simulation system drawing
     particles.forEach(p => {
       context.save(); context.globalAlpha = p.alpha; context.fillStyle = p.color; context.fillRect(p.x, p.y, p.size, p.size); context.restore();
-    });
-
-    // Render Cyan & Orange Gravity Platforms
-    gravityPlatforms.forEach(p => {
-      context.save();
-      context.fillStyle = p.color;
-      context.fillRect(p.x, p.y, p.width, p.height);
-      context.strokeStyle = "white";
-      context.lineWidth = 1;
-      context.strokeRect(p.x, p.y, p.width, p.height);
-      context.restore();
     });
 
     // Layer 11: Player Characters and Screen Mirror Wraps

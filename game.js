@@ -561,6 +561,28 @@ let loop = GameLoop({
       }
     });
 
+render() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    drawGameArea();
+    drawGround();
+
+    // Layer 1: Guiding Runway Wireframe Dashed Tracks
+    platforms.concat(spikes).forEach(p => {
+      if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {
+        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
+        context.beginPath(); context.moveTo(p.minX, p.y + p.height/2); context.lineTo(p.maxX, p.y + p.height/2); context.stroke(); context.restore();
+      }
+      if (p.vy !== 0 && p.minY !== null && p.maxY !== null) {
+        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
+        context.beginPath(); context.moveTo(p.x + p.width/2, p.minY); context.lineTo(p.x + p.width/2, p.maxY); context.stroke(); context.restore();
+      }
+    });
+
+    // Layer 2: Interactive Trampolines / Dash Pads
+    pads.forEach(p => {
+      context.save(); context.fillStyle = p.color; context.fillRect(p.x, p.y, p.width, p.height); context.restore();
+    });
+
     // Layer 4: Fragile Structural Blocks
     fragileBlocks.forEach(b => {
       if (b.state === "broken") return;

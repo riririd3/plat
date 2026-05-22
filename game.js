@@ -205,7 +205,7 @@ function loadLevel(index) {
   
   if (currentLevel.gates) {
     currentLevel.gates.forEach(g => {
-      gates.push({ x: GAME_X() + g.x, y: g.y, w: g.w || 20, h: g.h || 80, id: g.id, opened: false, color: "#3b82f6" });
+      gates.push({ x: GAME_X() + g.x, y: g.y, w: g.w || 20, h: g.h || 80, opened: false, color: "#3b82f6" });
     });
   }
 

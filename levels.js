@@ -20,8 +20,8 @@ const LEVEL_MAPS = [
     ],
     // GRAVITY PLATFORMS: 
     gravityPlatforms: [
-    { x: 200, y: 340, w: 80, h: 20, type: "inverter" },
-    { x: 400, y: 80, w: 80, h: 20, type: "restorer" }
+    { x: 200, y: 320, w: 80, h: 20, type: "inverter" },
+    { x: 400, y: 50, w: 80, h: 20, type: "restorer" }
     ],
     // Fragile step blocks (break on touch, auto-respawn in 1 sec)
     fragileBlocks: [

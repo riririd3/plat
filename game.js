@@ -544,6 +544,7 @@ let loop = GameLoop({
         
         // 1. Flip Upwards
         if (p.type === "inverter" && gravityDir === 1) {
+          playSound('gravity');
           gravityDir = -1;
           player.grounded = false;
           player.dy = 0; // Clear vertical speed for smooth exit transition
@@ -551,6 +552,7 @@ let loop = GameLoop({
         } 
         // 2. Restore Downwards
         else if (p.type === "restorer" && gravityDir === -1) {
+          playSound('gravity');
           gravityDir = 1;
           player.grounded = false;
           player.dy = 0; 

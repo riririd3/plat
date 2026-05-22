@@ -5,7 +5,8 @@ const LEVEL_MAPS = [
     playerSpawn: { x: 40, y: 300 }, 
     platforms: [
       { x: 150, y: 400, w: 120, h: 15 },
-      { x: 350, y: 280, w: 160, h: 20 }
+      { x: 350, y: 280, w: 160, h: 20 },
+      { x: 200, y: 350, w: 100, h: 20, vx: 2, minX: 200, maxX: 400 }
     ],
     spikes: [
       { x: 400, y: 400, w:50, h:50 } // Now perfectly visible sitting on the floor!
@@ -20,7 +21,7 @@ const LEVEL_MAPS = [
     platforms: [
       { x: 80,  y: 380, w: 80,  h: 15 },
       { x: 220, y: 290, w: 80,  h: 15 },
-      { x: 380, y: 200, w: 180, h: 20, vx: 2, minX: 550, maxX: 300 }
+      { x: ,450, y: 200, w: 180, h: 20, vy: 2, minY: 450, maxY: 550 }
     ],
     spikes: [
       { x: 240, y: 460, w: 40, h: 40 }

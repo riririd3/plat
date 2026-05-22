@@ -132,7 +132,7 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // 1. Load Platforms
+  // 1. Load Platforms (Upgraded for movement properties)
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
@@ -140,12 +140,19 @@ function loadLevel(index) {
         y: p.y, 
         width: p.w, 
         height: p.h, 
-        color: "#334155"
+        color: "#334155",
+        // Store movement physics properties cleanly
+        vx: p.vx || 0,
+        vy: p.vy || 0,
+        minX: p.minX ? GAME_X() + p.minX : null,
+        maxX: p.maxX ? GAME_X() + p.maxX : null,
+        minY: p.minY || null,
+        maxY: p.maxY || null
       }));
     });
   }
 
-  // 2. Load Spikes
+  // 2. Load Spikes (Upgraded for movement properties)
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
@@ -153,7 +160,13 @@ function loadLevel(index) {
         y: s.y, 
         width: s.w,
         height: s.h,
-        color: "#ef4444"
+        color: "#ef4444",
+        vx: s.vx || 0,
+        vy: s.vy || 0,
+        minX: s.minX ? GAME_X() + s.minX : null,
+        maxX: s.maxX ? GAME_X() + s.maxX : null,
+        minY: s.minY || null,
+        maxY: s.maxY || null
       }));
     });
   }
@@ -455,19 +468,72 @@ let loop = GameLoop({
     drawGameArea();
     drawGround();
 
+    // ----------------------------------------------------
+    // NEW: UPDATE MOVING PLATFORMS & SPIKES MECHANICS
+    // ----------------------------------------------------
     platforms.forEach(p => {
-      context.save();
-      context.fillStyle = "#1e293b";
-      context.fillRect(p.x + 4, p.y + 4, p.width, p.height);
-
-      context.fillStyle = p.color;
-      context.fillRect(p.x, p.y, p.width, p.height);
-
-      context.strokeStyle = "#6366f1"; 
-      context.lineWidth = 3;           
-      context.strokeRect(p.x, p.y, p.width, p.height);
-      context.restore();
+      p.x += p.vx;
+      p.y += p.vy;
+      // Reverse horizontal speed if boundary hit
+      if (p.minX !== null && p.maxX !== null) {
+        if (p.x <= p.minX || p.x + p.width >= p.maxX) p.vx *= -1;
+      }
+      // Reverse vertical speed if boundary hit
+      if (p.minY !== null && p.maxY !== null) {
+        if (p.y <= p.minY || p.y + p.height >= p.maxY) p.vy *= -1;
+      }
     });
+
+    spikes.forEach(s => {
+      s.x += s.vx;
+      s.y += s.vy;
+      if (s.minX !== null && s.maxX !== null) {
+        if (s.x <= s.minX || s.x + s.width >= s.maxX) s.vx *= -1;
+      }
+      if (s.minY !== null && s.maxY !== null) {
+        if (s.y <= s.minY || s.y + s.height >= s.maxY) s.vy *= -1;
+      }
+    });
+
+    // Run player's normal position adjustments
+    player.update();
+
+    // ----------------------------------------------------
+    // UPGRADED: PLATFORM RESOLUTION + RIDER PHYSICS
+    // ----------------------------------------------------
+    player.grounded = false;
+    const floor = canvas.height - 40;
+    if (player.y + player.height >= floor) {
+      player.y = floor - player.height;
+      player.dy = 0;
+      player.grounded = true;
+    }
+
+    for (let p of platforms) {
+      if (player.x < p.x + p.width && player.x + player.width > p.x &&
+          player.y < p.y + p.height && player.y + player.height > p.y) {
+        let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
+        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
+
+        if (overlapX < overlapY) {
+          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX;
+          else player.x += overlapX;
+        } else {
+          if (player.y + player.height / 2 < p.y + p.height / 2) {
+            player.y -= overlapY; 
+            player.dy = 0; 
+            player.grounded = true;
+
+            // 🎯 THE SECRET RIDER PHYSICS SAUCE:
+            // If we landed on top of this platform, drag the player along with its current speed!
+            player.x += p.vx;
+            player.y += p.vy; 
+          } else {
+            player.y += overlapY; player.dy = 0; // Ceiling bump
+          }
+        }
+      }
+    }
 
     spikes.forEach(s => {
       context.save();
@@ -522,7 +588,16 @@ let loop = GameLoop({
           context.restore();
         }
       });
-      
+      // Inside render(), right next to your player drawing logic:
+if (player.x > GAME_X() + GAME_WIDTH() - player.width) {
+  // Draw a mirror clone on the left edge before the player fully teleports
+  context.fillStyle = player.color;
+  context.fillRect(player.x - GAME_WIDTH(), player.y, player.width, player.height);
+} else if (player.x < GAME_X()) {
+  // Draw a mirror clone on the right edge
+  context.fillStyle = player.color;
+  context.fillRect(player.x + GAME_WIDTH(), player.y, player.width, player.height);
+                      }
       context.save();
       context.fillStyle = player.color;
       context.fillRect(player.x, player.y, player.width, player.height);

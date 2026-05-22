@@ -6,7 +6,7 @@ const LEVEL_MAPS = [
     platforms: [
       { x: 150, y: 400, w: 120, h: 15 },
       { x: 350, y: 280, w: 160, h: 20 },
-      { x: 40, y: 30, w: 10, h: 20, vy: 2, minY: 30, maxY: 100 }
+      { x: 40, y: 30, w: 10, h: 5, vy: 2, minY: 35, maxY: 50 }
     ],
     spikes: [
       { x: 400, y: 400, w:50, h:50 } // Now perfectly visible sitting on the floor!
@@ -21,7 +21,7 @@ const LEVEL_MAPS = [
     platforms: [
       { x: 80,  y: 380, w: 80,  h: 15 },
       { x: 220, y: 290, w: 80,  h: 15 },
-      { x: ,450, y: 200, w: 180, h: 20, vy: 2, minY: 450, maxY: 550 }
+      { x: 450, y: 200, w: 180, h: 20, vy: 2, minY: 460, maxY: 500 }
     ],
     spikes: [
       { x: 240, y: 460, w: 40, h: 40 }

@@ -14,13 +14,23 @@ initKeys();
 const BASE_WIDTH = 960;
 const BASE_HEIGHT = 540;
 
-// 🔊 Updated Sound trigger with mute check
+let z_ctx;
+const zzfx=(...t)=>{
+  if(!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext);
+  if(z_ctx.state === 'suspended') z_ctx.resume(); // Wakes up context on user interaction
+  let e=0;for(let r=0;r<t.length;r++){let i=t[r];if(i instanceof Array)for(let a=0;a<i.length;a++){let s=i[a];if(s instanceof Array)for(let c=0;c<s.length;c++)e+=s[c]?s[c]:0;else e+=i[a]?i[a]:0}else e+=t[r]?t[r]:0}
+  let f=z_ctx.createGain(),a=z_ctx.createOscillator();
+  a.connect(f),f.connect(z_ctx.destination),a.start(),a.stop(z_ctx.currentTime+.1);return a
+};
+
+// 🔊 Centralized Sound Manager
 function playSound(type) {
-  if (isMuted) return; // Stop if muted
-  if (type === 'jump') zzfx(...[.6,,100,,.01,.03,1,2,,,,, .1]);
-  if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
-  if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
-}
+  if (isMuted) return;
+  try {
+    if (type === 'jump') zzfx(...[,,307,.02,.03,.07,,3.7,,132,,,,,,,,.73,.01]); // Jump 0
+    if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
+    if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
+  }
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);

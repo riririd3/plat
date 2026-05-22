@@ -76,10 +76,13 @@ let player = Sprite({
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
     
-    // DYNAMIC JUMP: If gravity is inverted (-1), jumping multiplies by -1 
-    // to fling you DOWN away from the ceiling!
+    // Dynamic jump vector calculation
     if ((keyPressed("space") || touch.jump) && this.grounded) {
-      this.dy = -11 * gravityDir;
+      if (gravityDir === 1) {
+        this.dy = -11; // Jump UP normally from floors
+      } else {
+        this.dy = 7;   // Fling DOWN forcefully away from ceilings!
+      }
       this.grounded = false;
     }
     
@@ -393,18 +396,35 @@ let loop = GameLoop({
       }
     }
 
+    // 🧱 FIX: Two-Way Solid Platform Collision Logic
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
+        
         let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
         let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
+        
         if (overlapX < overlapY) {
-          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; else player.x += overlapX;
+          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; 
+          else player.x += overlapX;
         } else {
-          if (player.y + player.height / 2 < p.y + p.height / 2) {
-            player.y -= overlapY; player.dy = 0; player.grounded = true;
-            player.x += p.vx; player.y += p.vy; 
-          } else { player.y += overlapY; player.dy = 0; }
+          if (gravityDir === 1) {
+            // Normal Gravity: Land ON TOP of platforms safely
+            if (player.y + player.height / 2 < p.y + p.height / 2) {
+              player.y -= overlapY; player.dy = 0; player.grounded = true;
+              player.x += p.vx; player.y += p.vy; // Drag player with moving platforms
+            } else { 
+              player.y += overlapY; player.dy = 0; // Bump head from below
+            }
+          } else {
+            // Inverted Gravity: Stick to the UNDER-SURFACE of platforms safely
+            if (player.y + player.height / 2 > p.y + p.height / 2) {
+              player.y += overlapY; player.dy = 0; player.grounded = true;
+              player.x += p.vx; player.y += p.vy; // Drag player with moving ceiling
+            } else {
+              player.y -= overlapY; player.dy = 0; // Land on top while falling "up"
+            }
+          }
         }
       }
     }
@@ -614,14 +634,24 @@ let loop = GameLoop({
       context.save(); context.fillStyle = "#fbbf24"; context.beginPath(); context.arc(t.x, t.y, 6, 0, Math.PI * 2); context.fill(); context.restore();
     });
 
-    drawFog();
+    drawFog(); // Everything drawn above this line will be hidden in the dark!
 
-    // Layer 10: Particle simulation system drawing
+    // 🔥 3. MOVE TORCHES HERE (Draw the visible fire core on top of the light hole)
+    torches.forEach(t => {
+      context.save(); 
+      context.fillStyle = "#fbbf24"; 
+      context.beginPath(); 
+      context.arc(t.x, t.y, 6, 0, Math.PI * 2); 
+      context.fill(); 
+      context.restore();
+    });
+
+    // ✨ 4. PARTICLE EFFECTS (Render on top of fog so explosions are visible)
     particles.forEach(p => {
       context.save(); context.globalAlpha = p.alpha; context.fillStyle = p.color; context.fillRect(p.x, p.y, p.size, p.size); context.restore();
     });
 
-    // Layer 11: Player Characters and Screen Mirror Wraps
+    // 🏃 5. PLAYER CHARACTER AND WRAP COPIES (Render on top of fog so player is illuminated)
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {
@@ -636,6 +666,7 @@ let loop = GameLoop({
       context.restore();
     }
 
+    // 📱 6. USER INTERFACE & BUTTON STATS
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawRestartButton(); }
 

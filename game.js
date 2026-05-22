@@ -30,6 +30,7 @@ function playSound(type) {
     if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
     if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
   }
+}
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);

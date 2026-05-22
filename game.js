@@ -588,6 +588,11 @@ let loop = GameLoop({
           context.restore();
         }
       });
+      
+      context.save();
+      context.fillStyle = player.color;
+      context.fillRect(player.x, player.y, player.width, player.height);
+      context.restore();
       // Inside render(), right next to your player drawing logic:
 if (player.x > GAME_X() + GAME_WIDTH() - player.width) {
   // Draw a mirror clone on the left edge before the player fully teleports
@@ -597,11 +602,7 @@ if (player.x > GAME_X() + GAME_WIDTH() - player.width) {
   // Draw a mirror clone on the right edge
   context.fillStyle = player.color;
   context.fillRect(player.x + GAME_WIDTH(), player.y, player.width, player.height);
-                      }
-      context.save();
-      context.fillStyle = player.color;
-      context.fillRect(player.x, player.y, player.width, player.height);
-      context.restore();
+}
     }
 
     drawControlsBackground();

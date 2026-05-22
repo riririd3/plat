@@ -25,7 +25,7 @@ const zzfx=(...t)=>{
 // 🔊 Centralized Sound Manager
 function playSound(type) {
   if (isMuted) return;
-    if (type === 'jump') zzfx(...[,,307,.02,.03,.07,,3.7,,132,,,,,,,,.73,.01]); // Jump 0
+    if (type === 'jump') zzfx(...[,,327,.04,.03,.07,5,.9414115591186786,27,139,,,,,,.1,,.66,.02]); // Jump 0
     if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
     if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
 }

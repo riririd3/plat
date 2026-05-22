@@ -25,13 +25,9 @@ const zzfx=(...t)=>{
 // 🔊 Centralized Sound Manager
 function playSound(type) {
   if (isMuted) return;
-  try {
     if (type === 'jump') zzfx(...[,,307,.02,.03,.07,,3.7,,132,,,,,,,,.73,.01]); // Jump 0
     if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
     if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
-  } catch(e) { 
-    console.log("Audio skipped"); 
-  }
 }
 
 function resizeGame() {

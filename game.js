@@ -141,7 +141,6 @@ function loadLevel(index) {
         width: p.w, 
         height: p.h, 
         color: "#334155",
-        // Store movement physics properties cleanly
         vx: p.vx || 0,
         vy: p.vy || 0,
         minX: p.minX ? GAME_X() + p.minX : null,
@@ -385,7 +384,7 @@ canvas.addEventListener("touchend", handleTouch, { passive: false });
 // Core Loop Engine
 let loop = GameLoop({
   update() {
-    // 1. Move Particle update simulation loops inside update() where they belong!
+    // 1. Particle update physics mechanics
     for (let i = particles.length - 1; i >= 0; i--) {
       let p = particles[i];
       p.x += p.vx;
@@ -408,77 +407,13 @@ let loop = GameLoop({
       if (stateTimer <= 0) gameState = "play";
     }
 
-    player.update();
-
-    if (gameState === "play") {
-      playerTrail.push({ x: player.x, y: player.y, alpha: 0.45 });
-      if (playerTrail.length > 8) playerTrail.shift();
-      playerTrail.forEach(t => t.alpha -= 0.04);
-    }
-
-    player.grounded = false;
-    const floor = canvas.height - 40;
-    if (player.y + player.height >= floor) {
-      player.y = floor - player.height;
-      player.dy = 0;
-      player.grounded = true;
-    }
-
-    for (let p of platforms) {
-      if (player.x < p.x + p.width && player.x + player.width > p.x &&
-          player.y < p.y + p.height && player.y + player.height > p.y) {
-        let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
-        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
-
-        if (overlapX < overlapY) {
-          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX;
-          else player.x += overlapX;
-        } else {
-          if (player.y + player.height / 2 < p.y + p.height / 2) {
-            player.y -= overlapY; player.dy = 0; player.grounded = true;
-          } else {
-            player.y += overlapY; player.dy = 0;
-          }
-        }
-      }
-    }
-
-    for (let spike of spikes) {
-      if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
-          player.y < spike.y + spike.height && player.y + player.height > spike.y) {
-        spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
-        loadLevel(currentLevelIndex); 
-      }
-    }
-
-    for (let star of stars) {
-      if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
-          player.y < star.y + star.height && player.y + player.height > star.y) {
-        star.pickedUp = true;
-        spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
-        currentLevelIndex++;
-        loadLevel(currentLevelIndex);
-      }
-    }
-  }, // <-- Clean comma separating update and render methods
-
-  render() {
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawGameArea();
-    drawGround();
-
-    // ----------------------------------------------------
-    // NEW: UPDATE MOVING PLATFORMS & SPIKES MECHANICS
-    // ----------------------------------------------------
+    // 2. UPDATE MOVING PLATFORMS & SPIKES (Stays here in update!)
     platforms.forEach(p => {
       p.x += p.vx;
       p.y += p.vy;
-      // Reverse horizontal speed if boundary hit
       if (p.minX !== null && p.maxX !== null) {
         if (p.x <= p.minX || p.x + p.width >= p.maxX) p.vx *= -1;
       }
-      // Reverse vertical speed if boundary hit
       if (p.minY !== null && p.maxY !== null) {
         if (p.y <= p.minY || p.y + p.height >= p.maxY) p.vy *= -1;
       }
@@ -495,12 +430,15 @@ let loop = GameLoop({
       }
     });
 
-    // Run player's normal position adjustments
     player.update();
 
-    // ----------------------------------------------------
-    // UPGRADED: PLATFORM RESOLUTION + RIDER PHYSICS
-    // ----------------------------------------------------
+    if (gameState === "play") {
+      playerTrail.push({ x: player.x, y: player.y, alpha: 0.45 });
+      if (playerTrail.length > 8) playerTrail.shift();
+      playerTrail.forEach(t => t.alpha -= 0.04);
+    }
+
+    // Ground Boundary
     player.grounded = false;
     const floor = canvas.height - 40;
     if (player.y + player.height >= floor) {
@@ -509,6 +447,7 @@ let loop = GameLoop({
       player.grounded = true;
     }
 
+    // Upgraded Platform Collisions + Rider Physics
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -524,17 +463,59 @@ let loop = GameLoop({
             player.dy = 0; 
             player.grounded = true;
 
-            // 🎯 THE SECRET RIDER PHYSICS SAUCE:
-            // If we landed on top of this platform, drag the player along with its current speed!
+            // Target Rider Attachment! Drag character along with platform speeds
             player.x += p.vx;
             player.y += p.vy; 
           } else {
-            player.y += overlapY; player.dy = 0; // Ceiling bump
+            player.y += overlapY; player.dy = 0;
           }
         }
       }
     }
 
+    // Hazard Collisions
+    for (let spike of spikes) {
+      if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
+          player.y < spike.y + spike.height && player.y + player.height > spike.y) {
+        spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
+        loadLevel(currentLevelIndex); 
+      }
+    }
+
+    // Star Collisions
+    for (let star of stars) {
+      if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
+          player.y < star.y + star.height && player.y + player.height > star.y) {
+        star.pickedUp = true;
+        spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
+        currentLevelIndex++;
+        loadLevel(currentLevelIndex);
+      }
+    }
+  }, 
+
+  render() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawGameArea();
+    drawGround();
+
+    // 1. Draw Platforms (Restored!)
+    platforms.forEach(p => {
+      context.save();
+      context.fillStyle = "#1e293b";
+      context.fillRect(p.x + 4, p.y + 4, p.width, p.height);
+
+      context.fillStyle = p.color;
+      context.fillRect(p.x, p.y, p.width, p.height);
+
+      context.strokeStyle = "#6366f1"; 
+      context.lineWidth = 3;           
+      context.strokeRect(p.x, p.y, p.width, p.height);
+      context.restore();
+    });
+
+    // 2. Draw Spikes
     spikes.forEach(s => {
       context.save();
       context.translate(s.x + s.width / 2, s.y + s.height / 2);
@@ -548,6 +529,7 @@ let loop = GameLoop({
       context.restore();
     });
 
+    // 3. Draw Stars
     stars.forEach(star => {
       if (star.pickedUp) return;
       let hoverY = Math.sin(starPulseTime) * 4;
@@ -570,6 +552,7 @@ let loop = GameLoop({
 
     drawFog();
 
+    // 4. Draw Particles
     particles.forEach(p => {
       context.save();
       context.globalAlpha = p.alpha;
@@ -578,6 +561,7 @@ let loop = GameLoop({
       context.restore();
     });
 
+    // 5. Draw Player, Trails, and Mirror Edge Clones
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {
@@ -589,20 +573,21 @@ let loop = GameLoop({
         }
       });
       
+      // Main Player Block
       context.save();
       context.fillStyle = player.color;
       context.fillRect(player.x, player.y, player.width, player.height);
       context.restore();
-      // Inside render(), right next to your player drawing logic:
-if (player.x > GAME_X() + GAME_WIDTH() - player.width) {
-  // Draw a mirror clone on the left edge before the player fully teleports
-  context.fillStyle = player.color;
-  context.fillRect(player.x - GAME_WIDTH(), player.y, player.width, player.height);
-} else if (player.x < GAME_X()) {
-  // Draw a mirror clone on the right edge
-  context.fillStyle = player.color;
-  context.fillRect(player.x + GAME_WIDTH(), player.y, player.width, player.height);
-}
+      
+      // Screen wrap ghost renders
+      context.save();
+      context.fillStyle = player.color;
+      if (player.x > GAME_X() + GAME_WIDTH() - player.width) {
+        context.fillRect(player.x - GAME_WIDTH(), player.y, player.width, player.height);
+      } else if (player.x < GAME_X()) {
+        context.fillRect(player.x + GAME_WIDTH(), player.y, player.width, player.height);
+      }
+      context.restore();
     }
 
     drawControlsBackground();
@@ -642,8 +627,8 @@ if (player.x > GAME_X() + GAME_WIDTH() - player.width) {
       context.font = "bold 24px Arial";
       context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }
-  } // <-- Closes render() cleanly
-}); // <-- Closes GameLoop completely with a clean parenthesis!
+  } 
+}); 
 
 gameState = "menu"; 
 loop.start();

@@ -13,8 +13,6 @@ initKeys();
 
 const BASE_WIDTH = 960;
 const BASE_HEIGHT = 540;
-const restartBtn = { size: 40 };
-let isMuted = false;
 
 // 🔊 Updated Sound trigger with mute check
 function playSound(type) {
@@ -50,6 +48,7 @@ let currentLevelIndex = 0;
 let gameState = "menu"; 
 let stateTimer = 3.0;      
 let totalPlayTime = 0.0;   
+let isMuted = false;
 
 // Dynamic Entity Arrays
 let platforms = [];

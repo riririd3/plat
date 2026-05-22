@@ -16,20 +16,6 @@ const BASE_HEIGHT = 540;
 const restartBtn = { size: 40 };
 let isMuted = false;
 
-// 🔊 Mute Button Drawing (Place this in your render() loop, below drawRestartButton)
-function drawMuteButton() {
-  const x = canvas.width - RIGHT_UI() / 2; 
-  const y = 120; // Positioned below the RST button (which is at y=60)
-  context.save();
-  context.fillStyle = isMuted ? "#ef4444" : "#22c55e"; 
-  context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size);
-  context.fillStyle = "black";
-  context.font = "bold 10px Arial";
-  context.textAlign = "center";
-  context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
-  context.restore();
-}
-
 // 🔊 Updated Sound trigger with mute check
 function playSound(type) {
   if (isMuted) return; // Stop if muted

@@ -10,7 +10,7 @@ const LEVEL_MAPS = [
     torches: [
       { x: 150, y: 350, radius: 90 }
     ],
-    // Networks of buttons and blocks. ID link numbers must match!
+    // Networks of buttons and blocks.
     buttons: [
     { x: 100, y: 490 },
     { x: 400, y: 250 }
@@ -18,12 +18,10 @@ const LEVEL_MAPS = [
     gates: [
     { x: 500, y: 420, w: 20, h: 80 } 
     ],
-  // 🔄 GRAVITY PLATFORMS: 
-  // "inverter" blocks only trigger when hit from underneath.
-  // "restorer" blocks only trigger when stepped on from above.
+    // GRAVITY PLATFORMS: 
     gravityPlatforms: [
     { x: 200, y: 340, w: 80, h: 20, type: "inverter" },
-    { x: 400, y: 150, w: 80, h: 20, type: "restorer" }
+    { x: 400, y: 120, w: 80, h: 20, type: "restorer" }
     ],
     // Fragile step blocks (break on touch, auto-respawn in 1 sec)
     fragileBlocks: [

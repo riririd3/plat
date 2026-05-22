@@ -195,12 +195,14 @@ function loadLevel(index) {
     });
   }
 
-  // 9. Load Interlocking Buttons & Gates
+  // Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
-      buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, id: b.id, pressed: false, color: "#eab308" });
+      buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, pressed: false, color: "#eab308" 
+      });
     });
   }
+  
   if (currentLevel.gates) {
     currentLevel.gates.forEach(g => {
       gates.push({ x: GAME_X() + g.x, y: g.y, w: g.w || 20, h: g.h || 80, id: g.id, opened: false, color: "#3b82f6" });

@@ -129,10 +129,9 @@ function loadLevel(index) {
   gravityPlatforms = [];
   gravityDir = 1; 
 
-  // 2. DEFINE currentLevel FIRST so everything below can read it!
   const currentLevel = LEVEL_MAPS[index];
 
-  // 3. Load Gravity Platforms safely
+  // 2. Load Gravity Platforms safely
   if (currentLevel.gravityPlatforms) {
     currentLevel.gravityPlatforms.forEach(gp => {
       gravityPlatforms.push({
@@ -146,7 +145,7 @@ function loadLevel(index) {
     });
   }
 
-  // 4. Set Player Spawn Location
+  // 3. Set Player Spawn Location
   if (currentLevel.playerSpawn) {
     player.x = GAME_X() + currentLevel.playerSpawn.x;
     player.y = currentLevel.playerSpawn.y;
@@ -157,7 +156,7 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // 5. Load Static / Moving Platforms
+  // 4. Load Static / Moving Platforms
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
@@ -169,7 +168,7 @@ function loadLevel(index) {
     });
   }
 
-  // 6. Load Hazards
+  // 5. Load Hazards
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
@@ -181,21 +180,21 @@ function loadLevel(index) {
     });
   }
 
-  // 7. Load Goals
+  // 6. Load Goals
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {
       stars.push(Sprite({ x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "gold", pickedUp: false }));
     });
   }
 
-  // 8. Load Torches
+  // 7. FIXED: Torch loader restored to dynamic maps configuration
   if (currentLevel.torches) {
     currentLevel.torches.forEach(t => {
       torches.push({ x: GAME_X() + t.x, y: t.y, radius: t.radius || 85 });
     });
   }
   
-  // Load Interlocking Buttons & Gates
+  // 8. Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
       buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, pressed: false, color: "#eab308" });
@@ -208,14 +207,14 @@ function loadLevel(index) {
     });
   }
 
-  // 10. Load Fragile Blocks
+  // 9. Load Fragile Blocks
   if (currentLevel.fragileBlocks) {
     currentLevel.fragileBlocks.forEach(fb => {
       fragileBlocks.push({ x: GAME_X() + fb.x, y: fb.y, width: fb.w, height: fb.h, state: "solid", timer: 0.0, color: "#f43f5e" });
     });
   }
 
-  // 11. Load Launch/Dash Pads
+  // 10. Load Launch/Dash Pads
   if (currentLevel.pads) {
     currentLevel.pads.forEach(pd => {
       pads.push({ x: GAME_X() + pd.x, y: pd.y, width: pd.w || 32, height: pd.h || 12, type: pd.type, power: pd.power, color: pd.type === "dash" ? "#06b6d4" : "#a855f7" });
@@ -245,33 +244,30 @@ function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = c
 function drawRestartButton() { const x = canvas.width - RIGHT_UI() / 2; const y = 60; context.save(); context.fillStyle = "#f59e0b"; context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); context.fillStyle = "black"; context.font = "bold 12px Arial"; context.textAlign = "center"; context.fillText("RST", x, y + 4); context.restore(); }
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
+// FIXED: Clean canvas-eraser composite masking operation to prevent blackouts
 function drawFog() {
   if (gameState !== "play") return;
   
   context.save();
-  // 1. Paint a solid dark blanket over the active gameplay screen
   context.beginPath();
   context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
   context.fillStyle = "rgba(0, 0, 0, 1.0)";
   context.fill();
   
-  // 2. Set the canvas to "eraser mode"
   context.globalCompositeOperation = "destination-out";
   
-  // Cut the player's mobile flashlight circle
   const maskRadius = 75;
   context.beginPath();
   context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
   context.fill();
   
-  // Cut holes for every static room torch smoothly without conflicting
   torches.forEach(t => {
     context.beginPath();
     context.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
     context.fill();
   });
   
-  context.restore(); // Revert back to normal painting mode
+  context.restore(); 
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
@@ -334,7 +330,6 @@ canvas.addEventListener("touchend", handleTouch, { passive: false });
 // Core Game Processing Engine
 let loop = GameLoop({
   update() {
-    // 1. Particle update cycle
     for (let i = particles.length - 1; i >= 0; i--) {
       let p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.alpha -= p.decay;
       if (p.alpha <= 0) particles.splice(i, 1);
@@ -350,7 +345,6 @@ let loop = GameLoop({
       if (stateTimer <= 0) gameState = "play";
     }
 
-    // 2. Linear Moving Object Pacing Simulation Loops
     platforms.forEach(p => {
       p.x += p.vx; p.y += p.vy;
       if (p.minX !== null && p.maxX !== null) { if (p.x <= p.minX || p.x + p.width >= p.maxX) p.vx *= -1; }
@@ -363,14 +357,13 @@ let loop = GameLoop({
       if (s.minY !== null && s.maxY !== null) { if (s.y <= s.minY || s.y + s.height >= s.maxY) s.vy *= -1; }
     });
 
-    // 3. Fragile Platform Break/Respawn Clock updates
     fragileBlocks.forEach(b => {
       if (b.state === "stepping") {
         b.timer += 1 / 60;
         if (b.timer >= 0.4) { b.state = "broken"; b.timer = 0; }
       } else if (b.state === "broken") {
         b.timer += 1 / 60;
-        if (b.timer >= 1.0) { b.state = "solid"; b.timer = 0; } // Auto-respawn 1 sec
+        if (b.timer >= 1.0) { b.state = "solid"; b.timer = 0; } 
       }
     });
 
@@ -382,7 +375,6 @@ let loop = GameLoop({
       playerTrail.forEach(t => t.alpha -= 0.04);
     }
 
-    // DYNAMIC SCREEN BOUNDARY RESOLVER
     player.grounded = false;
     const floor = canvas.height - 40;
     const ceiling = 0; 
@@ -401,7 +393,6 @@ let loop = GameLoop({
       }
     }
 
-    // 4. Moving Platform Resolvers + Rider Momentum
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -412,13 +403,12 @@ let loop = GameLoop({
         } else {
           if (player.y + player.height / 2 < p.y + p.height / 2) {
             player.y -= overlapY; player.dy = 0; player.grounded = true;
-            player.x += p.vx; player.y += p.vy; // Rider sync drag
+            player.x += p.vx; player.y += p.vy; 
           } else { player.y += overlapY; player.dy = 0; }
         }
       }
     }
 
-    // 5. Fragile Blocks Spatial Intersection Collisions
     fragileBlocks.forEach(b => {
       if (b.state === "solid" || b.state === "stepping") {
         if (player.x < b.x + b.width && player.x + player.width > b.x &&
@@ -432,7 +422,6 @@ let loop = GameLoop({
       }
     });
 
-    // 6. Security Gates Spatial Intersection Collisions
     gates.forEach(g => {
       if (g.opened) return; 
       if (player.x < g.x + g.w && player.x + player.width > g.x &&
@@ -448,15 +437,12 @@ let loop = GameLoop({
       }
     });
 
-    // 7. COLLECTIVE BUTTONS & GATES CONTROLLER (Moved to update!)
     buttons.forEach(b => {
       if (player.x < b.x + b.w && player.x + player.width > b.x &&
           player.y < b.y + b.h && player.y + player.height > b.y) {
         if (!b.pressed) {
           b.pressed = true;
           spawnExplosion(b.x + b.w/2, b.y, "#eab308", 12);
-
-          // Check if every single button on the map is pressed
           const allPressed = buttons.every(btn => btn.pressed);
           if (allPressed) {
             gates.forEach(g => {
@@ -470,7 +456,7 @@ let loop = GameLoop({
       }
     });
 
-    // 🔄 RE-ENGINEERED TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE
+    // TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE
     gravityPlatforms.forEach(p => {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -478,7 +464,6 @@ let loop = GameLoop({
         let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
         let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
         
-        // Handle side-to-side bumping so you don't phase through walls
         if (overlapX < overlapY) {
           if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; 
           else player.x += overlapX;
@@ -486,24 +471,18 @@ let loop = GameLoop({
         }
 
         if (p.type === "restorer") {
-          // Orange blocks only block you from ABOVE (under inverted gravity)
           if (gravityDir === -1 && player.y + player.height / 2 < p.y + p.height / 2) {
             player.y -= overlapY; 
             player.dy = 0; 
             player.grounded = true;
-            
-            // Trigger drop back down
             gravityDir = 1;
             spawnExplosion(p.x + p.width/2, p.y, "#f97316", 15);
           }
         } 
         else if (p.type === "inverter") {
-          // Cyan blocks only block you from BELOW (under normal gravity)
           if (gravityDir === 1 && player.y + player.height / 2 > p.y + p.height / 2) {
             player.y += overlapY; 
             player.dy = 0;
-            
-            // Trigger launch upward
             gravityDir = -1;
             spawnExplosion(p.x + p.width/2, p.y + p.height, "#06b6d4", 15);
           }
@@ -511,7 +490,6 @@ let loop = GameLoop({
       }
     });
 
-    // 9. Launcher & Trampoline Vector Boost Pad Collisions
     pads.forEach(p => {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -525,7 +503,6 @@ let loop = GameLoop({
       }
     });
 
-    // 10. Hazard Collisions
     for (let spike of spikes) {
       if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
           player.y < spike.y + spike.height && player.y + player.height > spike.y) {
@@ -534,7 +511,6 @@ let loop = GameLoop({
       }
     }
 
-    // 11. Win Star Collectible Collisions
     for (let star of stars) {
       if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
           player.y < star.y + star.height && player.y + player.height > star.y) {
@@ -547,6 +523,8 @@ let loop = GameLoop({
 
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Core Layout Canvas Base Background layers
     drawGameArea();
     drawGround();
 
@@ -562,7 +540,7 @@ let loop = GameLoop({
       }
     });
 
-    // Render Cyan & Orange Gravity Platforms
+    // FIXED: Render Cyan & Orange Gravity Platforms BELOW the upcoming fog mask layer!
     gravityPlatforms.forEach(p => {
       context.save();
       context.fillStyle = p.color;
@@ -652,7 +630,6 @@ let loop = GameLoop({
       });
       context.save(); context.fillStyle = player.color; context.fillRect(player.x, player.y, player.width, player.height); context.restore();
       
-      // Mirror Edge Screen Wrap Renders
       context.save(); context.fillStyle = player.color;
       if (player.x > GAME_X() + GAME_WIDTH() - player.width) { context.fillRect(player.x - GAME_WIDTH(), player.y, player.width, player.height); } 
       else if (player.x < GAME_X()) { context.fillRect(player.x + GAME_WIDTH(), player.y, player.width, player.height); }

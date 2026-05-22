@@ -20,7 +20,7 @@ const LEVEL_MAPS = [
     platforms: [
       { x: 80,  y: 380, w: 80,  h: 15 },
       { x: 220, y: 290, w: 80,  h: 15 },
-      { x: 380, y: 200, w: 180, h: 20 vx: 2, minX: 550, maxX: 300 }
+      { x: 380, y: 200, w: 180, h: 20, vx: 2, minX: 550, maxX: 300 }
     ],
     spikes: [
       { x: 240, y: 460, w: 40, h: 40 }

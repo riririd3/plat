@@ -48,7 +48,6 @@ let currentLevelIndex = 0;
 let gameState = "menu"; 
 let stateTimer = 3.0;      
 let totalPlayTime = 0.0;   
-let isMuted = false;
 
 // Dynamic Entity Arrays
 let platforms = [];
@@ -72,6 +71,7 @@ let touch = { left: false, right: false, jump: false };
 const dpad = { size: 50 };
 const jumpBtn = { size: 50 };
 const restartBtn = { size: 40 };
+let isMuted = false;
 const startMenuBtn = { w: 200, h: 50 };
 const centerFullBtn = { w: 200, h: 45 };
 

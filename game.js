@@ -27,7 +27,7 @@ function resizeGame() {
 resizeGame();
 window.addEventListener("resize", resizeGame);
 
-// Secondary Offscreen Mask Canvas to fix alpha clipping bugs
+// 🕶️ FIXED: Offscreen buffer canvas to handle isolated blending math for the lighting holes
 const maskCanvas = document.createElement("canvas");
 const maskContext = maskCanvas.getContext("2d");
 
@@ -69,7 +69,7 @@ const restartBtn = { size: 40 };
 const startMenuBtn = { w: 200, h: 50 };
 const centerFullBtn = { w: 200, h: 45 };
 
-// Upgraded Player Configuration with precise gravity direction checks
+// Upgraded Player Configuration with variable gravity direction
 let player = Sprite({
   x: 0, y: 0, width: 32, height: 32, color: "lime", dy: 0, grounded: false,
   update() {
@@ -80,12 +80,12 @@ let player = Sprite({
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
     
-    // FIX: Dynamic jump vector calculation safely separated from direct multiplications
+    // 🤸 FIXED JUMP: Differentiates jump vectors depending on upside-down status
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       if (gravityDir === 1) {
-        this.dy = -11; // Jump UP from floors
+        this.dy = -11; 
       } else {
-        this.dy = 7;   // Fling DOWN away from ceilings!
+        this.dy = 7; // Flings you downward away from the ceiling
       }
       this.grounded = false;
     }
@@ -130,7 +130,6 @@ function loadLevel(index) {
   stateTimer = 3.0;
   resetTouch();
 
-  // Flush all dynamic object groups clean
   platforms = []; spikes = []; stars = []; playerTrail = [];
   torches = []; buttons = []; gates = []; fragileBlocks = []; pads = [];
   gravityPlatforms = [];
@@ -138,21 +137,15 @@ function loadLevel(index) {
 
   const currentLevel = LEVEL_MAPS[index];
 
-  // Load Gravity Platforms safely
   if (currentLevel.gravityPlatforms) {
     currentLevel.gravityPlatforms.forEach(gp => {
       gravityPlatforms.push({
-        x: GAME_X() + gp.x,
-        y: gp.y,
-        width: gp.w,
-        height: gp.h,
-        type: gp.type, // "inverter" or "restorer"
-        color: gp.type === "inverter" ? "#06b6d4" : "#f97316" // Cyan vs Orange
+        x: GAME_X() + gp.x, y: gp.y, width: gp.w, height: gp.h, type: gp.type,
+        color: gp.type === "inverter" ? "#06b6d4" : "#f97316"
       });
     });
   }
 
-  // Set Player Spawn Location
   if (currentLevel.playerSpawn) {
     player.x = GAME_X() + currentLevel.playerSpawn.x;
     player.y = currentLevel.playerSpawn.y;
@@ -163,7 +156,6 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // Load Static / Moving Platforms
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
@@ -175,7 +167,6 @@ function loadLevel(index) {
     });
   }
 
-  // Load Hazards
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
@@ -187,21 +178,18 @@ function loadLevel(index) {
     });
   }
 
-  // Load Goals
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {
       stars.push(Sprite({ x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "gold", pickedUp: false }));
     });
   }
 
-  // Torch loader configuration
   if (currentLevel.torches) {
     currentLevel.torches.forEach(t => {
       torches.push({ x: GAME_X() + t.x, y: t.y, radius: t.radius || 85 });
     });
   }
   
-  // Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
       buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, pressed: false, color: "#eab308" });
@@ -214,14 +202,12 @@ function loadLevel(index) {
     });
   }
 
-  // Load Fragile Blocks
   if (currentLevel.fragileBlocks) {
     currentLevel.fragileBlocks.forEach(fb => {
       fragileBlocks.push({ x: GAME_X() + fb.x, y: fb.y, width: fb.w, height: fb.h, state: "solid", timer: 0.0, color: "#f43f5e" });
     });
   }
 
-  // Load Launch/Dash Pads
   if (currentLevel.pads) {
     currentLevel.pads.forEach(pd => {
       pads.push({ x: GAME_X() + pd.x, y: pd.y, width: pd.w || 32, height: pd.h || 12, type: pd.type, power: pd.power, color: pd.type === "dash" ? "#06b6d4" : "#a855f7" });
@@ -229,7 +215,6 @@ function loadLevel(index) {
   }
 }
 
-// Global Core Visual Elements
 function drawGameArea() {
   let gradient = context.createLinearGradient(GAME_X(), 0, GAME_X(), canvas.height);
   gradient.addColorStop(0, "#0f172a"); gradient.addColorStop(1, "#1e1e38"); 
@@ -251,38 +236,37 @@ function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = c
 function drawRestartButton() { const x = canvas.width - RIGHT_UI() / 2; const y = 60; context.save(); context.fillStyle = "#f59e0b"; context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); context.fillStyle = "black"; context.font = "bold 12px Arial"; context.textAlign = "center"; context.fillText("RST", x, y + 4); context.restore(); }
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
-// FIX: Isolated Offscreen Mask Layer drawing method prevents light sources from clipping into black boxes
+// 🕶️ FIXED FOG: Processes clipping operations safely within an offscreen buffer canvas context
 function drawFog() {
   if (gameState !== "play") return;
   
-  // Keep offscreen canvas dimensions aligned with active frame size
   if (maskCanvas.width !== canvas.width || maskCanvas.height !== canvas.height) {
     maskCanvas.width = canvas.width;
     maskCanvas.height = canvas.height;
   }
   
-  // 1. Paint basic solid dark blanket layout inside offscreen canvas
+  // 1. Paint full black mask sheet on the buffer
   maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
   maskContext.fillStyle = "rgba(0, 0, 0, 0.98)";
   maskContext.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
   
-  // 2. Adjust offscreen blend pipeline to act as custom eraser
+  // 2. Set to subtraction/eraser mode
   maskContext.globalCompositeOperation = "destination-out";
   
-  // 3. Subtract player's flashlight radius holes
+  // 3. Punch player flashlight radius hole
   const maskRadius = 75;
   maskContext.beginPath();
   maskContext.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
   maskContext.fill();
   
-  // 4. Subtract static environment room torch radii safely
+  // 4. Punch static environmental torch visibility holes
   torches.forEach(t => {
     maskContext.beginPath();
     maskContext.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
     maskContext.fill();
   });
   
-  // 5. Blit completed offscreen stencil sheet cleanly directly over screen rendering buffer
+  // 5. Blit completed stencil lighting sheet overlay cleanly onto main scene
   context.save();
   context.drawImage(maskCanvas, 0, 0);
   context.restore();
@@ -411,7 +395,7 @@ let loop = GameLoop({
       }
     }
 
-    // FIX: Two-Way Solid Platform Collision Logic referencing gravity orientation
+    // 🧱 FIXED COLLISION: Respects current vertical physics orientation to avoid phasethrough bugs
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -435,7 +419,7 @@ let loop = GameLoop({
       }
     }
 
-    // FIX: Two-Way Fragile Platform Collision Logic referencing gravity orientation
+    // 🧱 FIXED FRAGILE COLLISION: Two-Way directional platform physics tracking
     fragileBlocks.forEach(b => {
       if (b.state === "solid" || b.state === "stepping") {
         if (player.x < b.x + b.width && player.x + player.width > b.x &&
@@ -456,7 +440,7 @@ let loop = GameLoop({
       }
     });
 
-    // FIX: Two-Way Security Gates Collision Logic referencing gravity orientation
+    // 🧱 FIXED BARRIER COLLISION: Safe sliding across gates regardless of gravity orientation
     gates.forEach(g => {
       if (g.opened) return; 
       if (player.x < g.x + g.w && player.x + player.width > g.x &&
@@ -496,7 +480,6 @@ let loop = GameLoop({
       }
     });
 
-    // TWO-WAY GRAVITY PLATFORMS COLLISION ENGINE
     gravityPlatforms.forEach(p => {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -512,17 +495,14 @@ let loop = GameLoop({
 
         if (p.type === "restorer") {
           if (gravityDir === -1 && player.y + player.height / 2 < p.y + p.height / 2) {
-            player.y -= overlapY; 
-            player.dy = 0; 
-            player.grounded = true;
+            player.y -= overlapY; player.dy = 0; player.grounded = true;
             gravityDir = 1;
             spawnExplosion(p.x + p.width/2, p.y, "#f97316", 15);
           }
         } 
         else if (p.type === "inverter") {
           if (gravityDir === 1 && player.y + player.height / 2 > p.y + p.height / 2) {
-            player.y += overlapY; 
-            player.dy = 0;
+            player.y += overlapY; player.dy = 0;
             gravityDir = -1;
             spawnExplosion(p.x + p.width/2, p.y + p.height, "#06b6d4", 15);
           }
@@ -564,11 +544,10 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Core Layout Canvas Base Background layers
+    // Core Background Runway Layer blocks
     drawGameArea();
     drawGround();
 
-    // Layer 1: Guiding Runway Wireframe Dashed Tracks
     platforms.concat(spikes).forEach(p => {
       if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {
         context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
@@ -580,41 +559,30 @@ let loop = GameLoop({
       }
     });
 
-    // Render Gravity Modules under upcoming fog sheet mask layers
+    // Render gravity pads behind fog layer
     gravityPlatforms.forEach(p => {
       context.save();
-      context.fillStyle = p.color;
-      context.fillRect(p.x, p.y, p.width, p.height);
-      context.strokeStyle = "white";
-      context.lineWidth = 1;
-      context.strokeRect(p.x, p.y, p.width, p.height);
+      context.fillStyle = p.color; context.fillRect(p.x, p.y, p.width, p.height);
+      context.strokeStyle = "white"; context.lineWidth = 1; context.strokeRect(p.x, p.y, p.width, p.height);
       context.restore();
     });
 
-    // Layer 2: Interactive Trampolines / Dash Pads
     pads.forEach(p => {
       context.save(); context.fillStyle = p.color; context.fillRect(p.x, p.y, p.width, p.height); context.restore();
     });
 
-    // Layer 3: Interactive Buttons Drawing
     buttons.forEach(b => {
-      context.save();
-      context.fillStyle = b.pressed ? "#475569" : b.color;
-      context.fillRect(b.x, b.y, b.w, b.h);
-      context.restore();
+      context.save(); context.fillStyle = b.pressed ? "#475569" : b.color; context.fillRect(b.x, b.y, b.w, b.h); context.restore();
     });
 
-    // Layer 4: Fragile Structural Blocks
     fragileBlocks.forEach(b => {
       if (b.state === "broken") return;
       context.save();
       let shake = b.state === "stepping" ? (Math.random() * 4 - 2) : 0;
-      context.fillStyle = b.color;
-      context.fillRect(b.x + shake, b.y, b.width, b.height);
+      context.fillStyle = b.color; context.fillRect(b.x + shake, b.y, b.width, b.height);
       context.restore();
     });
 
-    // Layer 5: Standard Platforms Drawing blocks
     platforms.forEach(p => {
       context.save();
       context.fillStyle = "#1e293b"; context.fillRect(p.x + 4, p.y + 4, p.width, p.height);
@@ -623,7 +591,6 @@ let loop = GameLoop({
       context.restore();
     });
 
-    // Layer 6: Security Barrier Gates
     gates.forEach(g => {
       if (g.opened) return;
       context.save();
@@ -632,14 +599,12 @@ let loop = GameLoop({
       context.restore();
     });
 
-    // Layer 7: Hazards (Spikes)
     spikes.forEach(s => {
       context.save(); context.translate(s.x + s.width / 2, s.y + s.height / 2); context.fillStyle = s.color;
       context.beginPath(); context.moveTo(0, -s.height / 2); context.lineTo(-s.width / 2, s.height / 2); context.lineTo(s.width / 2, s.height / 2);
       context.closePath(); context.fill(); context.restore();
     });
 
-    // Layer 8: Golden Star pickups
     stars.forEach(star => {
       if (star.pickedUp) return;
       let hoverY = Math.sin(starPulseTime) * 4;
@@ -649,20 +614,19 @@ let loop = GameLoop({
       context.globalAlpha = 1.0; context.rotate(starPulseTime * 0.2); context.fillRect(-star.width / 2, -star.height / 2, star.width, star.height); context.restore();
     });
 
-    // FIX: Render order corrections - Execute Fog Mask layer BEFORE active moving entities are drawn
+    // 🕶️ FIXED LAYER PLACEMENT: drawFog applies right here, covering up the static layout elements
     drawFog();
 
-    // Layer 9: Static Light Source Torch Fire Cores (Rendered ON TOP of fog circles)
+    // 🔥 FIXED LAYER PLACEMENT: Torches render on top of the dark sheet, inside their illuminated hole
     torches.forEach(t => {
       context.save(); context.fillStyle = "#fbbf24"; context.beginPath(); context.arc(t.x, t.y, 6, 0, Math.PI * 2); context.fill(); context.restore();
     });
 
-    // Layer 10: Particle simulation system drawing
     particles.forEach(p => {
       context.save(); context.globalAlpha = p.alpha; context.fillStyle = p.color; context.fillRect(p.x, p.y, p.size, p.size); context.restore();
     });
 
-    // Layer 11: Player Characters and Screen Mirror Wraps
+    // 🏃 FIXED LAYER PLACEMENT: Player character renders on top of everything so it stays fully visible
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {

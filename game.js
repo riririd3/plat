@@ -27,10 +27,6 @@ function resizeGame() {
 resizeGame();
 window.addEventListener("resize", resizeGame);
 
-// 🕶️ FIXED: Offscreen buffer canvas to handle isolated blending math for the lighting holes
-const maskCanvas = document.createElement("canvas");
-const maskContext = maskCanvas.getContext("2d");
-
 // Layout settings
 const LEFT_UI = () => 160;
 const RIGHT_UI = () => 160;
@@ -80,7 +76,7 @@ let player = Sprite({
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
     
-    // 🤸 FIXED JUMP: Differentiates jump vectors depending on upside-down status
+    // 🤸 JUMP LOGIC: Differentiates jump vectors depending on upside-down status
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       if (gravityDir === 1) {
         this.dy = -11; 
@@ -236,39 +232,32 @@ function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = c
 function drawRestartButton() { const x = canvas.width - RIGHT_UI() / 2; const y = 60; context.save(); context.fillStyle = "#f59e0b"; context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); context.fillStyle = "black"; context.font = "bold 12px Arial"; context.textAlign = "center"; context.fillText("RST", x, y + 4); context.restore(); }
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
-// 🕶️ FIXED FOG: Processes clipping operations safely within an offscreen buffer canvas context
+// 🕶️ ALTERNATIVE BULLETPROOF FOG: Uses path winding rules instead of complex blending styles
 function drawFog() {
   if (gameState !== "play") return;
   
-  if (maskCanvas.width !== canvas.width || maskCanvas.height !== canvas.height) {
-    maskCanvas.width = canvas.width;
-    maskCanvas.height = canvas.height;
-  }
+  context.save();
+  context.fillStyle = "rgba(0, 0, 0, 0.98)";
+  context.beginPath();
   
-  // 1. Paint full black mask sheet on the buffer
-  maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-  maskContext.fillStyle = "rgba(0, 0, 0, 0.98)";
-  maskContext.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
+  // Outer boundary: The main viewport window
+  context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
   
-  // 2. Set to subtraction/eraser mode
-  maskContext.globalCompositeOperation = "destination-out";
-  
-  // 3. Punch player flashlight radius hole
+  // Inner cutout 1: Player flashlight hole
+  const pX = player.x + player.width / 2;
+  const pY = player.y + player.height / 2;
   const maskRadius = 75;
-  maskContext.beginPath();
-  maskContext.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
-  maskContext.fill();
+  context.moveTo(pX + maskRadius, pY);
+  context.arc(pX, pY, maskRadius, 0, Math.PI * 2);
   
-  // 4. Punch static environmental torch visibility holes
+  // Inner cutouts 2+: Environmental torches
   torches.forEach(t => {
-    maskContext.beginPath();
-    maskContext.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-    maskContext.fill();
+    context.moveTo(t.x + t.radius, t.y);
+    context.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
   });
   
-  // 5. Blit completed stencil lighting sheet overlay cleanly onto main scene
-  context.save();
-  context.drawImage(maskCanvas, 0, 0);
+  // Fill everything EXCEPT the overlapping circular sub-paths
+  context.fill("evenodd");
   context.restore();
 }
 
@@ -395,7 +384,7 @@ let loop = GameLoop({
       }
     }
 
-    // 🧱 FIXED COLLISION: Respects current vertical physics orientation to avoid phasethrough bugs
+    // 🧱 COLLISION SYSTEM
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -419,7 +408,6 @@ let loop = GameLoop({
       }
     }
 
-    // 🧱 FIXED FRAGILE COLLISION: Two-Way directional platform physics tracking
     fragileBlocks.forEach(b => {
       if (b.state === "solid" || b.state === "stepping") {
         if (player.x < b.x + b.width && player.x + player.width > b.x &&
@@ -440,7 +428,6 @@ let loop = GameLoop({
       }
     });
 
-    // 🧱 FIXED BARRIER COLLISION: Safe sliding across gates regardless of gravity orientation
     gates.forEach(g => {
       if (g.opened) return; 
       if (player.x < g.x + g.w && player.x + player.width > g.x &&
@@ -544,7 +531,6 @@ let loop = GameLoop({
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Core Background Runway Layer blocks
     drawGameArea();
     drawGround();
 
@@ -559,7 +545,6 @@ let loop = GameLoop({
       }
     });
 
-    // Render gravity pads behind fog layer
     gravityPlatforms.forEach(p => {
       context.save();
       context.fillStyle = p.color; context.fillRect(p.x, p.y, p.width, p.height);
@@ -614,10 +599,10 @@ let loop = GameLoop({
       context.globalAlpha = 1.0; context.rotate(starPulseTime * 0.2); context.fillRect(-star.width / 2, -star.height / 2, star.width, star.height); context.restore();
     });
 
-    // 🕶️ FIXED LAYER PLACEMENT: drawFog applies right here, covering up the static layout elements
+    // 🕶️ DRAW FOG SHEET (Covers up the level scene layout)
     drawFog();
 
-    // 🔥 FIXED LAYER PLACEMENT: Torches render on top of the dark sheet, inside their illuminated hole
+    // 🔥 TORCH FLAMES (Rendered inside holes on top of the black mask layout)
     torches.forEach(t => {
       context.save(); context.fillStyle = "#fbbf24"; context.beginPath(); context.arc(t.x, t.y, 6, 0, Math.PI * 2); context.fill(); context.restore();
     });
@@ -626,7 +611,7 @@ let loop = GameLoop({
       context.save(); context.globalAlpha = p.alpha; context.fillStyle = p.color; context.fillRect(p.x, p.y, p.size, p.size); context.restore();
     });
 
-    // 🏃 FIXED LAYER PLACEMENT: Player character renders on top of everything so it stays fully visible
+    // 🏃 PLAYER AVATAR AND TRAIL
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {

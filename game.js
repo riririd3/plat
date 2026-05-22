@@ -50,6 +50,8 @@ let buttons = [];
 let gates = [];
 let fragileBlocks = [];
 let pads = [];
+let gravityPlatforms = [];
+let gravityDir = 1; // 1 = Normal (Down), -1 = Inverted (Up)
 
 // Cosmetic Trail Systems
 let playerTrail = [];
@@ -63,7 +65,7 @@ const restartBtn = { size: 40 };
 const startMenuBtn = { w: 200, h: 50 };
 const centerFullBtn = { w: 200, h: 45 };
 
-// Player Character Configuration
+// Upgraded Player Configuration with variable gravity direction
 let player = Sprite({
   x: 0, y: 0, width: 32, height: 32, color: "lime", dy: 0, grounded: false,
   update() {
@@ -73,14 +75,19 @@ let player = Sprite({
     }
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
+    
+    // 🔀 DYNAMIC JUMP: If gravity is inverted (-1), jumping multiplies by -1 
+    // to fling you DOWN away from the ceiling!
     if ((keyPressed("space") || touch.jump) && this.grounded) {
-      this.dy = -11;
+      this.dy = -11 * gravityDir;
       this.grounded = false;
     }
-    this.dy += 0.5;
+    
+    // 🔀 DYNAMIC GRAVITY: Pulls you down if gravityDir is 1, pulls you up if -1
+    this.dy += 0.5 * gravityDir;
     this.y += this.dy;
 
-    // SCREEN WRAP-AROUND LOGIC
+    // SCREEN WRAP-AROUND LOGIC (Keep your existing code below)
     if (this.x + this.width < GAME_X()) {
       this.x = GAME_X() + GAME_WIDTH() - 1; 
     } 
@@ -364,10 +371,26 @@ let loop = GameLoop({
       playerTrail.forEach(t => t.alpha -= 0.04);
     }
 
-    // Ground Floor boundary lock
+    // 🔀 DYNAMIC SCREEN BOUNDARY RESOLVER
     player.grounded = false;
     const floor = canvas.height - 40;
-    if (player.y + player.height >= floor) { player.y = floor - player.height; player.dy = 0; player.grounded = true; }
+    const ceiling = 0; // The very top of the game screen
+
+    if (gravityDir === 1) {
+      // Normal Gravity: Catch the player on the floor
+      if (player.y + player.height >= floor) {
+        player.y = floor - player.height;
+        player.dy = 0;
+        player.grounded = true;
+      }
+    } else {
+      // Inverted Gravity: Catch the player on the ceiling!
+      if (player.y <= ceiling) {
+        player.y = ceiling;
+        player.dy = 0;
+        player.grounded = true;
+      }
+    }
 
     // 4. Moving Platform Resolvers + Rider Momentum
     for (let p of platforms) {

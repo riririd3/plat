@@ -123,13 +123,16 @@ function loadLevel(index) {
   stateTimer = 3.0;
   resetTouch();
 
-  // Flush all dynamic object groups clean
+  // 1. Flush all dynamic object groups clean
   platforms = []; spikes = []; stars = []; playerTrail = [];
   torches = []; buttons = []; gates = []; fragileBlocks = []; pads = [];
-  // Inside loadLevel()
   gravityPlatforms = [];
   gravityDir = 1; 
 
+  // 2. DEFINE currentLevel FIRST so everything below can read it!
+  const currentLevel = LEVEL_MAPS[index];
+
+  // 3. Load Gravity Platforms safely
   if (currentLevel.gravityPlatforms) {
     currentLevel.gravityPlatforms.forEach(gp => {
       gravityPlatforms.push({
@@ -143,8 +146,7 @@ function loadLevel(index) {
     });
   }
 
-  const currentLevel = LEVEL_MAPS[index];
-
+  // 4. Set Player Spawn Location
   if (currentLevel.playerSpawn) {
     player.x = GAME_X() + currentLevel.playerSpawn.x;
     player.y = currentLevel.playerSpawn.y;
@@ -155,7 +157,7 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // 1. Load Static / Moving Platforms
+  // 5. Load Static / Moving Platforms
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
@@ -167,7 +169,7 @@ function loadLevel(index) {
     });
   }
 
-  // 2. Load Hazards
+  // 6. Load Hazards
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
@@ -179,21 +181,21 @@ function loadLevel(index) {
     });
   }
 
-  // 3. Load Goals
+  // 7. Load Goals
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {
       stars.push(Sprite({ x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "gold", pickedUp: false }));
     });
   }
 
-  // 4. Load Torches
+  // 8. Load Torches
   if (currentLevel.torches) {
     currentLevel.torches.forEach(t => {
       torches.push({ x: GAME_X() + t.x, y: t.y, radius: t.radius || 85 });
     });
   }
 
-  // 5. Load Interlocking Buttons & Gates
+  // 9. Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
       buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, id: b.id, pressed: false, color: "#eab308" });
@@ -205,14 +207,14 @@ function loadLevel(index) {
     });
   }
 
-  // 6. Load Fragile Blocks
+  // 10. Load Fragile Blocks
   if (currentLevel.fragileBlocks) {
     currentLevel.fragileBlocks.forEach(fb => {
       fragileBlocks.push({ x: GAME_X() + fb.x, y: fb.y, width: fb.w, height: fb.h, state: "solid", timer: 0.0, color: "#f43f5e" });
     });
   }
 
-  // 7. Load Launch/Dash Pads
+  // 11. Load Launch/Dash Pads
   if (currentLevel.pads) {
     currentLevel.pads.forEach(pd => {
       pads.push({ x: GAME_X() + pd.x, y: pd.y, width: pd.w || 32, height: pd.h || 12, type: pd.type, power: pd.power, color: pd.type === "dash" ? "#06b6d4" : "#a855f7" });

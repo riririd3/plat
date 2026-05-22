@@ -14,20 +14,22 @@ const BASE_WIDTH = 960;
 const BASE_HEIGHT = 540;
 
 let z_ctx;
-const zzfx=(...t)=>{
-  if(!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext);
-  if(z_ctx.state === 'suspended') z_ctx.resume(); // Wakes up context on user interaction
-  let e=0;for(let r=0;r<t.length;r++){let i=t[r];if(i instanceof Array)for(let a=0;a<i.length;a++){let s=i[a];if(s instanceof Array)for(let c=0;c<s.length;c++)e+=s[c]?s[c]:0;else e+=i[a]?i[a]:0}else e+=t[r]?t[r]:0}
-  let f=z_ctx.createGain(),a=z_ctx.createOscillator();
-  a.connect(f),f.connect(z_ctx.destination),a.start(),a.stop(z_ctx.currentTime+.1);return a
-};
-
 // 🔊 Centralized Sound Manager
 function playSound(type) {
   if (isMuted) return;
+  try {
+    if (!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (z_ctx.state === 'suspended') z_ctx.resume();
+  } catch (e) {
+    console.log("Audio context failed to start");
+  }
+  try {
     if (type === 'jump') zzfx(...[.5,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]); // Jump 3
     if (type === 'gravity') zzfx(...[.5,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]); // Random 38
     if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
+    catch (e) {
+    console.log("Sound could not play");
+  }
 }
 
 function resizeGame() {

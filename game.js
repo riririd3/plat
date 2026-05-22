@@ -25,8 +25,8 @@ const zzfx=(...t)=>{
 // 🔊 Centralized Sound Manager
 function playSound(type) {
   if (isMuted) return;
-    if (type === 'jump') zzfx(...[,,327,.04,.03,.07,5,.9414115591186786,27,139,,,,,,.1,,.66,.02]); // Jump 0
-    if (type === 'gravity') zzfx(...[.4,,400,,.05,.1,1,2,,,,, .1]);
+    if (type === 'jump') zzfx(...[.5,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]); // Jump 3
+    if (type === 'gravity') zzfx(...[.5,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]); // Random 38
     if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
 }
 

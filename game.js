@@ -27,6 +27,10 @@ function resizeGame() {
 resizeGame();
 window.addEventListener("resize", resizeGame);
 
+// Secondary Offscreen Mask Canvas to fix alpha clipping bugs
+const maskCanvas = document.createElement("canvas");
+const maskContext = maskCanvas.getContext("2d");
+
 // Layout settings
 const LEFT_UI = () => 160;
 const RIGHT_UI = () => 160;
@@ -65,7 +69,7 @@ const restartBtn = { size: 40 };
 const startMenuBtn = { w: 200, h: 50 };
 const centerFullBtn = { w: 200, h: 45 };
 
-// Upgraded Player Configuration with variable gravity direction
+// Upgraded Player Configuration with precise gravity direction checks
 let player = Sprite({
   x: 0, y: 0, width: 32, height: 32, color: "lime", dy: 0, grounded: false,
   update() {
@@ -76,17 +80,17 @@ let player = Sprite({
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
     
-    // Dynamic jump vector calculation
+    // FIX: Dynamic jump vector calculation safely separated from direct multiplications
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       if (gravityDir === 1) {
-        this.dy = -11; // Jump UP normally from floors
+        this.dy = -11; // Jump UP from floors
       } else {
-        this.dy = 7;   // Fling DOWN forcefully away from ceilings!
+        this.dy = 7;   // Fling DOWN away from ceilings!
       }
       this.grounded = false;
     }
     
-    // DYNAMIC GRAVITY: Pulls you down if gravityDir is 1, pulls you up if -1
+    // DYNAMIC GRAVITY: Pulls down if gravityDir is 1, pulls up if -1
     this.dy += 0.5 * gravityDir;
     this.y += this.dy;
 
@@ -126,7 +130,7 @@ function loadLevel(index) {
   stateTimer = 3.0;
   resetTouch();
 
-  // 1. Flush all dynamic object groups clean
+  // Flush all dynamic object groups clean
   platforms = []; spikes = []; stars = []; playerTrail = [];
   torches = []; buttons = []; gates = []; fragileBlocks = []; pads = [];
   gravityPlatforms = [];
@@ -134,7 +138,7 @@ function loadLevel(index) {
 
   const currentLevel = LEVEL_MAPS[index];
 
-  // 2. Load Gravity Platforms safely
+  // Load Gravity Platforms safely
   if (currentLevel.gravityPlatforms) {
     currentLevel.gravityPlatforms.forEach(gp => {
       gravityPlatforms.push({
@@ -148,7 +152,7 @@ function loadLevel(index) {
     });
   }
 
-  // 3. Set Player Spawn Location
+  // Set Player Spawn Location
   if (currentLevel.playerSpawn) {
     player.x = GAME_X() + currentLevel.playerSpawn.x;
     player.y = currentLevel.playerSpawn.y;
@@ -159,7 +163,7 @@ function loadLevel(index) {
   player.dy = 0;
   player.grounded = false;
 
-  // 4. Load Static / Moving Platforms
+  // Load Static / Moving Platforms
   if (currentLevel.platforms) {
     currentLevel.platforms.forEach(p => {
       platforms.push(Sprite({
@@ -171,7 +175,7 @@ function loadLevel(index) {
     });
   }
 
-  // 5. Load Hazards
+  // Load Hazards
   if (currentLevel.spikes) {
     currentLevel.spikes.forEach(s => {
       spikes.push(Sprite({
@@ -183,21 +187,21 @@ function loadLevel(index) {
     });
   }
 
-  // 6. Load Goals
+  // Load Goals
   if (currentLevel.stars) {
     currentLevel.stars.forEach(s => {
       stars.push(Sprite({ x: GAME_X() + s.x, y: s.y, width: 20, height: 20, color: "gold", pickedUp: false }));
     });
   }
 
-  // 7. FIXED: Torch loader restored to dynamic maps configuration
+  // Torch loader configuration
   if (currentLevel.torches) {
     currentLevel.torches.forEach(t => {
       torches.push({ x: GAME_X() + t.x, y: t.y, radius: t.radius || 85 });
     });
   }
   
-  // 8. Load Interlocking Buttons & Gates
+  // Load Interlocking Buttons & Gates
   if (currentLevel.buttons) {
     currentLevel.buttons.forEach(b => {
       buttons.push({ x: GAME_X() + b.x, y: b.y, w: b.w || 32, h: b.h || 10, pressed: false, color: "#eab308" });
@@ -210,14 +214,14 @@ function loadLevel(index) {
     });
   }
 
-  // 9. Load Fragile Blocks
+  // Load Fragile Blocks
   if (currentLevel.fragileBlocks) {
     currentLevel.fragileBlocks.forEach(fb => {
       fragileBlocks.push({ x: GAME_X() + fb.x, y: fb.y, width: fb.w, height: fb.h, state: "solid", timer: 0.0, color: "#f43f5e" });
     });
   }
 
-  // 10. Load Launch/Dash Pads
+  // Load Launch/Dash Pads
   if (currentLevel.pads) {
     currentLevel.pads.forEach(pd => {
       pads.push({ x: GAME_X() + pd.x, y: pd.y, width: pd.w || 32, height: pd.h || 12, type: pd.type, power: pd.power, color: pd.type === "dash" ? "#06b6d4" : "#a855f7" });
@@ -247,30 +251,41 @@ function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = c
 function drawRestartButton() { const x = canvas.width - RIGHT_UI() / 2; const y = 60; context.save(); context.fillStyle = "#f59e0b"; context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); context.fillStyle = "black"; context.font = "bold 12px Arial"; context.textAlign = "center"; context.fillText("RST", x, y + 4); context.restore(); }
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
-// FIXED: Clean canvas-eraser composite masking operation to prevent blackouts
+// FIX: Isolated Offscreen Mask Layer drawing method prevents light sources from clipping into black boxes
 function drawFog() {
   if (gameState !== "play") return;
   
-  context.save();
-  context.beginPath();
-  context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
-  context.fillStyle = "rgba(0, 0, 0, 1.0)";
-  context.fill();
+  // Keep offscreen canvas dimensions aligned with active frame size
+  if (maskCanvas.width !== canvas.width || maskCanvas.height !== canvas.height) {
+    maskCanvas.width = canvas.width;
+    maskCanvas.height = canvas.height;
+  }
   
-  context.globalCompositeOperation = "destination-out";
+  // 1. Paint basic solid dark blanket layout inside offscreen canvas
+  maskContext.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+  maskContext.fillStyle = "rgba(0, 0, 0, 0.98)";
+  maskContext.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
   
+  // 2. Adjust offscreen blend pipeline to act as custom eraser
+  maskContext.globalCompositeOperation = "destination-out";
+  
+  // 3. Subtract player's flashlight radius holes
   const maskRadius = 75;
-  context.beginPath();
-  context.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
-  context.fill();
+  maskContext.beginPath();
+  maskContext.arc(player.x + player.width / 2, player.y + player.height / 2, maskRadius, 0, Math.PI * 2);
+  maskContext.fill();
   
+  // 4. Subtract static environment room torch radii safely
   torches.forEach(t => {
-    context.beginPath();
-    context.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
-    context.fill();
+    maskContext.beginPath();
+    maskContext.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+    maskContext.fill();
   });
   
-  context.restore(); 
+  // 5. Blit completed offscreen stencil sheet cleanly directly over screen rendering buffer
+  context.save();
+  context.drawImage(maskCanvas, 0, 0);
+  context.restore();
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
@@ -396,52 +411,52 @@ let loop = GameLoop({
       }
     }
 
-    // 🧱 FIX: Two-Way Solid Platform Collision Logic
+    // FIX: Two-Way Solid Platform Collision Logic referencing gravity orientation
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
-        
         let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
         let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
-        
         if (overlapX < overlapY) {
-          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; 
-          else player.x += overlapX;
+          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; else player.x += overlapX;
         } else {
           if (gravityDir === 1) {
-            // Normal Gravity: Land ON TOP of platforms safely
             if (player.y + player.height / 2 < p.y + p.height / 2) {
               player.y -= overlapY; player.dy = 0; player.grounded = true;
-              player.x += p.vx; player.y += p.vy; // Drag player with moving platforms
-            } else { 
-              player.y += overlapY; player.dy = 0; // Bump head from below
-            }
+              player.x += p.vx; player.y += p.vy; 
+            } else { player.y += overlapY; player.dy = 0; }
           } else {
-            // Inverted Gravity: Stick to the UNDER-SURFACE of platforms safely
             if (player.y + player.height / 2 > p.y + p.height / 2) {
               player.y += overlapY; player.dy = 0; player.grounded = true;
-              player.x += p.vx; player.y += p.vy; // Drag player with moving ceiling
-            } else {
-              player.y -= overlapY; player.dy = 0; // Land on top while falling "up"
-            }
+              player.x += p.vx; player.y += p.vy; 
+            } else { player.y -= overlapY; player.dy = 0; }
           }
         }
       }
     }
 
+    // FIX: Two-Way Fragile Platform Collision Logic referencing gravity orientation
     fragileBlocks.forEach(b => {
       if (b.state === "solid" || b.state === "stepping") {
         if (player.x < b.x + b.width && player.x + player.width > b.x &&
             player.y < b.y + b.height && player.y + player.height > b.y) {
           let overlapY = Math.min(player.y + player.height - b.y, b.y + b.height - player.y);
-          if (player.y + player.height / 2 < b.y + b.height / 2) {
-            player.y -= overlapY; player.dy = 0; player.grounded = true;
-            if (b.state === "solid") b.state = "stepping";
-          } else { player.y += overlapY; player.dy = 0; }
+          if (gravityDir === 1) {
+            if (player.y + player.height / 2 < b.y + b.height / 2) {
+              player.y -= overlapY; player.dy = 0; player.grounded = true;
+              if (b.state === "solid") b.state = "stepping";
+            } else { player.y += overlapY; player.dy = 0; }
+          } else {
+            if (player.y + player.height / 2 > b.y + b.height / 2) {
+              player.y += overlapY; player.dy = 0; player.grounded = true;
+              if (b.state === "solid") b.state = "stepping";
+            } else { player.y -= overlapY; player.dy = 0; }
+          }
         }
       }
     });
 
+    // FIX: Two-Way Security Gates Collision Logic referencing gravity orientation
     gates.forEach(g => {
       if (g.opened) return; 
       if (player.x < g.x + g.w && player.x + player.width > g.x &&
@@ -451,8 +466,13 @@ let loop = GameLoop({
         if (overlapX < overlapY) {
           if (player.x + player.width / 2 < g.x + g.w / 2) player.x -= overlapX; else player.x += overlapX;
         } else {
-          if (player.y + player.height / 2 < g.y + g.h / 2) { player.y -= overlapY; player.dy = 0; player.grounded = true; }
-          else { player.y += overlapY; player.dy = 0; }
+          if (gravityDir === 1) {
+            if (player.y + player.height / 2 < g.y + g.h / 2) { player.y -= overlapY; player.dy = 0; player.grounded = true; }
+            else { player.y += overlapY; player.dy = 0; }
+          } else {
+            if (player.y + player.height / 2 > g.y + g.h / 2) { player.y += overlapY; player.dy = 0; player.grounded = true; }
+            else { player.y -= overlapY; player.dy = 0; }
+          }
         }
       }
     });
@@ -560,7 +580,7 @@ let loop = GameLoop({
       }
     });
 
-    // FIXED: Render Cyan & Orange Gravity Platforms BELOW the upcoming fog mask layer!
+    // Render Gravity Modules under upcoming fog sheet mask layers
     gravityPlatforms.forEach(p => {
       context.save();
       context.fillStyle = p.color;
@@ -629,29 +649,20 @@ let loop = GameLoop({
       context.globalAlpha = 1.0; context.rotate(starPulseTime * 0.2); context.fillRect(-star.width / 2, -star.height / 2, star.width, star.height); context.restore();
     });
 
-    // Layer 9: Static Light Source Torch Fire Cores
+    // FIX: Render order corrections - Execute Fog Mask layer BEFORE active moving entities are drawn
+    drawFog();
+
+    // Layer 9: Static Light Source Torch Fire Cores (Rendered ON TOP of fog circles)
     torches.forEach(t => {
       context.save(); context.fillStyle = "#fbbf24"; context.beginPath(); context.arc(t.x, t.y, 6, 0, Math.PI * 2); context.fill(); context.restore();
     });
 
-    drawFog(); // Everything drawn above this line will be hidden in the dark!
-
-    // 🔥 3. MOVE TORCHES HERE (Draw the visible fire core on top of the light hole)
-    torches.forEach(t => {
-      context.save(); 
-      context.fillStyle = "#fbbf24"; 
-      context.beginPath(); 
-      context.arc(t.x, t.y, 6, 0, Math.PI * 2); 
-      context.fill(); 
-      context.restore();
-    });
-
-    // ✨ 4. PARTICLE EFFECTS (Render on top of fog so explosions are visible)
+    // Layer 10: Particle simulation system drawing
     particles.forEach(p => {
       context.save(); context.globalAlpha = p.alpha; context.fillStyle = p.color; context.fillRect(p.x, p.y, p.size, p.size); context.restore();
     });
 
-    // 🏃 5. PLAYER CHARACTER AND WRAP COPIES (Render on top of fog so player is illuminated)
+    // Layer 11: Player Characters and Screen Mirror Wraps
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {
@@ -666,7 +677,6 @@ let loop = GameLoop({
       context.restore();
     }
 
-    // 📱 6. USER INTERFACE & BUTTON STATS
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawRestartButton(); }
 

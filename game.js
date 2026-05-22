@@ -232,33 +232,53 @@ function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = c
 function drawRestartButton() { const x = canvas.width - RIGHT_UI() / 2; const y = 60; context.save(); context.fillStyle = "#f59e0b"; context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size); context.fillStyle = "black"; context.font = "bold 12px Arial"; context.textAlign = "center"; context.fillText("RST", x, y + 4); context.restore(); }
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
-// 🕶️ ALTERNATIVE BULLETPROOF FOG: Uses path winding rules instead of complex blending styles
 function drawFog() {
   if (gameState !== "play") return;
+
+  // 1. Create a temporary, un-attached buffer canvas to calculate light layers safely
+  if (!window.fogCanvas) {
+    window.fogCanvas = document.createElement("canvas");
+    window.fogCtx = window.fogCanvas.getContext("2d");
+  }
   
-  context.save();
-  context.fillStyle = "rgba(0, 0, 0, 0.98)";
-  context.beginPath();
-  
-  // Outer boundary: The main viewport window
-  context.rect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
-  
-  // Inner cutout 1: Player flashlight hole
+  const fCanvas = window.fogCanvas;
+  const fCtx = window.fogCtx;
+
+  if (fCanvas.width !== canvas.width || fCanvas.height !== canvas.height) {
+    fCanvas.width = canvas.width;
+    fCanvas.height = canvas.height;
+  }
+
+  // 2. Clear out the buffer and paint it entirely solid black
+  fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
+  fCtx.fillStyle = "rgba(0, 0, 0, 0.98)";
+  fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
+
+  // 3. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
+  fCtx.globalCompositeOperation = "destination-out";
+
+  // 4. Punch out the player's flashlight hole
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;
   const maskRadius = 75;
-  context.moveTo(pX + maskRadius, pY);
-  context.arc(pX, pY, maskRadius, 0, Math.PI * 2);
   
-  // Inner cutouts 2+: Environmental torches
+  fCtx.fillStyle = "black"; // Color doesn't matter for erasing, only alpha shape matters
+  fCtx.beginPath();
+  fCtx.arc(pX, pY, maskRadius, 0, Math.PI * 2);
+  fCtx.fill();
+
+  // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
   torches.forEach(t => {
-    context.moveTo(t.x + t.radius, t.y);
-    context.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+    fCtx.beginPath();
+    fCtx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
+    fCtx.fill();
   });
-  
-  // Fill everything EXCEPT the overlapping circular sub-paths
-  context.fill("evenodd");
-  context.restore();
+
+  // 6. Reset the buffer composition mode back to normal
+  fCtx.globalCompositeOperation = "source-over";
+
+  // 7. Paint our completed dark mask on top of the main game board
+  context.drawImage(fCanvas, 0, 0);
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
@@ -468,31 +488,23 @@ let loop = GameLoop({
     });
 
     gravityPlatforms.forEach(p => {
+      // Clean bounding-box check
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
         
-        let overlapX = Math.min(player.x + player.width - p.x, p.x + p.width - player.x);
-        let overlapY = Math.min(player.y + player.height - p.y, p.y + p.height - player.y);
-        
-        if (overlapX < overlapY) {
-          if (player.x + player.width / 2 < p.x + p.width / 2) player.x -= overlapX; 
-          else player.x += overlapX;
-          return;
-        }
-
-        if (p.type === "restorer") {
-          if (gravityDir === -1 && player.y + player.height / 2 < p.y + p.height / 2) {
-            player.y -= overlapY; player.dy = 0; player.grounded = true;
-            gravityDir = 1;
-            spawnExplosion(p.x + p.width/2, p.y, "#f97316", 15);
-          }
+        // 1. Flip Upwards
+        if (p.type === "inverter" && gravityDir === 1) {
+          gravityDir = -1;
+          player.grounded = false;
+          player.dy = 0; // Clear vertical speed for smooth exit transition
+          spawnExplosion(p.x + p.width / 2, p.y + p.height / 2, "#06b6d4", 15);
         } 
-        else if (p.type === "inverter") {
-          if (gravityDir === 1 && player.y + player.height / 2 > p.y + p.height / 2) {
-            player.y += overlapY; player.dy = 0;
-            gravityDir = -1;
-            spawnExplosion(p.x + p.width/2, p.y + p.height, "#06b6d4", 15);
-          }
+        // 2. Restore Downwards
+        else if (p.type === "restorer" && gravityDir === -1) {
+          gravityDir = 1;
+          player.grounded = false;
+          player.dy = 0; 
+          spawnExplosion(p.x + p.width / 2, p.y + p.height / 2, "#f97316", 15);
         }
       }
     });

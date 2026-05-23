@@ -604,7 +604,10 @@ let loop = GameLoop({
         playSound('spike');
         freezeFrames = 10;
         spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
-        loadLevel(currentLevelIndex); return;
+        setTimeout(() => {
+        loadLevel(currentLevelIndex);
+        }, 200); 
+        return;
       }
     }
 
@@ -614,7 +617,11 @@ let loop = GameLoop({
         star.pickedUp = true;
         playSound('star');
         spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
-        currentLevelIndex++; setTimeout(() => { loadLevel(currentLevelIndex); }, 200); return;
+        currentLevelIndex++; 
+        setTimeout(() => {
+          loadLevel(currentLevelIndex);
+        }, 200); 
+        return;
       }
     }
   },

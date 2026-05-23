@@ -324,6 +324,14 @@ function drawFog() {
     fCtx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
     fCtx.fill();
   });
+  
+  stars.forEach(s => {
+    if (!s.pickedUp) {
+      fCtx.beginPath();
+      fCtx.arc(s.x + s.width / 2, s.y + s.height / 2, 40, 0, Math.PI * 2);
+      fCtx.fill();
+    }
+  });
 
   // 6. Reset the buffer composition mode back to normal
   fCtx.globalCompositeOperation = "source-over";
@@ -672,6 +680,15 @@ let loop = GameLoop({
 
     // 🕶️ DRAW FOG SHEET (Covers up the level scene layout)
     drawFog();
+    // Inside drawFog()
+    fCtx.save();
+    fCtx.globalCompositeOperation = "destination-out";
+    fCtx.fillStyle = "rgba(0, 0, 0, 0.4)"; // Semi-transparent "soft" light
+    let auraPulse = 1.0 + Math.sin(starPulseTime * 2) * 0.2; // Pulsing effect
+    fCtx.beginPath();
+    fCtx.arc(pX, pY, maskRadius * auraPulse, 0, Math.PI * 2);
+    fCtx.fill();
+    fCtx.restore();
 
     // 🔥 TORCH FLAMES (Rendered inside holes on top of the black mask layout)
     torches.forEach(t => {

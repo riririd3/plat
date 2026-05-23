@@ -617,7 +617,7 @@ let loop = GameLoop({
     let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
     context.save();
     context.beginPath();
-    context.arc(player.x + player.width / 2, player.y + player.height / 2, 30 * auraScale, 0, Math.PI * 2);
+    context.arc(player.x + player.width / 2, player.y + player.height / 2, 10 * auraScale, 0, Math.PI * 2);
     context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
     context.fill();
     context.restore();

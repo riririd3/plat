@@ -604,6 +604,23 @@ let loop = GameLoop({
     
     drawGameArea();
     drawGround();
+  // 1. Calculate the same pulsing scale you use for stars
+  let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
+  
+  // 2. Draw the "glow" aura on the screen
+  context.save();
+  context.beginPath();
+  context.arc(this.x + this.width / 2, this.y + this.height / 2, 40 * auraScale, 0, Math.PI * 2);
+  
+  // Set a soft, glowing color (e.g., light blue or white)
+  context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
+  context.fill();
+  
+  // 3. Draw your standard player square
+  context.fillStyle = "white";
+  context.fillRect(this.x, this.y, this.width, this.height);
+  context.restore();
+    }
 
     platforms.concat(spikes).forEach(p => {
       if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {

@@ -308,24 +308,30 @@ function drawFog() {
   // 3. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
   fCtx.globalCompositeOperation = "destination-out";
 
-  // 4. Punch out the player's flashlight hole
+  // 4. Punch out the player's light source
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;
-  const maskRadius = 75;
-  
-  fCtx.fillStyle = "black"; // Color doesn't matter for erasing, only alpha shape matters
-  fCtx.beginPath();
-  fCtx.arc(pX, pY, maskRadius, 0, Math.PI * 2);
-  fCtx.fill();
 
-  fCtx.save();
-  fCtx.globalCompositeOperation = "destination-out";
-  fCtx.fillStyle = "rgba(0, 0, 0, 0.4)"; // Semi-transparent "soft" light
-  let auraPulse = 1.0 + Math.sin(starPulseTime * 2) * 0.2; // Pulsing effect
-  fCtx.beginPath();
-  fCtx.arc(pX, pY, maskRadius * auraPulse, 0, Math.PI * 2);
-  fCtx.fill();
-  fCtx.restore();
+// The core "Flashlight" (Static)
+fCtx.fillStyle = "black";
+fCtx.beginPath();
+fCtx.arc(pX, pY, 75, 0, Math.PI * 2);
+fCtx.fill();
+
+// The "Pulse & Flicker" Aura (Dynamic)
+fCtx.save();
+fCtx.globalCompositeOperation = "destination-out"; // Ensures it punches a hole
+fCtx.globalAlpha = 0.4; // Softens the edge
+
+// "Breathing" logic: oscillates between 75 and 85
+let pulseRadius = 75 + Math.sin(starPulseTime * 3) * 10; 
+// "Flicker" logic: adds random variation to the radius
+let flicker = Math.random() * 5; 
+
+fCtx.beginPath();
+fCtx.arc(pX, pY, pulseRadius + flicker, 0, Math.PI * 2);
+fCtx.fill();
+fCtx.restore();
 
   // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
   torches.forEach(t => {
@@ -339,6 +345,16 @@ function drawFog() {
       fCtx.beginPath();
       fCtx.arc(s.x + s.width / 2, s.y + s.height / 2, 40, 0, Math.PI * 2);
       fCtx.fill();
+
+      // Inside your star loop in drawFog()
+fCtx.save();
+fCtx.globalAlpha = 0.3 + Math.random() * 0.2; // Add a tiny bit of "flicker"
+fCtx.beginPath();
+// Using the same pulse logic from your aura
+let starGlow = 30 + Math.sin(starPulseTime * 3) * 10; 
+fCtx.arc(s.x + s.width / 2, s.y + s.height / 2, starGlow, 0, Math.PI * 2);
+fCtx.fill();
+fCtx.restore();
     }
   });
 

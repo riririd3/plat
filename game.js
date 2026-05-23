@@ -623,8 +623,14 @@ let loop = GameLoop({
         star.pickedUp = true;
         playSound('star');
         spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
-        currentLevelIndex++; return;
-      }
+        setTimeout(() => {
+        if (currentLevelIndex < levels.length - 1) {
+          currentLevelIndex++; 
+          loadLevel(currentLevelIndex); 
+        } else { 
+          gameState = "victory"; 
+        }
+      }, 200);
     }
   },
 

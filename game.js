@@ -308,30 +308,18 @@ function drawFog() {
   // 3. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
   fCtx.globalCompositeOperation = "destination-out";
 
-  // 4. Punch out the player's light source
-  const pX = player.x + player.width / 2;
-  const pY = player.y + player.height / 2;
+// --- PLAYER LIGHT ---
+const pX = player.x + player.width / 2;
+const pY = player.y + player.height / 2;
 
-// The core "Flashlight" (Static)
-fCtx.fillStyle = "black";
-fCtx.beginPath();
-fCtx.arc(pX, pY, 75, 0, Math.PI * 2);
-fCtx.fill();
-
-// The "Pulse & Flicker" Aura (Dynamic)
-fCtx.save();
-fCtx.globalCompositeOperation = "destination-out"; // Ensures it punches a hole
-fCtx.globalAlpha = 0.4; // Softens the edge
-
-// "Breathing" logic: oscillates between 75 and 85
+// Combine Pulse and Flicker into ONE radius calculation
 let pulseRadius = 75 + Math.sin(starPulseTime * 3) * 10; 
-// "Flicker" logic: adds random variation to the radius
-let flicker = Math.random() * 5; 
+let flicker = Math.random() * 5;
+let finalRadius = pulseRadius + flicker;
 
 fCtx.beginPath();
-fCtx.arc(pX, pY, pulseRadius + flicker, 0, Math.PI * 2);
+fCtx.arc(pX, pY, finalRadius, 0, Math.PI * 2);
 fCtx.fill();
-fCtx.restore();
 
   // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
   torches.forEach(t => {
@@ -351,7 +339,7 @@ fCtx.save();
 fCtx.globalAlpha = 0.3 + Math.random() * 0.2; // Add a tiny bit of "flicker"
 fCtx.beginPath();
 // Using the same pulse logic from your aura
-let starGlow = 30 + Math.sin(starPulseTime * 3) * 10; 
+let starGlow = 30 + Math.sin(starPulseTime * 30) * 50; 
 fCtx.arc(s.x + s.width / 2, s.y + s.height / 2, starGlow, 0, Math.PI * 2);
 fCtx.fill();
 fCtx.restore();

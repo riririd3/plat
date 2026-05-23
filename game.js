@@ -734,7 +734,6 @@ let loop = GameLoop({
       context.fillStyle = "#fbbf24"; context.font = "bold 24px Arial"; context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }
   }
-}
 });
 
 gameState = "menu"; 

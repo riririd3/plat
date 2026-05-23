@@ -33,7 +33,10 @@ function playSound(type) {
     if (type === 'gravity') zzfx(...[1,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
     if (type === 'spike') zzfx(...[,,301,.04,,,3,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
     if (type === 'star') zzfx(...[1,0,292,.1,.31,.8,1,.7,,,99,,.1,,,,.3,.99,,.02]);
-    if (type === 'buttons') zzfx(...[,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
+    if (type === 'button') zzfx(...[,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
+    if (type === 'pad') zzfx(...[1.2,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04]);
+    if (type === 'gate') zzfx(...[.7,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05]);
+    if (type === 'fragile') zzfx(...[1,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]);
   } catch (e) { // Fixed: added closing brace here
     console.log("Sound could not play");
   }
@@ -509,12 +512,12 @@ let loop = GameLoop({
           if (gravityDir === 1) {
             if (player.y + player.height / 2 < b.y + b.height / 2) {
               player.y -= overlapY; player.dy = 0; player.grounded = true;
-              if (b.state === "solid") b.state = "stepping";
+              if (b.state === "solid") b.state = "stepping"; playSound('fragile');
             } else { player.y += overlapY; player.dy = 0; }
           } else {
             if (player.y + player.height / 2 > b.y + b.height / 2) {
               player.y += overlapY; player.dy = 0; player.grounded = true;
-              if (b.state === "solid") b.state = "stepping";
+              if (b.state === "solid") b.state = "stepping"; playSound('fragile');
             } else { player.y -= overlapY; player.dy = 0; }
           }
         }
@@ -546,13 +549,14 @@ let loop = GameLoop({
           player.y < b.y + b.h && player.y + player.height > b.y) {
         if (!b.pressed) {
           b.pressed = true;
+          playSound('button');
           spawnExplosion(b.x + b.w/2, b.y, "#eab308", 12);
           const allPressed = buttons.every(btn => btn.pressed);
           if (allPressed) {
             gates.forEach(g => {
               if (!g.opened) {
                 g.opened = true;
-                playSound('buttons');
+                playSound('gate');
                 spawnExplosion(g.x + g.w/2, g.y + g.h/2, "#3b82f6", 15);
               }
             });
@@ -590,9 +594,11 @@ let loop = GameLoop({
           player.y < p.y + p.height && player.y + player.height > p.y) {
         if (p.type === "jump") {
           player.dy = p.power; player.grounded = false;
+          playSound('pad');
           spawnExplosion(p.x + p.width/2, p.y, "#a855f7", 10);
         } else if (p.type === "dash") {
           player.x += p.power; 
+          playSound('pad');
           spawnExplosion(player.x + player.width/2, p.y, "#06b6d4", 10);
         }
       }
@@ -617,11 +623,7 @@ let loop = GameLoop({
         star.pickedUp = true;
         playSound('star');
         spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
-        currentLevelIndex++; 
-        setTimeout(() => {
-          loadLevel(currentLevelIndex);
-        }, 200); 
-        return;
+        currentLevelIndex++; return;
       }
     }
   },
@@ -637,7 +639,7 @@ let loop = GameLoop({
     context.save();
     context.beginPath();
     context.arc(player.x + player.width / 2, player.y + player.height / 2, 15 * auraScale, 0, Math.PI * 2);
-    context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
+    context.fillStyle = "rgba(0, 255, 0, 0.25)"; 
     context.fill();
     context.restore();
 

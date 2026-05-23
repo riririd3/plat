@@ -674,6 +674,7 @@ let loop = GameLoop({
       context.save();
       let shake = b.state === "stepping" ? (Math.random() * 4 - 2) : 0;
       context.fillStyle = b.color; context.fillRect(b.x + shake, b.y, b.width, b.height);
+      context.strokeStyle = "#6366f1"; context.lineWidth = 3; context.strokeRect(p.x, p.y, p.width, p.height);
       context.restore();
     });
 

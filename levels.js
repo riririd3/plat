@@ -38,7 +38,7 @@ const LEVEL_MAPS = [
     stars: [
       { x: 580, y: 250 }
     ]
-  }
+  },
   { //level 2
     playerSpawn: { x: 580, y: 250 },
   platform: [

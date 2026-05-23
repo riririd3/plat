@@ -673,8 +673,10 @@ let loop = GameLoop({
       if (b.state === "broken") return;
       context.save();
       let shake = b.state === "stepping" ? (Math.random() * 4 - 2) : 0;
-      context.fillStyle = b.color; context.fillRect(b.x + shake, b.y, b.width, b.height);
-      context.strokeStyle = "#6366f1"; context.lineWidth = 3; context.strokeRect(p.x, p.y, p.width, p.height);
+      context.fillStyle = "#1e293b"; context.fillRect(b.x + shake + 4, b.y + 4, b.width, b.height);
+      context.fillStyle = b.color;
+      context.fillRect(b.x + shake, b.y, b.width, b.height);
+      context.strokeStyle = "#6366f1"; context.lineWidth = 3; context.strokeRect(b.x + shake, b.y, b.width, b.height);
       context.restore();
     });
 

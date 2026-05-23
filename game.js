@@ -614,14 +614,15 @@ let loop = GameLoop({
     drawGround();
     
     let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
-  
-    // 2. Draw the "glow" aura on the screen
-    context.save();
-    context.beginPath();
-    context.arc(player.x + player.width / 2, player.y + player.height / 2, 40 * auraScale, 0, Math.PI * 2);
-    context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
-    context.fill();
-    context.restore();
+    let glowSize = 60 * auraScale; 
+    let rotation = starPulseTime * 0.5; // Rotates based on time
+
+context.save();
+context.translate(player.x + player.width / 2, player.y + player.height / 2);
+context.rotate(rotation);
+context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
+context.fillRect(-glowSize / 2, -glowSize / 2, glowSize, glowSize);
+context.restore();
 
     platforms.concat(spikes).forEach(p => {
       if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {

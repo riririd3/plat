@@ -82,6 +82,7 @@ let gravityDir = 1; // 1 = Normal (Down), -1 = Inverted (Up)
 // Cosmetic Trail Systems
 let playerTrail = [];
 let starPulseTime = 0; 
+let freezeFrames = 0;
 
 // Mobile Input Structures
 let touch = { left: false, right: false, jump: false };
@@ -422,6 +423,11 @@ let loop = GameLoop({
       stateTimer -= 1 / 60;
       if (stateTimer <= 0) gameState = "play";
     }
+    
+    if (freezeFrames > 0) {
+      freezeFrames--;
+      return; 
+    }
 
     platforms.forEach(p => {
       p.x += p.vx; p.y += p.vy;
@@ -596,6 +602,7 @@ let loop = GameLoop({
       if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
           player.y < spike.y + spike.height && player.y + player.height > spike.y) {
         playSound('spike');
+        freezeFrames = 10;
         spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
         loadLevel(currentLevelIndex); return;
       }
@@ -607,7 +614,7 @@ let loop = GameLoop({
         star.pickedUp = true;
         playSound('star');
         spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
-        currentLevelIndex++; loadLevel(currentLevelIndex); return;
+        currentLevelIndex++; setTimeout(() => { loadLevel(currentLevelIndex); }, 200); return;
       }
     }
   },

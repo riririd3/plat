@@ -1,5 +1,5 @@
 const LEVEL_MAPS = [
-  {
+  { //level 1
     playerSpawn: { x: 40, y: 468 },
     // Standard and moving platforms
     platforms: [
@@ -39,4 +39,13 @@ const LEVEL_MAPS = [
       { x: 580, y: 250 }
     ]
   }
+  { //level 2
+    playerSpawn: { x: 580, y: 250 },
+  platform: [
+    { x: 580, y: 282, w: 100, h: 20 }
+    ],
+    stars: [
+    { x: 320, y: 460 }
+    ]
+  } 
 ];

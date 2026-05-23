@@ -630,7 +630,8 @@ let loop = GameLoop({
           gameState = "victory"; 
         }
       }
-    },
+    }
+  },
 
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);

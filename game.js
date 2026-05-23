@@ -325,6 +325,14 @@ function drawFog() {
     fCtx.fill();
   });
 
+  stars.forEach(s => {
+    if (!s.pickedUp) {
+      fCtx.beginPath();
+      fCtx.arc(s.x + s.width / 2, s.y + s.height / 2, 30, 0, Math.PI * 2);
+      fCtx.fill();
+    }
+  });
+
   // 6. Reset the buffer composition mode back to normal
   fCtx.globalCompositeOperation = "source-over";
 
@@ -604,23 +612,16 @@ let loop = GameLoop({
     
     drawGameArea();
     drawGround();
-  // 1. Calculate the same pulsing scale you use for stars
-  let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
+    
+    let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
   
-  // 2. Draw the "glow" aura on the screen
-  context.save();
-  context.beginPath();
-  context.arc(this.x + this.width / 2, this.y + this.height / 2, 40 * auraScale, 0, Math.PI * 2);
-  
-  // Set a soft, glowing color (e.g., light blue or white)
-  context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
-  context.fill();
-  
-  // 3. Draw your standard player square
-  context.fillStyle = "white";
-  context.fillRect(this.x, this.y, this.width, this.height);
-  context.restore();
-    }
+    // 2. Draw the "glow" aura on the screen
+    context.save();
+    context.beginPath();
+    context.arc(player.x + player.width / 2, player.y + player.height / 2, 40 * auraScale, 0, Math.PI * 2);
+    context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
+    context.fill();
+    context.restore();
 
     platforms.concat(spikes).forEach(p => {
       if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {
@@ -733,6 +734,7 @@ let loop = GameLoop({
       context.fillStyle = "#fbbf24"; context.font = "bold 24px Arial"; context.fillText(`MEMORIZE MAP: ${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }
   }
+}
 });
 
 gameState = "menu"; 

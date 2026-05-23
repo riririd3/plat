@@ -749,7 +749,7 @@ let loop = GameLoop({
       context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
     } else if (gameState === "victory") {
       context.fillStyle = "#22c55e"; context.font = "bold 36px Arial"; context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
-      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 10); drawMenuButtons();
+      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 80); drawMenuButtons();
     } else if (gameState === "memorize") {
       context.fillStyle = "#fbbf24"; context.font = "bold 20px Arial"; context.fillText(`${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }

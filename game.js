@@ -614,7 +614,7 @@ let loop = GameLoop({
     drawGround();
     
     let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
-    let glowSize = 60 * auraScale; 
+    let glowSize = 20 * auraScale; 
     let rotation = starPulseTime * 0.5; // Rotates based on time
 
 context.save();

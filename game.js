@@ -313,7 +313,7 @@ const pX = player.x + player.width / 2;
 const pY = player.y + player.height / 2;
 
 // Combine Pulse and Flicker into ONE radius calculation
-let pulseRadius = 50 + Math.sin(starPulseTime * 3) * 10; 
+let pulseRadius = 60 + Math.sin(starPulseTime * 1) * 15; 
 let flicker = Math.random() * 5;
 let finalRadius = pulseRadius + flicker;
 
@@ -339,7 +339,7 @@ fCtx.save();
 fCtx.globalAlpha = 0.3 + Math.random() * 0.2; // Add a tiny bit of "flicker"
 fCtx.beginPath();
 // Using the same pulse logic from your aura
-let starGlow = 30 + Math.sin(starPulseTime * 3) * 10; 
+let starGlow = 30 + Math.sin(starPulseTime * 3) * 30; 
 fCtx.arc(s.x + s.width / 2, s.y + s.height / 2, starGlow, 0, Math.PI * 2);
 fCtx.fill();
 fCtx.restore();

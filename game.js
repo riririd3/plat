@@ -29,9 +29,11 @@ function playSound(type) {
 
   // 2. Play the sound (Requires ZzFXMicro.min.js loaded in index.html)
   try {
-    if (type === 'jump') zzfx(...[.5,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]);
-    if (type === 'gravity') zzfx(...[.5,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
-    if (type === 'spike') zzfx(...[.8,,80,,.05,.2,1,0,,,,, .1]);
+    if (type === 'jump') zzfx(...[1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]);
+    if (type === 'gravity') zzfx(...[1,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
+    if (type === 'spike') zzfx(...[,,301,.04,,,3,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
+    if (type === 'star') zzfx(...[1,0,292,.1,.31,.8,1,.7,,,99,,.1,,,,.3,.99,,.02]);
+    if (type === 'buttons') zzfx(...[,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
   } catch (e) { // Fixed: added closing brace here
     console.log("Sound could not play");
   }
@@ -544,6 +546,7 @@ let loop = GameLoop({
             gates.forEach(g => {
               if (!g.opened) {
                 g.opened = true;
+                playSound('buttons');
                 spawnExplosion(g.x + g.w/2, g.y + g.h/2, "#3b82f6", 15);
               }
             });
@@ -592,6 +595,7 @@ let loop = GameLoop({
     for (let spike of spikes) {
       if (player.x < spike.x + spike.width && player.x + player.width > spike.x &&
           player.y < spike.y + spike.height && player.y + player.height > spike.y) {
+        playSound('spike');
         spawnExplosion(player.x + player.width / 2, player.y + player.height / 2, "#ef4444", 25);
         loadLevel(currentLevelIndex); return;
       }
@@ -601,6 +605,7 @@ let loop = GameLoop({
       if (!star.pickedUp && player.x < star.x + star.width && player.x + player.width > star.x &&
           player.y < star.y + star.height && player.y + player.height > star.y) {
         star.pickedUp = true;
+        playSound('star');
         spawnExplosion(star.x + star.width / 2, star.y + star.height / 2, "gold", 40);
         currentLevelIndex++; loadLevel(currentLevelIndex); return;
       }
@@ -617,7 +622,7 @@ let loop = GameLoop({
     let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
     context.save();
     context.beginPath();
-    context.arc(player.x + player.width / 2, player.y + player.height / 2, 10 * auraScale, 0, Math.PI * 2);
+    context.arc(player.x + player.width / 2, player.y + player.height / 2, 15 * auraScale, 0, Math.PI * 2);
     context.fillStyle = "rgba(255, 255, 255, 0.15)"; 
     context.fill();
     context.restore();

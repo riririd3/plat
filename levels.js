@@ -12,7 +12,7 @@ const LEVEL_MAPS = [
     ],
     // Networks of buttons and blocks.
     buttons: [
-    { x: 100, y: 490 },
+    { x: 550, y: 490 },
     { x: 400, y: 250 }
     ],
     gates: [

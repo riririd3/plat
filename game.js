@@ -43,7 +43,7 @@ function playSound(type) {
 }
 
 let musicPlayer = null;
-let song = zzfxm([
+let song = zzfxM([
   // Instruments
   [
     // Instrument 0: Soft bass drone

@@ -69,7 +69,7 @@ const song = [
   55,
   // Volume
   0.4
-]);
+];
 let musicPlayer;
 
 function resizeGame() {

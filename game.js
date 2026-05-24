@@ -42,7 +42,6 @@ function playSound(type) {
   }
 }
 
-let musicPlayer = null;
 const song = [
   // Instruments
   [
@@ -71,9 +70,7 @@ const song = [
   // Volume
   0.4
 ]);
-
-console.log("Music created:", song);
-console.log("Play method:", typeof song.play);
+let musicPlayer;
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);
@@ -416,11 +413,7 @@ function handleTouch(e) {
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           if (!musicPlayer) {
-            if (z_ctx && z_ctx.state === 'suspended') {
-              z_ctx.resume();
-            }
             musicPlayer = new ZzFXM(...song);
-            musicPlayer.loop = true;
             musicPlayer.play();
           }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;

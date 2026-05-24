@@ -806,7 +806,6 @@ let loop = GameLoop({
 
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawRestartButton(); drawMuteButton(); }
-
     context.fillStyle = "white"; context.font = "bold 16px Arial"; context.textAlign = "center";
     context.fillText(`LEVEL: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);
 

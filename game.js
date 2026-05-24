@@ -71,6 +71,8 @@ let song = zzfxM([
   // Volume
   0.4
 ]);
+console.log("Music created:", song);
+console.log("Play method:", typeof song.play);
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);

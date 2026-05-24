@@ -42,50 +42,35 @@ function playSound(type) {
   }
 }
 
-let song = {
-  song: [
-    { // Track 0: soft bass drone
-      notes: [
-        [48, 0, 0.8],  // C3
-        [48, 2, 0.8],
-        [48, 4, 0.8],
-        [48, 6, 0.8]
-      ],
-      loop: true,
-      loopStart: 0,
-      loopEnd: 8,
-      dur: 8,
-      props: { p: 0.2, a: 0.05, b: 0.7, c: 0.3, d: 0.4, e: 0.1, f: 0.2, g: 1, h: 0.8, i: 0.6, j: 0.9, k: 1, l: 0.5, m: 0, n: 0, o: 0, q: 0, r: 0.5, s: 0.3, t: 0.05, u: 0.02, v: 0.3, w: 0.7, x: 0, y: 0.2, z: 0 }
-    },
-    { // Track 1: sparse high arpeggio
-      notes: [
-        [64, 1.0, 0.4],  // E4
-        [60, 3.0, 0.4],  // G4
-        [67, 5.0, 0.4],  // B4
-        [60, 7.0, 0.4]   // G4
-      ],
-      loop: true,
-      loopStart: 0,
-      loopEnd: 8,
-      dur: 8,
-      props: { p: 0.3, a: 0.02, b: 0.4, c: 0.1, d: 0.3, e: 0, f: 0, g: 0.7, h: 0.5, i: 0.2, j: 0.8, k: 0.4, l: 0, m: 0, n: 0, o: 0.2, q: 0.1, r: 0.8, s: 0.4, t: 0.1, u: 0.01, v: 0.2, w: 0.5, x: 0.1, y: 0.3, z: 0 }
-    },
-    { // Track 2: faint texture pad
-      notes: [
-        [36, 0.2, 1.5],  // C2
-        [36, 4.2, 1.5]   // C2
-      ],
-      loop: true,
-      loopStart: 0,
-      loopEnd: 8,
-      dur: 8,
-      props: { p: 0.15, a: 0.1, b: 0.9, c: 0.5, d: 0.2, e: 0.05, f: 0.1, g: 0.9, h: 0.3, i: 0.9, j: 0.6, k: 0.2, l: 0.1, m: 0.3, n: 0.05, o: 0, q: 0, r: 0.9, s: 0.2, t: 0.2, u: 0.02, v: 0.15, w: 0.4, x: 0.2, y: 0.1, z: 0 }
-    }
+let musicPlayer = null;
+let song = zzfxM([
+  // Instruments
+  [
+    // Instrument 0: Soft bass drone
+    [0.3, 0, 110, 0.05, 0.2, 0.4, 0, 0.2, 0, 0, 0, 0, 0, 0.05, 0, 0, 0.1, 0.6, 0.2],
+    // Instrument 1: Gentle chime
+    [0.2, 0, 440, 0.01, 0.1, 0.3, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.8, 0.1]
   ],
-  bpm: 50
-};
-
-let musicPlayer;
+  // Patterns
+  [
+    // Pattern 0 - Main loop
+    [
+      [0, 0, 13, 0, 0, 0, 14, 0, 0, 0, 15, 0, 0, 0, 16, 0, 0, 0],  // Bass
+      [1, 0.3, 0, 0, 22, 0, 0, 20, 0, 0, 24, 0, 0, 21, 0, 0, 19, 0]   // Chimes
+    ],
+    // Pattern 1 - Slight variation
+    [
+      [0, 0, 15, 0, 0, 0, 16, 0, 0, 0, 13, 0, 0, 0, 14, 0, 0, 0],
+      [1, -0.3, 0, 0, 24, 0, 0, 22, 0, 0, 20, 0, 0, 23, 0, 0, 21, 0]
+    ]
+  ],
+  // Sequence (alternate patterns)
+  [0, 1],
+  // BPM
+  55,
+  // Volume
+  0.4
+]);
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);
@@ -428,7 +413,8 @@ function handleTouch(e) {
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           if (!musicPlayer) {
-            musicPlayer = zzfxm(...song.song, song.bpm);    
+            musicPlayer = song;
+            musicPlayer.loop = true;
             musicPlayer.play();
           }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;

@@ -301,7 +301,7 @@ function drawRestartButton() {
   context.fillStyle = "black"; 
   context.font = "bold 12px Arial"; 
   context.textAlign = "center"; 
-  context.fillText("RST", x, y + 4); 
+  context.fillText("RESET", x, y + 4); 
   context.restore(); 
 }
 // Draw the Mute Button
@@ -413,7 +413,8 @@ function handleTouch(e) {
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           if (!musicPlayer) {
-            musicPlayer = zzfxP(zzfxM(...song), true);
+            const songData = zzfxM(...song);
+            musicPlayer = zzfxP(songData, true);
           }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
         }

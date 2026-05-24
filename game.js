@@ -43,7 +43,7 @@ function playSound(type) {
 }
 
 let musicPlayer = null;
-let song = zzfxM([
+const song = [
   // Instruments
   [
     // Instrument 0: Soft bass drone
@@ -71,6 +71,7 @@ let song = zzfxM([
   // Volume
   0.4
 ]);
+
 console.log("Music created:", song);
 console.log("Play method:", typeof song.play);
 
@@ -418,7 +419,7 @@ function handleTouch(e) {
             if (z_ctx && z_ctx.state === 'suspended') {
               z_ctx.resume();
             }
-            musicPlayer = song;
+            musicPlayer = new ZzFXM(...song);
             musicPlayer.loop = true;
             musicPlayer.play();
           }

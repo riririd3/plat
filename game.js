@@ -812,6 +812,7 @@ let loop = GameLoop({
       context.fillText(`LEVEL: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);
     
       context.fillStyle = "#38bdf8"; context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 150);
+    }
       
     if (gameState === "menu") {
       context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();

@@ -30,10 +30,10 @@ function playSound(type) {
   // 2. Play the sound (Requires ZzFXMicro.min.js loaded in index.html)
   try {
     if (type === 'jump') zzfx(...[1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]);
-    if (type === 'gravity') zzfx(...[1,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
-    if (type === 'spike') zzfx(...[1,,301,.04,,,3,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
+    if (type === 'gravity') zzfx(...[.7,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
+    if (type === 'spike') zzfx(...[.5,,301,.04,,,,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
     if (type === 'star') zzfx(...[1,0,292,.1,.31,.8,1,.7,,,99,,.1,,,,.3,.99,,.02]);
-    if (type === 'button') zzfx(...[1,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
+    if (type === 'button') zzfx(...[.5,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
     if (type === 'pad') zzfx(...[1,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04]);
     if (type === 'gate') zzfx(...[1,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05]);
     if (type === 'fragile') zzfx(...[1,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]);
@@ -95,12 +95,11 @@ const song = [
   ],
   
   // Sequence (alternate patterns - now with 3 patterns)
-  [0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 0],
+  [0, 1, 0, 2, 0, 2, 0, 1, 1, 1, 2, 2],
   
-  // BPM - slightly slower for more ambient feel
-  70,
-  
-  // Volume - slightly lower to stay non-distracting
+  // BPM
+  52, 
+  // Volume
   1
 ];
 let musicPlayer;

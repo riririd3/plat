@@ -711,11 +711,11 @@ let loop = GameLoop({
 
     platforms.concat(spikes).forEach(p => {
       if (p.vx !== 0 && p.minX !== null && p.maxX !== null) {
-        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.22)"; context.lineWidth = 2; context.setLineDash([4, 6]);
+        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.8)"; context.lineWidth = 10; context.setLineDash([4, 6]);
         context.beginPath(); context.moveTo(p.minX, p.y + p.height/2); context.lineTo(p.maxX, p.y + p.height/2); context.stroke(); context.restore();
       }
       if (p.vy !== 0 && p.minY !== null && p.maxY !== null) {
-        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.8)"; context.lineWidth = 5; context.setLineDash([4, 6]);
+        context.save(); context.strokeStyle = "rgba(99, 102, 241, 0.8)"; context.lineWidth = 10; context.setLineDash([4, 6]);
         context.beginPath(); context.moveTo(p.x + p.width/2, p.minY); context.lineTo(p.x + p.width/2, p.maxY); context.stroke(); context.restore();
       }
     });

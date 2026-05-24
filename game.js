@@ -413,8 +413,7 @@ function handleTouch(e) {
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           if (!musicPlayer) {
-            musicPlayer = new ZzFXM(...song);
-            musicPlayer.play();
+            musicPlayer = zzfxP(...new ZzFXM(...song));
           }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
         }

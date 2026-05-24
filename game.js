@@ -42,7 +42,8 @@ function playSound(type) {
   }
 }
 
-const song = [
+let song = {
+  song: [
     { // Track 0: soft bass drone
       notes: [
         [48, 0, 0.8],  // C3
@@ -427,7 +428,7 @@ function handleTouch(e) {
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           if (!musicPlayer) {
-            musicPlayer = new ZzFXM(...song);    
+            musicPlayer = zzfxm(...song.song, song.bpm);    
             musicPlayer.play();
           }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;

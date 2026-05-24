@@ -43,7 +43,7 @@ function playSound(type) {
 }
 
 let musicPlayer = null;
-let song = zzfxM([
+let song = zzfxm([
   // Instruments
   [
     // Instrument 0: Soft bass drone
@@ -413,6 +413,9 @@ function handleTouch(e) {
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
           if (!musicPlayer) {
+            if (z_ctx && z_ctx.state === 'suspended') {
+              z_ctx.resume();
+            }
             musicPlayer = song;
             musicPlayer.loop = true;
             musicPlayer.play();

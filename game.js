@@ -42,6 +42,51 @@ function playSound(type) {
   }
 }
 
+const song = [
+    { // Track 0: soft bass drone
+      notes: [
+        [48, 0, 0.8],  // C3
+        [48, 2, 0.8],
+        [48, 4, 0.8],
+        [48, 6, 0.8]
+      ],
+      loop: true,
+      loopStart: 0,
+      loopEnd: 8,
+      dur: 8,
+      props: { p: 0.2, a: 0.05, b: 0.7, c: 0.3, d: 0.4, e: 0.1, f: 0.2, g: 1, h: 0.8, i: 0.6, j: 0.9, k: 1, l: 0.5, m: 0, n: 0, o: 0, q: 0, r: 0.5, s: 0.3, t: 0.05, u: 0.02, v: 0.3, w: 0.7, x: 0, y: 0.2, z: 0 }
+    },
+    { // Track 1: sparse high arpeggio
+      notes: [
+        [64, 1.0, 0.4],  // E4
+        [60, 3.0, 0.4],  // G4
+        [67, 5.0, 0.4],  // B4
+        [60, 7.0, 0.4]   // G4
+      ],
+      loop: true,
+      loopStart: 0,
+      loopEnd: 8,
+      dur: 8,
+      props: { p: 0.3, a: 0.02, b: 0.4, c: 0.1, d: 0.3, e: 0, f: 0, g: 0.7, h: 0.5, i: 0.2, j: 0.8, k: 0.4, l: 0, m: 0, n: 0, o: 0.2, q: 0.1, r: 0.8, s: 0.4, t: 0.1, u: 0.01, v: 0.2, w: 0.5, x: 0.1, y: 0.3, z: 0 }
+    },
+    { // Track 2: faint texture pad
+      notes: [
+        [36, 0.2, 1.5],  // C2
+        [36, 4.2, 1.5]   // C2
+      ],
+      loop: true,
+      loopStart: 0,
+      loopEnd: 8,
+      dur: 8,
+      props: { p: 0.15, a: 0.1, b: 0.9, c: 0.5, d: 0.2, e: 0.05, f: 0.1, g: 0.9, h: 0.3, i: 0.9, j: 0.6, k: 0.2, l: 0.1, m: 0.3, n: 0.05, o: 0, q: 0, r: 0.9, s: 0.2, t: 0.2, u: 0.02, v: 0.15, w: 0.4, x: 0.2, y: 0.1, z: 0 }
+    }
+  ],
+  bpm: 50
+};
+];
+
+let musicPlayer;
+
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);
   canvas.width = BASE_WIDTH;
@@ -61,7 +106,7 @@ const LEFT_UI = () => 160;
 const RIGHT_UI = () => 160;
 const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
-const SAFE = 10;
+const SAFE = 5;
 
 // Game State Engine Variables
 let currentLevelIndex = 0;
@@ -382,6 +427,10 @@ function handleTouch(e) {
         const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15;
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
+          if (!musicPlayer) {
+            musicPlayer = new ZzFXM(...song);    
+            musicPlayer.play();
+          }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
         }
         if (x > fullX && x < fullX + centerFullBtn.w && y > fullY && y < fullY + centerFullBtn.h) {
@@ -752,7 +801,7 @@ let loop = GameLoop({
       context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
     } else if (gameState === "victory") {
       context.fillStyle = "#22c55e"; context.font = "bold 36px Arial"; context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
-      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 65); drawMenuButtons();
+      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); drawMenuButtons();
     } else if (gameState === "memorize") {
       context.fillStyle = "#fbbf24"; context.font = "bold 20px Arial"; context.fillText(`${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }

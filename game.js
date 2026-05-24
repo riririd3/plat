@@ -412,17 +412,10 @@ function handleTouch(e) {
         const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15;
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
-//          if (!musicPlayer) {
-//            musicPlayer = zzfxP(...zzfxM(...song));
-//          }
-            if (!musicPlayer) {
-              const songData = zzfxM(...song);
-              const playSong = () => {
-                musicPlayer = zzfxP(songData);
-                musicPlayer.onended = playSong;  // Loop automatically
-              };
-              playSong();
-            } 
+          if (!musicPlayer) {
+            musicPlayer = zzfxP(...zzfxM(...song));
+            musicPlayer.loop = true;
+          }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
         }
         if (x > fullX && x < fullX + centerFullBtn.w && y > fullY && y < fullY + centerFullBtn.h) {

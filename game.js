@@ -45,30 +45,63 @@ function playSound(type) {
 const song = [
   // Instruments
   [
-    // Instrument 0: Soft bass drone
+    // Instrument 0: Soft bass drone (sub-bass feel)
     [0.3, 0, 110, 0.05, 0.2, 0.4, 0, 0.2, 0, 0, 0, 0, 0, 0.05, 0, 0, 0.1, 0.6, 0.2],
-    // Instrument 1: Gentle chime
-    [0.2, 0, 440, 0.01, 0.1, 0.3, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.8, 0.1]
+    
+    // Instrument 1: Gentle chime (main melody)
+    [0.2, 0, 880, 0.01, 0.1, 0.3, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.8, 0.1],
+    
+    // Instrument 2: Soft pad/atmosphere (NEW - fills empty space)
+    [0.15, 0, 220, 0.1, 0.4, 0.6, 0, 0.1, 0, 0, 0, 0, 0, 0.1, 0, 0, 0.05, 0.9, 0.3]
   ],
+  
   // Patterns
   [
-    // Pattern 0 - Main loop
+    // Pattern 0 - Main ambient loop
     [
-      [0, 0, 13, 0, 0, 0, 14, 0, 0, 0, 15, 0, 0, 0, 16, 0, 0, 0],  // Bass
-      [1, 0.3, 0, 0, 22, 0, 0, 20, 0, 0, 24, 0, 0, 21, 0, 0, 19, 0]   // Chimes
+      // Channel 0: Bass drone (slightly more movement)
+      [0, 0, 13, 0, 0, 13, 14, 0, 0, 14, 15, 0, 0, 15, 16, 0, 0, 16],
+      
+      // Channel 1: Chime melody (more notes, gentle progression)
+      [1, 0.2, 0, 22, 0, 20, 0, 24, 0, 21, 0, 19, 0, 23, 0, 20, 0, 22],
+      
+      // Channel 2: Pad atmosphere (NEW - held notes that evolve)
+      [2, 0, 0, 0, 17, 0, 0, 0, 19, 0, 0, 0, 17, 0, 0, 0, 15, 0]
     ],
-    // Pattern 1 - Slight variation
+    
+    // Pattern 1 - Variation (subtle shift)
     [
-      [0, 0, 15, 0, 0, 0, 16, 0, 0, 0, 13, 0, 0, 0, 14, 0, 0, 0],
-      [1, -0.3, 0, 0, 24, 0, 0, 22, 0, 0, 20, 0, 0, 23, 0, 0, 21, 0]
+      // Channel 0: Bass variation
+      [0, 0, 15, 0, 0, 15, 16, 0, 0, 16, 13, 0, 0, 13, 14, 0, 0, 14],
+      
+      // Channel 1: Chime variation (different order)
+      [1, 0.15, 0, 24, 0, 22, 0, 20, 0, 23, 0, 21, 0, 19, 0, 24, 0, 20],
+      
+      // Channel 2: Pad variation
+      [2, 0, 0, 0, 19, 0, 0, 0, 20, 0, 0, 0, 17, 0, 0, 0, 16, 0]
+    ],
+    
+    // Pattern 2 - Bridge section (NEW - adds variety)
+    [
+      // Channel 0: Bass holds
+      [0, 0, 12, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 12, 0, 0, 0],
+      
+      // Channel 1: Higher chime arpeggio
+      [1, 0.1, 0, 27, 0, 26, 0, 24, 0, 27, 0, 26, 0, 24, 0, 22, 0, 0],
+      
+      // Channel 2: Pad swell
+      [2, 0, 0, 0, 17, 0, 0, 0, 15, 0, 0, 0, 17, 0, 0, 0, 14, 0]
     ]
   ],
-  // Sequence (alternate patterns)
-  [0, 1],
-  // BPM
-  55,
-  // Volume
-  0.8
+  
+  // Sequence (alternate patterns - now with 3 patterns)
+  [0, 1, 0, 2, 0, 1, 0, 2, 0, 1, 0, 0],
+  
+  // BPM - slightly slower for more ambient feel
+  70,
+  
+  // Volume - slightly lower to stay non-distracting
+  1
 ];
 let musicPlayer;
 

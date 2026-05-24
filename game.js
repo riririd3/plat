@@ -31,11 +31,11 @@ function playSound(type) {
   try {
     if (type === 'jump') zzfx(...[1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]);
     if (type === 'gravity') zzfx(...[1,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
-    if (type === 'spike') zzfx(...[,,301,.04,,,3,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
+    if (type === 'spike') zzfx(...[1,,301,.04,,,3,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
     if (type === 'star') zzfx(...[1,0,292,.1,.31,.8,1,.7,,,99,,.1,,,,.3,.99,,.02]);
-    if (type === 'button') zzfx(...[,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
-    if (type === 'pad') zzfx(...[1.2,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04]);
-    if (type === 'gate') zzfx(...[.7,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05]);
+    if (type === 'button') zzfx(...[1,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
+    if (type === 'pad') zzfx(...[1,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04]);
+    if (type === 'gate') zzfx(...[1,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05]);
     if (type === 'fragile') zzfx(...[1,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]);
   } catch (e) { // Fixed: added closing brace here
     console.log("Sound could not play");
@@ -68,7 +68,7 @@ const song = [
   // BPM
   55,
   // Volume
-  0.4
+  0.8
 ];
 let musicPlayer;
 
@@ -412,9 +412,17 @@ function handleTouch(e) {
         const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15;
 
         if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
-          if (!musicPlayer) {
-            musicPlayer = zzfxP(...zzfxM(...song));
-          }
+//          if (!musicPlayer) {
+//            musicPlayer = zzfxP(...zzfxM(...song));
+//          }
+            if (!musicPlayer) {
+              const songData = zzfxM(...song);
+              const playSong = () => {
+                musicPlayer = zzfxP(songData);
+                musicPlayer.onended = playSong;  // Loop automatically
+              };
+              playSong();
+            } 
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
         }
         if (x > fullX && x < fullX + centerFullBtn.w && y > fullY && y < fullY + centerFullBtn.h) {

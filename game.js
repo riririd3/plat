@@ -415,7 +415,6 @@ function handleTouch(e) {
           if (!musicPlayer) {
             musicPlayer = zzfxM(...song);
             musicPlayer.loop = true;
-            musicPlayer.play();
           }
           currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
         }

@@ -806,13 +806,11 @@ let loop = GameLoop({
 
     drawControlsBackground();
     if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawRestartButton(); drawMuteButton(); }
-    context.fillStyle = "white"; context.font = "bold 16px Arial"; context.textAlign = "center";
-    context.fillText(`LEVEL: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);
 
     if (gameState === "play" || gameState === "memorize") {
+      context.fillStyle = "#38bdf8"; context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 150);
       context.fillStyle = "white"; context.font = "bold 16px Arial"; context.textAlign = "center";
       context.fillText(`LEVEL: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);
-    }
 
     if (gameState === "menu") {
       context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();

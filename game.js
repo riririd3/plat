@@ -83,7 +83,6 @@ const song = [
   ],
   bpm: 50
 };
-];
 
 let musicPlayer;
 

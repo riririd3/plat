@@ -846,10 +846,11 @@ let loop = GameLoop({
       context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
       if (isPortrait()) {
         const blink = Math.floor(Date.now() / 500) % 2 === 0;
+        const bottomPadding = 50;
         if (blink) {
             context.fillStyle = "#ff4757";
             context.font = "bold 20px Arial";
-            context.fillText("Please rotate your phone to Landscape!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 + 60);
+            context.fillText("Please rotate your phone to Landscape!", GAME_X() + GAME_WIDTH() / 2, canvas.height - bottomPadding);
         }
       }
     } else if (gameState === "victory") {

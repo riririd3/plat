@@ -409,7 +409,31 @@ function drawFog() {
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
-async function toggleFullscreen() { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); else await document.exitFullscreen(); }
+async function toggleFullscreen() {
+  try {
+    if (!document.fullscreenElement) {
+      // Enter Fullscreen
+      await document.documentElement.requestFullscreen();
+      
+      // Lock to landscape if supported
+      if (screen.orientation && screen.orientation.lock) {
+        await screen.orientation.lock('landscape').catch(() => {});
+      }
+    } else {
+      // Exit Fullscreen
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+        
+        // Restore screen rotation
+        if (screen.orientation && screen.orientation.unlock) {
+          screen.orientation.unlock();
+        }
+      }
+    }
+  } catch (err) {
+    console.log(`Fullscreen error: ${err.message}`);
+  }
+}
 
 function handleTouch(e) {
   e.preventDefault();
@@ -813,9 +837,21 @@ let loop = GameLoop({
     
       context.fillStyle = "#38bdf8"; context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 150);
     }
+    
+    function isPortrait() {
+      return window.innerHeight > window.innerWidth;
+    }
       
     if (gameState === "menu") {
       context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("BLIND MEMORY", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
+      if (isPortrait()) {
+        const blink = Math.floor(Date.now() / 500) % 2 === 0;
+        if (blink) {
+            context.fillStyle = "#ff4757";
+            context.font = "bold 20px Arial";
+            context.fillText("Please rotate your phone to Landscape!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 + 60);
+        }
+      }
     } else if (gameState === "victory") {
       context.fillStyle = "#22c55e"; context.font = "bold 36px Arial"; context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
       context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); drawMenuButtons();

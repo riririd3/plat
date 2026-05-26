@@ -128,7 +128,7 @@ const SAFE = 5;
 // Game State Engine Variables
 let currentLevelIndex = 0;
 let gameState = "menu"; 
-let stateTimer = 3.0;      
+let stateTimer = 2.0;      
 let totalPlayTime = 0.0;   
 
 // Dynamic Entity Arrays
@@ -843,7 +843,7 @@ let loop = GameLoop({
     }
       
     if (gameState === "menu") {
-      context.fillStyle = "#06b6d4"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("Lime Adventure", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
+      context.fillStyle = "#00ff00"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("Lime Adventure", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
       if (isPortrait()) {
         const blink = Math.floor(Date.now() / 500) % 2 === 0;
         const bottomPadding = 50;

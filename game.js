@@ -863,6 +863,7 @@ let loop = GameLoop({
       drawFog(1.0);
     }
   }
+});
 
 gameState = "menu"; 
 loop.start();

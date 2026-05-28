@@ -388,9 +388,10 @@ function drawFog() {
 
   // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
   torches.forEach(t => {
-    fCtx.beginPath();
-    fCtx.arc(t.x, t.y, t.radius + Math.sin(Date.now() * 0.01) * 5);
-    fCtx.fill();
+  fCtx.beginPath();
+  const flickerRadius = t.radius + Math.sin(Date.now() * 0.01) * 5;
+  fCtx.arc(t.x, t.y, Math.max(1, flickerRadius), 0, Math.PI * 2);
+  fCtx.fill();
   });
 
   stars.forEach(s => {

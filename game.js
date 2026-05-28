@@ -351,15 +351,13 @@ function drawMuteButton() {
 }
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
-function drawFog() {
-  if (gameState !== "play") return;
-
-  // 1. Create a temporary, un-attached buffer canvas to calculate light layers safely
+// Replace your old drawFog function with this one
+function drawFog(intensity = 1.0) {
+  // 1. Buffer setup
   if (!window.fogCanvas) {
     window.fogCanvas = document.createElement("canvas");
     window.fogCtx = window.fogCanvas.getContext("2d");
   }
-  
   const fCanvas = window.fogCanvas;
   const fCtx = window.fogCtx;
 
@@ -368,31 +366,32 @@ function drawFog() {
     fCanvas.height = canvas.height;
   }
 
-  // 2. Clear out the buffer and paint it entirely solid black
+  // 2. Clear and fill with dynamic intensity
   fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
-  fCtx.fillStyle = "rgba(0, 0, 0, 0.98)";
+  fCtx.fillStyle = `rgba(0, 0, 0, ${0.98 * intensity})`; // Uses the intensity
   fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // 3. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
   fCtx.globalCompositeOperation = "destination-out";
 
-  // 4. Punch out the player's flashlight hole
+  // 3. Dynamic radius: starts large (visible), shrinks as level starts
+  // During "memorize", intensity is lower, and radius is larger.
+  let maskRadius = 75 + (gameState === "memorize" ? (stateTimer * 50) : 0);
+  
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;
-  const maskRadius = 75;
   
-  fCtx.fillStyle = "black"; // Color doesn't matter for erasing, only alpha shape matters
+  fCtx.fillStyle = "black";
   fCtx.beginPath();
   fCtx.arc(pX, pY, maskRadius, 0, Math.PI * 2);
   fCtx.fill();
 
-  // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
+  // Static torches
   torches.forEach(t => {
     fCtx.beginPath();
     fCtx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
     fCtx.fill();
   });
-
+  
   stars.forEach(s => {
     if (!s.pickedUp) {
       fCtx.beginPath();
@@ -400,11 +399,8 @@ function drawFog() {
       fCtx.fill();
     }
   });
-
-  // 6. Reset the buffer composition mode back to normal
+  
   fCtx.globalCompositeOperation = "source-over";
-
-  // 7. Paint our completed dark mask on top of the main game board
   context.drawImage(fCanvas, 0, 0);
 }
 
@@ -857,10 +853,16 @@ let loop = GameLoop({
       context.fillStyle = "#22c55e"; context.font = "bold 36px Arial"; context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
       context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); drawMenuButtons();
     } else if (gameState === "memorize") {
-      context.fillStyle = "#fbbf24"; context.font = "bold 20px Arial"; context.fillText(`${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
+      let intensity = 1 - (stateTimer / 3.0);
+      drawFog(intensity); 
+      context.fillStyle = "#fbbf24"; 
+      context.font = "bold 20px Arial"; 
+      context.textAlign = "center";
+      context.fillText(`${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
+    } else if (gameState === "play") {
+      drawFog(1.0);
     }
   }
-});
 
 gameState = "menu"; 
 loop.start();

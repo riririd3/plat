@@ -376,7 +376,7 @@ function drawFog(intensity = 1.0) {
 
   // 3. Dynamic radius: starts large (visible), shrinks as level starts
   // During "memorize", intensity is lower, and radius is larger.
-  let maskRadius = 75 + (gameState === "memorize" ? (stateTimer * 20) : 0);
+  let maskRadius = 40 + (gameState === "memorize" ? (stateTimer * 50) : 0);
   
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;

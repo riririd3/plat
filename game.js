@@ -862,7 +862,6 @@ let loop = GameLoop({
     } else if (gameState === "play") {
       drawFog(1.0);
     }
-  }
 
 gameState = "menu"; 
 loop.start();

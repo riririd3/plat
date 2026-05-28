@@ -352,7 +352,7 @@ function drawMuteButton() {
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
 function drawFog() {
-  if (gameState !== "play") return;
+  if (gameState !== "play" && gameState !== "memorize") return;
 
   // 1. Create a temporary, un-attached buffer canvas to calculate light layers safely
   if (!window.fogCanvas) {
@@ -373,10 +373,45 @@ function drawFog() {
   fCtx.fillStyle = "rgba(0, 0, 0, 0.98)";
   fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // 3. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
+  // 3. MEMORIZE STATE: Fog shrinks inward from sides
+  if (gameState === "memorize") {
+    const progress = 1 - (stateTimer / 3.0); // 0 to 1
+    
+    let shrinkAmount = 0;
+    
+    if (progress < 0.167) {
+      // First 0.5s: fog shrinks open (0 to max)
+      shrinkAmount = (progress / 0.167) * (GAME_WIDTH() / 2);
+    } else if (progress < 0.833) {
+      // Middle 2s: fully open
+      shrinkAmount = GAME_WIDTH() / 2;
+    } else {
+      // Last 0.5s: fog shrinks closed (max to 0)
+      const closeProgress = (progress - 0.833) / 0.167;
+      shrinkAmount = (GAME_WIDTH() / 2) * (1 - closeProgress);
+    }
+    
+    // Draw fog narrowing from sides
+    const left = GAME_X() + shrinkAmount;
+    const right = GAME_X() + GAME_WIDTH() - shrinkAmount;
+    const width = right - left;
+    
+    if (width > 0) {
+      fCtx.fillStyle = "rgba(0, 0, 0, 0.98)";
+      // Left side fog
+      fCtx.fillRect(GAME_X(), 0, shrinkAmount, canvas.height);
+      // Right side fog
+      fCtx.fillRect(right, 0, shrinkAmount, canvas.height);
+    } else {
+      // Fully closed - fill entire area
+      fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
+    }
+  }
+
+  // 4. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
   fCtx.globalCompositeOperation = "destination-out";
 
-  // 4. Punch out the player's flashlight hole
+  // 5. Punch out the player's flashlight hole
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;
   const maskRadius = 75;
@@ -386,12 +421,12 @@ function drawFog() {
   fCtx.arc(pX, pY, maskRadius, 0, Math.PI * 2);
   fCtx.fill();
 
-  // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
+  // 6. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
   torches.forEach(t => {
-  fCtx.beginPath();
-  const flickerRadius = t.radius + Math.sin(Date.now() * 0.01) * 5;
-  fCtx.arc(t.x, t.y, Math.max(1, flickerRadius), 0, Math.PI * 2);
-  fCtx.fill();
+    fCtx.beginPath();
+    const flickerRadius = t.radius + Math.sin(Date.now() * 0.01) * 5;
+    fCtx.arc(t.x, t.y, Math.max(1, flickerRadius), 0, Math.PI * 2);
+    fCtx.fill();
   });
 
   stars.forEach(s => {
@@ -402,10 +437,10 @@ function drawFog() {
     }
   });
 
-  // 6. Reset the buffer composition mode back to normal
+  // 7. Reset the buffer composition mode back to normal
   fCtx.globalCompositeOperation = "source-over";
 
-  // 7. Paint our completed dark mask on top of the main game board
+  // 8. Paint our completed dark mask on top of the main game board
   context.drawImage(fCanvas, 0, 0);
 }
 

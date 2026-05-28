@@ -368,7 +368,8 @@ function drawFog(intensity = 1.0) {
 
   // 2. Clear and fill with dynamic intensity
   fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
-  fCtx.fillStyle = `rgba(0, 0, 0, ${0.98 * intensity})`; // Uses the intensity
+  let fogAlpha = (gameState === "memorize") ? (1 - (stateTimer / 3.0)) * 0.98 : 0.98;
+  fCtx.fillStyle = `rgba(0, 0, 0, ${fogAlpha})`;
   fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
   fCtx.globalCompositeOperation = "destination-out";

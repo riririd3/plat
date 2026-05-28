@@ -375,7 +375,7 @@ function drawFog() {
 
   // 3. MEMORIZE STATE: Fog shrinks inward from sides
   if (gameState === "memorize") {
-    const progress = 1 - (stateTimer / 3.0); // 0 to 1
+    const progress = (3.0 - stateTimer) / 3.0; // goes 0 to 1
     
     let shrinkAmount = 0;
     

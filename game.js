@@ -352,58 +352,47 @@ function drawMuteButton() {
 function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
 function drawFog() {
-  // Only apply fog during play or memorize states
-  if (gameState !== "play" && gameState !== "memorize") return;
+  if (gameState !== "play") return;
 
-  // 1. Create / resize buffer canvas
+  // 1. Create a temporary, un-attached buffer canvas to calculate light layers safely
   if (!window.fogCanvas) {
     window.fogCanvas = document.createElement("canvas");
     window.fogCtx = window.fogCanvas.getContext("2d");
   }
+  
   const fCanvas = window.fogCanvas;
   const fCtx = window.fogCtx;
+
   if (fCanvas.width !== canvas.width || fCanvas.height !== canvas.height) {
     fCanvas.width = canvas.width;
     fCanvas.height = canvas.height;
   }
 
-  // 2. Compute fog intensity and player light radius based on game state
-  let fogAlpha = 0.98;        // normal play: almost black
-  let playerRadius = 75;      // normal play: standard flashlight
-
-  if (gameState === "memorize") {
-    // stateTimer goes from 3.0 down to 0.0
-    // progress = 0 at start, 1 at end of memorize
-    const progress = 1 - (stateTimer / 3.0);
-    // Fog starts light (alpha 0.3) and becomes dark (0.98)
-    fogAlpha = 0.3 + progress * 0.68;
-    // Light radius starts huge (300) and shrinks to normal (75)
-    playerRadius = 300 * (1 - progress) + 75 * progress;
-  }
-
-  // 3. Clear buffer and paint the semi‑transparent / opaque fog
+  // 2. Clear out the buffer and paint it entirely solid black
   fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
-  fCtx.fillStyle = `rgba(0, 0, 0, ${fogAlpha})`;
+  fCtx.fillStyle = "rgba(0, 0, 0, 0.98)";
   fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
 
-  // 4. Erase holes for lights (destination-out blending)
+  // 3. Switch the blend mode to "destination-out" (this turns solid fills into pure transparent eraser holes)
   fCtx.globalCompositeOperation = "destination-out";
 
-  // Player’s dynamic light (radius changes during memorize)
+  // 4. Punch out the player's flashlight hole
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;
+  const maskRadius = 75;
+  
+  fCtx.fillStyle = "black"; // Color doesn't matter for erasing, only alpha shape matters
   fCtx.beginPath();
-  fCtx.arc(pX, pY, playerRadius, 0, Math.PI * 2);
+  fCtx.arc(pX, pY, maskRadius, 0, Math.PI * 2);
   fCtx.fill();
 
-  // Torches (fixed radius)
+  // 5. Punch out the static torch holes (They will merge cleanly with the flashlight hole now!)
   torches.forEach(t => {
     fCtx.beginPath();
     fCtx.arc(t.x, t.y, t.radius + Math.sin(Date.now() * 0.01) * 5);
     fCtx.fill();
   });
 
-  // Stars (fixed radius, only if not collected)
   stars.forEach(s => {
     if (!s.pickedUp) {
       fCtx.beginPath();
@@ -412,8 +401,10 @@ function drawFog() {
     }
   });
 
-  // 5. Reset composition mode and draw the fog layer onto the game canvas
+  // 6. Reset the buffer composition mode back to normal
   fCtx.globalCompositeOperation = "source-over";
+
+  // 7. Paint our completed dark mask on top of the main game board
   context.drawImage(fCanvas, 0, 0);
 }
 

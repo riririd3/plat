@@ -321,8 +321,8 @@ function drawGameArea() {
 
 function drawGround() { context.fillStyle = "#334155"; context.fillRect(GAME_X(), canvas.height - 40, GAME_WIDTH(), 40); }
 function drawControlsBackground() { context.fillStyle = "#111"; context.fillRect(0, 0, LEFT_UI(), canvas.height); context.fillRect(canvas.width - RIGHT_UI(), 0, RIGHT_UI(), canvas.height); }
-function drawDpad() { const cX = LEFT_UI() / 2; const cY = canvas.height - 140 - SAFE; context.save(); context.globalAlpha = touch.left ? 0.8 : 0.4; context.fillStyle = "white"; context.fillRect(cX - dpad.size - 10, cY, dpad.size, dpad.size); context.globalAlpha = touch.right ? 0.8 : 0.4; context.fillRect(cX + 10, cY, dpad.size, dpad.size); context.restore(); }
-function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = canvas.height - 140 - SAFE + jumpBtn.size / 2; context.save(); context.globalAlpha = touch.jump ? 0.8 : 0.4; context.fillStyle = "#06b6d4"; context.beginPath(); context.arc(x, y, jumpBtn.size / 2, 0, Math.PI * 2); context.fill(); context.restore(); }
+function drawDpad() { const cX = LEFT_UI() / 2; const cY = canvas.height - 140 - SAFE; context.save(); context.globalAlpha = touch.left ? 0.8 : 0.4; context.fillStyle = "white"; context.fillRect([...]
+function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = canvas.height - 140 - SAFE + jumpBtn.size / 2; context.save(); context.globalAlpha = touch.jump ? 0.8 : 0.4; context[...]
 // Draw the Restart Button
 function drawRestartButton() { 
   const x = canvas.width - RIGHT_UI() / 2; 
@@ -349,7 +349,7 @@ function drawMuteButton() {
   context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
   context.restore();
 }
-function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
+function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b98[...]
 
 function drawFog() {
   if (gameState !== "play" && gameState !== "memorize") return;
@@ -394,9 +394,8 @@ function drawFog() {
     // Draw fog narrowing from sides
     const left = GAME_X() + shrinkAmount;
     const right = GAME_X() + GAME_WIDTH() - shrinkAmount;
-    const width = right - left;
     
-    if (width > 0) {
+    if (right > left) {
       fCtx.fillStyle = "rgba(0, 0, 0, 0.98)";
       // Left side fog
       fCtx.fillRect(GAME_X(), 0, shrinkAmount, canvas.height);
@@ -879,7 +878,7 @@ let loop = GameLoop({
     }
       
     if (gameState === "menu") {
-      context.fillStyle = "#00ff00"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("Lime Adventure", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
+      context.fillStyle = "#00ff00"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("Lime Adventure", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawM[...]
       if (isPortrait()) {
         const blink = Math.floor(Date.now() / 500) % 2 === 0;
         const bottomPadding = 50;
@@ -891,7 +890,7 @@ let loop = GameLoop({
       }
     } else if (gameState === "victory") {
       context.fillStyle = "#22c55e"; context.font = "bold 36px Arial"; context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
-      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); drawMenuButtons();
+      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); drawMenuBut[...]
     } else if (gameState === "memorize") {
       context.fillStyle = "#fbbf24"; context.font = "bold 20px Arial"; context.fillText(`${Math.ceil(stateTimer)}s`, GAME_X() + GAME_WIDTH() / 2, 50);
     }

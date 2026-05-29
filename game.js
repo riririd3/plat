@@ -83,6 +83,9 @@ let starPulseTime = 0;
 let touch = { left: false, right: false, jump: false };
 const dpad = { size: 50 }, jumpBtn = { size: 50 }, restartBtn = { size: 40 };
 const startMenuBtn = { w: 200, h: 50 }, centerFullBtn = { w: 200, h: 45 };
+const midX = GAME_X() + GAME_WIDTH() / 2;
+const btnW = 200;
+const btnH = 50;
 
 // ==================================================
 // 3. AUDIO & HELPER FUNCTIONS
@@ -311,10 +314,6 @@ function drawRestartButton() {
 }
 
 function drawMenuButtons() {
-  const midX = GAME_X() + GAME_WIDTH() / 2;
-  const btnW = 200;
-  const btnH = 50;
-
   if (menuState === "main") {
     // START BUTTON
     context.fillStyle = "#10b981";

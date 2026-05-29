@@ -18,37 +18,8 @@ const GAME_X = () => LEFT_UI();
 const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
 const SAFE = 5;
 
-// Game State
-let currentLevelIndex = 0;
-let gameState = "menu";
-let stateTimer = 2.0;
-let totalPlayTime = 0.0;
-let gravityDir = 1; // 1 = Down, -1 = Up
-let isMuted = false;
-let freezeFrames = 0;
-
-// Entities & Arrays
-let platforms = [], spikes = [], stars = [], particles = [], torches = [];
-let buttons = [], gates = [], fragileBlocks = [], pads = [], gravityPlatforms = [];
-let playerTrail = [];
-let starPulseTime = 0;
-
-// Inputs
-let touch = { left: false, right: false, jump: false };
-const dpad = { size: 50 }, jumpBtn = { size: 50 }, restartBtn = { size: 40 };
-const startMenuBtn = { w: 200, h: 50 }, centerFullBtn = { w: 200, h: 45 };
-
-// ==================================================
-// 3. AUDIO & HELPER FUNCTIONS
-
-function playSound(type) {
-  if (isMuted) return;
-  try {
-    if (!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (z_ctx.state === 'suspended') z_ctx.resume();
-    
-    // ZzFX sounds mapping
-    const song = [
+// Song
+const song = [
   [ // Instruments 
     // Soft bass drone
     [0.3, 0, 110, 0.05, 0.2, 0.4, 0, 0.2, 0, 0, 0, 0, 0, 0.05, 0, 0, 0.1, 0.6, 0.2],    
@@ -91,7 +62,37 @@ function playSound(type) {
   1
 ];
 let musicPlayer;
+
+// Game State
+let currentLevelIndex = 0;
+let gameState = "menu";
+let stateTimer = 2.0;
+let totalPlayTime = 0.0;
+let gravityDir = 1; // 1 = Down, -1 = Up
+let isMuted = false;
+let freezeFrames = 0;
+
+// Entities & Arrays
+let platforms = [], spikes = [], stars = [], particles = [], torches = [];
+let buttons = [], gates = [], fragileBlocks = [], pads = [], gravityPlatforms = [];
+let playerTrail = [];
+let starPulseTime = 0;
+
+// Inputs
+let touch = { left: false, right: false, jump: false };
+const dpad = { size: 50 }, jumpBtn = { size: 50 }, restartBtn = { size: 40 };
+const startMenuBtn = { w: 200, h: 50 }, centerFullBtn = { w: 200, h: 45 };
+
+// ==================================================
+// 3. AUDIO & HELPER FUNCTIONS
+
+function playSound(type) {
+  if (isMuted) return;
+  try {
+    if (!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (z_ctx.state === 'suspended') z_ctx.resume();
     
+    // ZzFX sounds mapping
     const sounds = {
       jump: [1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462],
       gravity: [.7,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01],

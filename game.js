@@ -329,17 +329,21 @@ function drawMenuButtons() {
     context.fillText("SETTINGS", midX, canvas.height / 2 + 85);
   } 
   else if (menuState === "settings") {
-    // MUTE 
+    // MUTE/PLAY BUTTON
+    const muteBtnY = canvas.height / 2 - 20; // Y position for mute button
     context.fillStyle = isMuted ? "#ef4444" : "#22c55e"; 
-    context.fillRect(midX - btnW / 2, canvas.height / 2 - 20, btnW, btnH);
-    context.fillStyle = "black";
-    context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
+    context.fillRect(midX - btnW / 2, muteBtnY, btnW, btnH);  
+    context.fillStyle = "white";
+    context.font = "bold 20px Arial";
+    context.textAlign = "center";
+    context.fillText(isMuted ? "SOUND: OFF" : "SOUND: ON", midX, muteBtnY + 35); 
   
     // BACK BUTTON
-    context.fillStyle = "#ef4444";
-    context.fillRect(midX - btnW / 2, canvas.height / 2 + 50, btnW, btnH);
+    const backBtnY = canvas.height / 2 + 50;
+    context.fillStyle = "#64748b";
+    context.fillRect(midX - btnW / 2, backBtnY, btnW, btnH);
     context.fillStyle = "white";
-    context.fillText("BACK", midX, canvas.height / 2 + 85);
+    context.fillText("BACK", midX, backBtnY + 35);
   }
 }
   
@@ -419,12 +423,6 @@ function handleTouch(e) {
 
   for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX; const y = (t.clientY - rect.top) * scaleY;
-    const muteX = canvas.width - RIGHT_UI() / 2; 
-    const muteY = 120;
-    if (Math.hypot(x - muteX, y - muteY) < restartBtn.size / 2 && e.type === "touchstart") {
-      isMuted = !isMuted;
-      return;
-    }
     if (x > canvas.width - RIGHT_UI()) {
       const rstX = canvas.width - RIGHT_UI() / 2; const rstY = 60;
       if (Math.hypot(x - rstX, y - rstY) < restartBtn.size / 2 && e.type === "touchstart") {
@@ -455,8 +453,10 @@ function handleTouch(e) {
       }
     } 
     else if (menuState === "settings") {
-      // 3. CLICKED BACK?
-      if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 100) {
+      if (x > midX - btnW / 2 && x < midX + btnW / 2 && y > canvas.height / 2 - 20 && y < canvas.height / 2 + 30) {
+        isMuted = !isMuted;
+      }
+      else if (x > midX - btnW / 2 && x < midX + btnW / 2 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 100) {
         menuState = "main";
       }
     }

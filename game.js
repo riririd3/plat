@@ -461,6 +461,9 @@ function handleTouch(e) {
     else if (menuState === "settings") {
       if (x > midX - btnW / 2 && x < midX + btnW / 2 && y > canvas.height / 2 - 20 && y < canvas.height / 2 + 30) {
         isMuted = !isMuted;
+        if (musicPlayer) {
+          isMuted ? musicPlayer.disconnect() : musicPlayer.connect(zzfxX.destination);
+        }
       }
       else if (x > midX - btnW / 2 && x < midX + btnW / 2 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 100) {
         menuState = "main";

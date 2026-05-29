@@ -1,113 +1,69 @@
-const {
-  init,
-  GameLoop,
-  Sprite,
-  initKeys,
-  keyPressed
-} = kontra;
+// 1. INITIALIZATION & ENGINE SETUP
 
+const { init, GameLoop, Sprite, initKeys, keyPressed } = kontra;
 let { canvas, context } = init("game");
-
 initKeys();
 
 const BASE_WIDTH = 960;
 const BASE_HEIGHT = 540;
-
 let z_ctx;
 
-// 🔊 Centralized Sound Manager
+// ==================================================
+// 2. CONFIGURATION & STATE VARIABLES
+
+// Layout
+const LEFT_UI = () => 160;
+const RIGHT_UI = () => 160;
+const GAME_X = () => LEFT_UI();
+const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
+const SAFE = 5;
+
+// Game State
+let currentLevelIndex = 0;
+let gameState = "menu";
+let stateTimer = 2.0;
+let totalPlayTime = 0.0;
+let gravityDir = 1; // 1 = Down, -1 = Up
+let isMuted = false;
+let freezeFrames = 0;
+
+// Entities & Arrays
+let platforms = [], spikes = [], stars = [], particles = [], torches = [];
+let buttons = [], gates = [], fragileBlocks = [], pads = [], gravityPlatforms = [];
+let playerTrail = [];
+let starPulseTime = 0;
+
+// Inputs
+let touch = { left: false, right: false, jump: false };
+const dpad = { size: 50 }, jumpBtn = { size: 50 }, restartBtn = { size: 40 };
+const startMenuBtn = { w: 200, h: 50 }, centerFullBtn = { w: 200, h: 45 };
+
+// ==================================================
+// 3. AUDIO & HELPER FUNCTIONS
+
 function playSound(type) {
   if (isMuted) return;
-  
-  // 1. Ensure AudioContext is ready
   try {
     if (!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (z_ctx.state === 'suspended') z_ctx.resume();
-  } catch (e) {
-    console.log("Audio context failed to start");
-  }
-
-  // 2. Play the sound (Requires ZzFXMicro.min.js loaded in index.html)
-  try {
-    if (type === 'jump') zzfx(...[1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462]);
-    if (type === 'gravity') zzfx(...[.7,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01]);
-    if (type === 'spike') zzfx(...[.7,,301,.04,,,,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01]);
-    if (type === 'star') zzfx(...[1,0,292,.1,.31,.8,1,.7,,,99,,.1,,,,.3,.99,,.02]);
-    if (type === 'button') zzfx(...[.5,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99]);
-    if (type === 'pad') zzfx(...[1,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04]);
-    if (type === 'gate') zzfx(...[1,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05]);
-    if (type === 'fragile') zzfx(...[.7,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]);
-  } catch (e) { // Fixed: added closing brace here
-    console.log("Sound could not play");
-  }
+    // ZzFX sounds mapping
+    const sounds = {
+      jump: [1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462],
+      gravity: [.7,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01],
+      spike: [.7,,301,.04,,,,1.46,.1,.1,-110,.18,-0.01,-0.1,-2,-0.1,,.63,,.01],
+      star: [1,0,292,.1,.31,.8,1,.7,,,99,,.1,,,,.3,.99,,.02],
+      button: [.5,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99],
+      pad: [1,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04],
+      gate: [1,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05],
+      fragile: [.7,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]
+    };
+    if (sounds[type]) zzfx(...sounds[type]);
+  } catch (e) { console.log("Sound could not play"); }
 }
-
-const song = [
-  // Instruments
-  [
-    // Instrument 0: Soft bass drone (sub-bass feel)
-    [0.3, 0, 110, 0.05, 0.2, 0.4, 0, 0.2, 0, 0, 0, 0, 0, 0.05, 0, 0, 0.1, 0.6, 0.2],
-    
-    // Instrument 1: Gentle chime (main melody)
-    [0.2, 0, 880, 0.01, 0.1, 0.3, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.8, 0.1],
-    
-    // Instrument 2: Soft pad/atmosphere (NEW - fills empty space)
-    [0.15, 0, 220, 0.1, 0.4, 0.6, 0, 0.1, 0, 0, 0, 0, 0, 0.1, 0, 0, 0.05, 0.9, 0.3]
-  ],
-  
-  // Patterns
-  [
-    // Pattern 0 - Main ambient loop
-    [
-      // Channel 0: Bass drone (slightly more movement)
-      [0, 0, 13, 0, 0, 13, 14, 0, 0, 14, 15, 0, 0, 15, 16, 0, 0, 16],
-      
-      // Channel 1: Chime melody (more notes, gentle progression)
-      [1, 0.2, 0, 22, 0, 20, 0, 24, 0, 21, 0, 19, 0, 23, 0, 20, 0, 22],
-      
-      // Channel 2: Pad atmosphere (NEW - held notes that evolve)
-      [2, 0, 0, 0, 17, 0, 0, 0, 19, 0, 0, 0, 17, 0, 0, 0, 15, 0]
-    ],
-    
-    // Pattern 1 - Variation (subtle shift)
-    [
-      // Channel 0: Bass variation
-      [0, 0, 15, 0, 0, 15, 16, 0, 0, 16, 13, 0, 0, 13, 14, 0, 0, 14],
-      
-      // Channel 1: Chime variation (different order)
-      [1, 0.15, 0, 24, 0, 22, 0, 20, 0, 23, 0, 21, 0, 19, 0, 24, 0, 20],
-      
-      // Channel 2: Pad variation
-      [2, 0, 0, 0, 19, 0, 0, 0, 20, 0, 0, 0, 17, 0, 0, 0, 16, 0]
-    ],
-    
-    // Pattern 2 - Bridge section (NEW - adds variety)
-    [
-      // Channel 0: Bass holds
-      [0, 0, 12, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 12, 0, 0, 0],
-      
-      // Channel 1: Higher chime arpeggio
-      [1, 0.1, 0, 27, 0, 26, 0, 24, 0, 27, 0, 26, 0, 24, 0, 22, 0, 0],
-      
-      // Channel 2: Pad swell
-      [2, 0, 0, 0, 17, 0, 0, 0, 15, 0, 0, 0, 17, 0, 0, 0, 14, 0]
-    ]
-  ],
-  
-  // Sequence (alternate patterns - now with 3 patterns)
-  [0, 1, 0, 2, 0, 2, 0, 1, 1, 1, 2, 2],
-  
-  // BPM
-  52, 
-  // Volume
-  1
-];
-let musicPlayer;
 
 function resizeGame() {
   const scale = Math.min(window.innerWidth / BASE_WIDTH, window.innerHeight / BASE_HEIGHT);
-  canvas.width = BASE_WIDTH;
-  canvas.height = BASE_HEIGHT;
+  canvas.width = BASE_WIDTH; canvas.height = BASE_HEIGHT;
   canvas.style.width = BASE_WIDTH * scale + "px";
   canvas.style.height = BASE_HEIGHT * scale + "px";
   canvas.style.position = "absolute";
@@ -118,79 +74,24 @@ function resizeGame() {
 resizeGame();
 window.addEventListener("resize", resizeGame);
 
-// Layout settings
-const LEFT_UI = () => 160;
-const RIGHT_UI = () => 160;
-const GAME_X = () => LEFT_UI();
-const GAME_WIDTH = () => canvas.width - LEFT_UI() - RIGHT_UI();
-const SAFE = 5;
+// ==================================================
+// 4. ENTITY LOGIC (PLAYER, LEVEL, COLLISIONS)
 
-// Game State Engine Variables
-let currentLevelIndex = 0;
-let gameState = "menu"; 
-let stateTimer = 2.0;      
-let totalPlayTime = 0.0;   
-
-// Dynamic Entity Arrays
-let platforms = [];
-let spikes = [];
-let stars = [];
-let particles = [];
-let torches = [];
-let buttons = [];
-let gates = [];
-let fragileBlocks = [];
-let pads = [];
-let gravityPlatforms = [];
-let gravityDir = 1; // 1 = Normal (Down), -1 = Inverted (Up)
-
-// Cosmetic Trail Systems
-let playerTrail = [];
-let starPulseTime = 0; 
-let freezeFrames = 0;
-
-// Mobile Input Structures
-let touch = { left: false, right: false, jump: false };
-const dpad = { size: 50 };
-const jumpBtn = { size: 50 };
-const restartBtn = { size: 40 };
-let isMuted = false;
-const startMenuBtn = { w: 200, h: 50 };
-const centerFullBtn = { w: 200, h: 45 };
-
-// Upgraded Player Configuration with variable gravity direction
 let player = Sprite({
   x: 0, y: 0, width: 32, height: 32, color: "lime", dy: 0, grounded: false,
   update() {
-    if (gameState !== "play") {
-      this.dy = 0;
-      return;
-    }
+    if (gameState !== "play") { this.dy = 0; return; }
     if (keyPressed("left") || touch.left) this.x -= 4;
     if (keyPressed("right") || touch.right) this.x += 4;
-    
-    // 🤸 JUMP LOGIC: Differentiates jump vectors depending on upside-down status
     if ((keyPressed("space") || touch.jump) && this.grounded) {
       playSound('jump');
-      if (gravityDir === 1) {
-        this.dy = -11; 
-      } else {
-        this.dy = 7; // Flings you downward away from the ceiling
-      }
+      this.dy = gravityDir === 1 ? -11 : 7;
       this.grounded = false;
     }
-    
-    // DYNAMIC GRAVITY: Pulls down if gravityDir is 1, pulls up if -1
     this.dy += 0.5 * gravityDir;
     this.y += this.dy;
-
-    // SCREEN WRAP-AROUND LOGIC
-    if (this.x + this.width < GAME_X()) {
-      this.x = GAME_X() + GAME_WIDTH() - 1; 
-    } 
-    else if (this.x > GAME_X() + GAME_WIDTH()) {
-      this.x = GAME_X() - this.width + 1;
-    }
+    if (this.x + this.width < GAME_X()) this.x = GAME_X() + GAME_WIDTH() - 1;
+    else if (this.x > GAME_X() + GAME_WIDTH()) this.x = GAME_X() - this.width + 1;
   }
 });
 
@@ -199,13 +100,8 @@ function spawnExplosion(originX, originY, spawnColor, count = 20) {
     let angle = Math.random() * Math.PI * 2;
     let speed = 1 + Math.random() * 4;
     particles.push({
-      x: originX, y: originY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      size: 4 + Math.random() * 6,
-      alpha: 1.0,
-      decay: 0.02 + Math.random() * 0.02, 
-      color: spawnColor
+      x: originX, y: originY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+      size: 4 + Math.random() * 6, alpha: 1.0, decay: 0.02 + Math.random() * 0.02, color: spawnColor
     });
   }
 }
@@ -319,11 +215,41 @@ function drawGameArea() {
   context.restore();
 }
 
-function drawGround() { context.fillStyle = "#334155"; context.fillRect(GAME_X(), canvas.height - 40, GAME_WIDTH(), 40); }
-function drawControlsBackground() { context.fillStyle = "#111"; context.fillRect(0, 0, LEFT_UI(), canvas.height); context.fillRect(canvas.width - RIGHT_UI(), 0, RIGHT_UI(), canvas.height); }
-function drawDpad() { const cX = LEFT_UI() / 2; const cY = canvas.height - 140 - SAFE; context.save(); context.globalAlpha = touch.left ? 0.8 : 0.4; context.fillStyle = "white"; context.fillRect(cX - dpad.size - 10, cY, dpad.size, dpad.size); context.globalAlpha = touch.right ? 0.8 : 0.4; context.fillRect(cX + 10, cY, dpad.size, dpad.size); context.restore(); }
-function drawJumpButton() { const x = canvas.width - RIGHT_UI() / 2; const y = canvas.height - 140 - SAFE + jumpBtn.size / 2; context.save(); context.globalAlpha = touch.jump ? 0.8 : 0.4; context.fillStyle = "#06b6d4"; context.beginPath(); context.arc(x, y, jumpBtn.size / 2, 0, Math.PI * 2); context.fill(); context.restore(); }
-// Draw the Restart Button
+function drawGround() { 
+  context.fillStyle = "#334155"; 
+  context.fillRect(GAME_X(), canvas.height - 40, GAME_WIDTH(), 40);
+}
+
+function drawControlsBackground() { 
+  context.fillStyle = "#111"; 
+  context.fillRect(0, 0, LEFT_UI(), canvas.height); 
+  context.fillRect(canvas.width - RIGHT_UI(), 0, RIGHT_UI(), canvas.height); 
+}
+
+function drawDpad() { 
+  const cX = LEFT_UI() / 2; 
+  const cY = canvas.height - 140 - SAFE; 
+  context.save(); 
+  context.globalAlpha = touch.left ? 0.8 : 0.4; 
+  context.fillStyle = "white"; 
+  context.fillRect(cX - dpad.size - 10, cY, dpad.size, dpad.size); 
+  context.globalAlpha = touch.right ? 0.8 : 0.4; 
+  context.fillRect(cX + 10, cY, dpad.size, dpad.size); 
+  context.restore(); 
+}
+
+function drawJumpButton() { 
+  const x = canvas.width - RIGHT_UI() / 2; 
+  const y = canvas.height - 140 - SAFE + jumpBtn.size / 2; 
+  context.save(); 
+  context.globalAlpha = touch.jump ? 0.8 : 0.4; 
+  context.fillStyle = "#06b6d4"; 
+  context.beginPath(); 
+  context.arc(x, y, jumpBtn.size / 2, 0, Math.PI * 2); 
+  context.fill(); 
+  context.restore(); 
+}
+
 function drawRestartButton() { 
   const x = canvas.width - RIGHT_UI() / 2; 
   const y = 60; 
@@ -336,7 +262,7 @@ function drawRestartButton() {
   context.fillText("RESET", x, y + 4); 
   context.restore(); 
 }
-// Draw the Mute Button
+
 function drawMuteButton() {
   const x = canvas.width - RIGHT_UI() / 2; 
   const y = 120; 
@@ -349,44 +275,56 @@ function drawMuteButton() {
   context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
   context.restore();
 }
-function drawMenuButtons() { const midX = GAME_X() + GAME_WIDTH() / 2; const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20; context.save(); context.fillStyle = "#10b981"; context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); context.fillStyle = "white"; context.font = "bold 18px Arial"; context.textAlign = "center"; context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15; context.fillStyle = "#3b82f6"; context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); context.fillStyle = "white"; context.font = "bold 16px Arial"; context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); context.restore(); }
 
-// Replace your old drawFog function with this one
+function drawMenuButtons() { 
+  const midX = GAME_X() + GAME_WIDTH() / 2; 
+  const startX = midX - startMenuBtn.w / 2; 
+  const startY = canvas.height / 2 - 20; 
+  context.save(); 
+  context.fillStyle = "#10b981"; 
+  context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); 
+  context.fillStyle = "white"; 
+  context.font = "bold 18px Arial"; 
+  context.textAlign = "center"; 
+  context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); 
+  const fullX = midX - centerFullBtn.w / 2; 
+  const fullY = startY + startMenuBtn.h + 15; 
+  context.fillStyle = "#3b82f6"; 
+  context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); 
+  context.fillStyle = "white"; 
+  context.font = "bold 16px Arial"; 
+  context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); 
+  context.restore(); 
+}
+
+// ==================================================
+// 5. RENDER FUNCTIONS
+
 function drawFog(intensity = 1.0) {
-  // 1. Buffer setup
   if (!window.fogCanvas) {
     window.fogCanvas = document.createElement("canvas");
     window.fogCtx = window.fogCanvas.getContext("2d");
   }
   const fCanvas = window.fogCanvas;
   const fCtx = window.fogCtx;
-
   if (fCanvas.width !== canvas.width || fCanvas.height !== canvas.height) {
     fCanvas.width = canvas.width;
     fCanvas.height = canvas.height;
   }
 
-  // 2. Clear and fill with dynamic intensity
   fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
   let fogAlpha = (gameState === "memorize") ? (1 - (stateTimer / 3.0)) * 0.98 : 0.98;
   fCtx.fillStyle = `rgba(0, 0, 0, ${fogAlpha})`;
   fCtx.fillRect(GAME_X(), 0, GAME_WIDTH(), canvas.height);
-
   fCtx.globalCompositeOperation = "destination-out";
-
-  // 3. Dynamic radius: starts large (visible), shrinks as level starts
-  // During "memorize", intensity is lower, and radius is larger.
   let maskRadius = 75 + (gameState === "memorize" ? (stateTimer * 250) : 0);
-  
   const pX = player.x + player.width / 2;
   const pY = player.y + player.height / 2;
-  
   fCtx.fillStyle = "black";
   fCtx.beginPath();
   fCtx.arc(pX, pY, maskRadius, 0, Math.PI * 2);
   fCtx.fill();
 
-  // Static torches
   torches.forEach(t => {
     fCtx.beginPath();
     fCtx.arc(t.x, t.y, t.radius, 0, Math.PI * 2);
@@ -409,19 +347,13 @@ function resetTouch() { touch.left = false; touch.right = false; touch.jump = fa
 async function toggleFullscreen() {
   try {
     if (!document.fullscreenElement) {
-      // Enter Fullscreen
       await document.documentElement.requestFullscreen();
-      
-      // Lock to landscape if supported
       if (screen.orientation && screen.orientation.lock) {
         await screen.orientation.lock('landscape').catch(() => {});
       }
     } else {
-      // Exit Fullscreen
       if (document.exitFullscreen) {
         await document.exitFullscreen();
-        
-        // Restore screen rotation
         if (screen.orientation && screen.orientation.unlock) {
           screen.orientation.unlock();
         }
@@ -444,7 +376,7 @@ function handleTouch(e) {
     const muteX = canvas.width - RIGHT_UI() / 2; 
     const muteY = 120;
     if (Math.hypot(x - muteX, y - muteY) < restartBtn.size / 2 && e.type === "touchstart") {
-      isMuted = !isMuted; // Toggle sound
+      isMuted = !isMuted;
       return;
     }
     if (x > canvas.width - RIGHT_UI()) {
@@ -496,7 +428,9 @@ canvas.addEventListener("touchstart", handleTouch, { passive: false });
 canvas.addEventListener("touchmove", handleTouch, { passive: false });
 canvas.addEventListener("touchend", handleTouch, { passive: false });
 
-// Core Game Processing Engine
+// ==================================================
+// 6. GAME LOOP
+
 let loop = GameLoop({
   update() {
     for (let i = particles.length - 1; i >= 0; i--) {
@@ -567,7 +501,7 @@ let loop = GameLoop({
       }
     }
 
-    // 🧱 COLLISION SYSTEM
+    // Collisions
     for (let p of platforms) {
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
@@ -653,19 +587,16 @@ let loop = GameLoop({
     });
 
     gravityPlatforms.forEach(p => {
-      // Clean bounding-box check
       if (player.x < p.x + p.width && player.x + player.width > p.x &&
           player.y < p.y + p.height && player.y + player.height > p.y) {
         
-        // 1. Flip Upwards
         if (p.type === "inverter" && gravityDir === 1) {
           playSound('gravity');
           gravityDir = -1;
           player.grounded = false;
-          player.dy = 0; // Clear vertical speed for smooth exit transition
+          player.dy = 0; 
           spawnExplosion(p.x + p.width / 2, p.y + p.height / 2, "#06b6d4", 15);
         } 
-        // 2. Restore Downwards
         else if (p.type === "restorer" && gravityDir === -1) {
           playSound('gravity');
           gravityDir = 1;
@@ -714,14 +645,12 @@ let loop = GameLoop({
       }
     }
   },
-
+  
   render() {
     context.clearRect(0, 0, canvas.width, canvas.height);
-    
     drawGameArea();
     drawGround();
     
-    // 2. Draw Player Aura Glow (Before the player sprite)
     let auraScale = 1.0 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
     context.save();
     context.beginPath();
@@ -797,11 +726,8 @@ let loop = GameLoop({
       context.globalAlpha = 0.25; context.fillStyle = star.color; context.beginPath(); context.arc(0, 0, (star.width / 2) * auraScale, 0, Math.PI * 2); context.fill();
       context.globalAlpha = 1.0; context.rotate(starPulseTime * 0.2); context.fillRect(-star.width / 2, -star.height / 2, star.width, star.height); context.restore();
     });
-
-    // 🕶️ DRAW FOG SHEET (Covers up the level scene layout)
+    
     drawFog();
-
-    // 🔥 TORCH FLAMES (Rendered inside holes on top of the black mask layout)
     torches.forEach(t => {
       context.save(); context.fillStyle = "#fbbf24"; context.beginPath(); context.arc(t.x, t.y, 6, 0, Math.PI * 2); context.fill(); context.restore();
     });
@@ -810,7 +736,6 @@ let loop = GameLoop({
       context.save(); context.globalAlpha = p.alpha; context.fillStyle = p.color; context.fillRect(p.x, p.y, p.size, p.size); context.restore();
     });
 
-    // 🏃 PLAYER AVATAR AND TRAIL
     if (gameState !== "menu" && gameState !== "victory") {
       playerTrail.forEach(t => {
         if (t.alpha > 0) {
@@ -826,13 +751,20 @@ let loop = GameLoop({
     }
 
     drawControlsBackground();
-    if (gameState !== "menu" && gameState !== "victory") { drawDpad(); drawJumpButton(); drawRestartButton(); drawMuteButton(); }
+    if (gameState !== "menu" && gameState !== "victory") { 
+      drawDpad(); 
+      drawJumpButton(); 
+      drawRestartButton(); 
+      drawMuteButton();
+    }
     
     if (gameState === "play" || gameState === "memorize") {
-      context.fillStyle = "white"; context.font = "bold 16px Arial"; context.textAlign = "center";
+      context.fillStyle = "white"; 
+      context.font = "bold 16px Arial"; 
+      context.textAlign = "center";
       context.fillText(`LEVEL: ${currentLevelIndex + 1}`, LEFT_UI() / 2, 110);
-    
-      context.fillStyle = "#38bdf8"; context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 150);
+      context.fillStyle = "#38bdf8";
+      context.fillText(`TIME: ${totalPlayTime.toFixed(2)}s`, LEFT_UI() / 2, 150);
     }
     
     function isPortrait() {
@@ -840,7 +772,11 @@ let loop = GameLoop({
     }
       
     if (gameState === "menu") {
-      context.fillStyle = "#00ff00"; context.font = "bold 36px Arial"; context.textAlign = "center"; context.fillText("Lime Adventure", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); drawMenuButtons();
+      context.fillStyle = "#00ff00"; 
+      context.font = "bold 36px Arial"; 
+      context.textAlign = "center"; 
+      context.fillText("Lime Adventure", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 40); 
+      drawMenuButtons();
       if (isPortrait()) {
         const blink = Math.floor(Date.now() / 500) % 2 === 0;
         const bottomPadding = 50;
@@ -851,8 +787,13 @@ let loop = GameLoop({
         }
       }
     } else if (gameState === "victory") {
-      context.fillStyle = "#22c55e"; context.font = "bold 36px Arial"; context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
-      context.fillStyle = "white"; context.font = "bold 20px Arial"; context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); drawMenuButtons();
+      context.fillStyle = "#22c55e"; 
+      context.font = "bold 36px Arial"; 
+      context.fillText("VICTORY!", GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 100);
+      context.fillStyle = "white"; 
+      context.font = "bold 20px Arial"; 
+      context.fillText(`Final Time: ${totalPlayTime.toFixed(2)}s`, GAME_X() + GAME_WIDTH() / 2, canvas.height / 2 - 60); 
+      drawMenuButtons();
     } else if (gameState === "memorize") {
       let intensity = 1 - (stateTimer / 3.0);
       drawFog(intensity); 

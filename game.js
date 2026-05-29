@@ -66,15 +66,12 @@ let musicPlayer;
 // Game State
 let currentLevelIndex = 0;
 let gameState = "menu";
+let menuState = "main";
 let stateTimer = 2.0;
 let totalPlayTime = 0.0;
 let gravityDir = 1; // 1 = Down, -1 = Up
 let isMuted = false;
 let freezeFrames = 0;
-const menuState = {
-  current: "MAIN",
-  goto(newState) { this.current = newState; }
-};
 
 // Entities & Arrays
 let platforms = [], spikes = [], stars = [], particles = [], torches = [];
@@ -326,35 +323,31 @@ function drawMuteButton() {
   context.restore();
 }
 
-function drawMenuButtons() { 
-  const midX = GAME_X() + GAME_WIDTH() / 2; 
-  if (menuState.current === "MAIN") {
-  const startX = midX - startMenuBtn.w / 2; 
-  const startY = canvas.height / 2 - 20; 
-  context.save(); 
-  context.fillStyle = "#10b981"; 
-  context.fillRect(startX, startY, startMenuBtn.w, startMenuBtn.h); 
-  context.fillStyle = "white"; 
-  context.font = "bold 18px Arial"; 
-  context.textAlign = "center"; 
-  context.fillStyle = "#64748b"; // Grey color
-  context.fillRect(midX - 100, canvas.height / 2 + 50, 200, 45);    context.fillStyle = "white";    context.fillText("SETTINGS", midX, canvas.height / 2 + 80);
-  context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); 
-  const fullX = midX - centerFullBtn.w / 2; 
-  const fullY = startY + startMenuBtn.h + 15; 
-  context.fillStyle = "#3b82f6"; 
-  context.fillRect(fullX, fullY, centerFullBtn.w, centerFullBtn.h); 
-  context.fillStyle = "white"; 
-  context.font = "bold 16px Arial"; 
-  context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); 
-  context.restore(); 
-}
-else if (menuState.current === "SETTINGS") {
-    // NEW: Back Button
-    context.fillStyle = "#ef4444"; // Red color
-    context.fillRect(midX - 100, canvas.height / 2 + 50, 200, 45);
+function drawMenuButtons() {
+  const midX = GAME_X() + GAME_WIDTH() / 2;
+  const btnW = 200;
+  const btnH = 50;
+
+  if (menuState === "main") {
+    // START BUTTON
+    context.fillStyle = "#10b981";
+    context.fillRect(midX - btnW / 2, canvas.height / 2 - 20, btnW, btnH);
     context.fillStyle = "white";
-    context.fillText("BACK", midX, canvas.height / 2 + 80);
+    context.fillText("START GAME", midX, canvas.height / 2 + 15);
+
+    // SETTINGS BUTTON
+    context.fillStyle = "#64748b";
+    context.fillRect(midX - btnW / 2, canvas.height / 2 + 50, btnW, btnH);
+    context.fillStyle = "white";
+    context.fillText("SETTINGS", midX, canvas.height / 2 + 85);
+  } 
+  else if (menuState === "settings") {
+    // BACK BUTTON
+    context.fillStyle = "#ef4444";
+    context.fillRect(midX - btnW / 2, canvas.height / 2 + 50, btnW, btnH);
+    context.fillStyle = "white";
+    context.fillText("BACK", midX, canvas.height / 2 + 85);
+  }
 }
   
 // ==================================================
@@ -453,38 +446,31 @@ function handleTouch(e) {
     const rect = canvas.getBoundingClientRect();
     const x = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
     const y = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+    const midX = GAME_X() + GAME_WIDTH() / 2;
 
-    if (menuState.current === "MAIN") {
-      // Your existing Main Menu logic
-      const midX = GAME_X() + GAME_WIDTH() / 2;
-      const startX = midX - startMenuBtn.w / 2; 
-      const startY = canvas.height / 2 - 20;
-
-      if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
-        // Start Game Logic
-        if (!musicPlayer) {
-          musicPlayer = zzfxP(...zzfxM(...song));
-          musicPlayer.loop = true;
-        }
-        currentLevelIndex = 0; 
-        totalPlayTime = 0.0; 
+    if (menuState === "main") {
+      // 1. CLICKED START?
+      if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 - 20 && y < canvas.height / 2 + 30) {
+        if (!musicPlayer) { musicPlayer = zzfxP(...zzfxM(...song)); musicPlayer.loop = true; }
+        currentLevelIndex = 0;
         loadLevel(currentLevelIndex);
+        gameState = "play";
       }
-      if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 95) {
-    menuState.goto("SETTINGS"); // This simple line switches the page!
-  }
-} 
-else if (menuState.current === "SETTINGS") {
-  // Check if they clicked the BACK button
-  if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 95) {
-    menuState.goto("MAIN"); // This switches back to Main
-  }
-}
+      // 2. CLICKED SETTINGS?
+      else if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 100) {
+        menuState = "settings";
+      }
+    } 
+    else if (menuState === "settings") {
+      // 3. CLICKED BACK?
+      if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 100) {
+        menuState = "main";
+      }
     }
   }
-  return; // Stop here if in menu
-  }
-
+  return;
+}
+  
   resetTouch();
   for (let t of activeTouches) {
     const x = (t.clientX - rect.left) * scaleX; const y = (t.clientY - rect.top) * scaleY;

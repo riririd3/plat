@@ -46,7 +46,52 @@ function playSound(type) {
   try {
     if (!z_ctx) z_ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (z_ctx.state === 'suspended') z_ctx.resume();
+    
     // ZzFX sounds mapping
+    const song = [
+  [ // Instruments 
+    // Soft bass drone
+    [0.3, 0, 110, 0.05, 0.2, 0.4, 0, 0.2, 0, 0, 0, 0, 0, 0.05, 0, 0, 0.1, 0.6, 0.2],    
+    // Gentle chime
+    [0.2, 0, 880, 0.01, 0.1, 0.3, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0.8, 0.1], 
+    // Soft pad/atmosphere
+    [0.15, 0, 220, 0.1, 0.4, 0.6, 0, 0.1, 0, 0, 0, 0, 0, 0.1, 0, 0, 0.05, 0.9, 0.3]
+  ],
+  [ // Patterns
+    [
+      // Channel 0: Bass drone
+      [0, 0, 13, 0, 0, 13, 14, 0, 0, 14, 15, 0, 0, 15, 16, 0, 0, 16],     
+      // Channel 1: Chime melody
+      [1, 0.2, 0, 22, 0, 20, 0, 24, 0, 21, 0, 19, 0, 23, 0, 20, 0, 22], 
+      // Channel 2: Pad atmosphere
+      [2, 0, 0, 0, 17, 0, 0, 0, 19, 0, 0, 0, 17, 0, 0, 0, 15, 0]
+    ],   
+    [
+      // Channel 0: Bass variation
+      [0, 0, 15, 0, 0, 15, 16, 0, 0, 16, 13, 0, 0, 13, 14, 0, 0, 14],   
+      // Channel 1: Chime variation
+      [1, 0.15, 0, 24, 0, 22, 0, 20, 0, 23, 0, 21, 0, 19, 0, 24, 0, 20],
+      // Channel 2: Pad variation
+      [2, 0, 0, 0, 19, 0, 0, 0, 20, 0, 0, 0, 17, 0, 0, 0, 16, 0]
+    ],
+    [
+      // Channel 0: Bass holds
+      [0, 0, 12, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 12, 0, 0, 0],
+      // Channel 1: Higher chime arpeggio
+      [1, 0.1, 0, 27, 0, 26, 0, 24, 0, 27, 0, 26, 0, 24, 0, 22, 0, 0],
+      // Channel 2: Pad swell
+      [2, 0, 0, 0, 17, 0, 0, 0, 15, 0, 0, 0, 17, 0, 0, 0, 14, 0]
+    ]
+  ],  
+  // Sequence
+  [0, 1, 0, 2, 0, 2, 0, 1, 1, 1, 2, 2],
+  // BPM
+  55, 
+  // Volume
+  1
+];
+let musicPlayer;
+    
     const sounds = {
       jump: [1,,458,.05,.03,.07,,3,,198,,,,,,,.04,.53,.03,,-1462],
       gravity: [.7,,286,.01,.03,.38,2,.43,-8.1,-0.1,-50,-0.01,.02,.2,,,.01,1.09,.05,.01],

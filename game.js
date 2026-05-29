@@ -71,6 +71,10 @@ let totalPlayTime = 0.0;
 let gravityDir = 1; // 1 = Down, -1 = Up
 let isMuted = false;
 let freezeFrames = 0;
+const menuState = {
+  current: "MAIN",
+  goto(newState) { this.current = newState; }
+};
 
 // Entities & Arrays
 let platforms = [], spikes = [], stars = [], particles = [], torches = [];
@@ -324,6 +328,7 @@ function drawMuteButton() {
 
 function drawMenuButtons() { 
   const midX = GAME_X() + GAME_WIDTH() / 2; 
+  if (menuState.current === "MAIN") {
   const startX = midX - startMenuBtn.w / 2; 
   const startY = canvas.height / 2 - 20; 
   context.save(); 
@@ -332,6 +337,8 @@ function drawMenuButtons() {
   context.fillStyle = "white"; 
   context.font = "bold 18px Arial"; 
   context.textAlign = "center"; 
+  context.fillStyle = "#64748b"; // Grey color
+  context.fillRect(midX - 100, canvas.height / 2 + 50, 200, 45);    context.fillStyle = "white";    context.fillText("SETTINGS", midX, canvas.height / 2 + 80);
   context.fillText(gameState === "victory" ? "PLAY AGAIN" : "START GAME", midX, startY + 31); 
   const fullX = midX - centerFullBtn.w / 2; 
   const fullY = startY + startMenuBtn.h + 15; 
@@ -342,7 +349,14 @@ function drawMenuButtons() {
   context.fillText("TOGGLE FULLSCREEN", midX, fullY + 28); 
   context.restore(); 
 }
-
+else if (menuState.current === "SETTINGS") {
+    // NEW: Back Button
+    context.fillStyle = "#ef4444"; // Red color
+    context.fillRect(midX - 100, canvas.height / 2 + 50, 200, 45);
+    context.fillStyle = "white";
+    context.fillText("BACK", midX, canvas.height / 2 + 80);
+}
+  
 // ==================================================
 // 5. RENDER FUNCTIONS
 
@@ -434,27 +448,41 @@ function handleTouch(e) {
     }
   }
 
-  if (gameState === "menu" || gameState === "victory") {
-    if (e.type === "touchstart") {
-      for (let t of e.targetTouches) {
-        const x = (t.clientX - rect.left) * scaleX; const y = (t.clientY - rect.top) * scaleY;
-        const midX = GAME_X() + GAME_WIDTH() / 2;
-        const startX = midX - startMenuBtn.w / 2; const startY = canvas.height / 2 - 20;
-        const fullX = midX - centerFullBtn.w / 2; const fullY = startY + startMenuBtn.h + 15;
+  if (gameState === "menu") {
+  if (e.type === "touchstart") {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
 
-        if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
-          if (!musicPlayer) {
-            musicPlayer = zzfxP(...zzfxM(...song));
-            musicPlayer.loop = true;
-          }
-          currentLevelIndex = 0; totalPlayTime = 0.0; loadLevel(currentLevelIndex); return;
+    if (menuState.current === "MAIN") {
+      // Your existing Main Menu logic
+      const midX = GAME_X() + GAME_WIDTH() / 2;
+      const startX = midX - startMenuBtn.w / 2; 
+      const startY = canvas.height / 2 - 20;
+
+      if (x > startX && x < startX + startMenuBtn.w && y > startY && y < startY + startMenuBtn.h) {
+        // Start Game Logic
+        if (!musicPlayer) {
+          musicPlayer = zzfxP(...zzfxM(...song));
+          musicPlayer.loop = true;
         }
-        if (x > fullX && x < fullX + centerFullBtn.w && y > fullY && y < fullY + centerFullBtn.h) {
-          toggleFullscreen().catch(err => console.log("Fullscreen blocked")); return;
-        }
+        currentLevelIndex = 0; 
+        totalPlayTime = 0.0; 
+        loadLevel(currentLevelIndex);
       }
+      if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 95) {
+    menuState.goto("SETTINGS"); // This simple line switches the page!
+  }
+} 
+else if (menuState.current === "SETTINGS") {
+  // Check if they clicked the BACK button
+  if (x > midX - 100 && x < midX + 100 && y > canvas.height / 2 + 50 && y < canvas.height / 2 + 95) {
+    menuState.goto("MAIN"); // This switches back to Main
+  }
+}
     }
-    return;
+  }
+  return; // Stop here if in menu
   }
 
   resetTouch();

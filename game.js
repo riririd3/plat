@@ -320,12 +320,16 @@ function drawMenuButtons() {
     context.fillStyle = "#10b981";
     context.fillRect(midX - btnW / 2, canvas.height / 2 - 20, btnW, btnH);
     context.fillStyle = "white";
+    context.font = "bold 20px Arial";
+    context.textAlign = "center";
     context.fillText("START GAME", midX, canvas.height / 2 + 15);
 
     // SETTINGS BUTTON
     context.fillStyle = "#64748b";
     context.fillRect(midX - btnW / 2, canvas.height / 2 + 50, btnW, btnH);
     context.fillStyle = "white";
+    context.font = "bold 20px Arial";
+    context.textAlign = "center";
     context.fillText("SETTINGS", midX, canvas.height / 2 + 85);
   } 
   else if (menuState === "settings") {
@@ -343,6 +347,8 @@ function drawMenuButtons() {
     context.fillStyle = "#64748b";
     context.fillRect(midX - btnW / 2, backBtnY, btnW, btnH);
     context.fillStyle = "white";
+    context.font = "bold 20px Arial";
+    context.textAlign = "center";
     context.fillText("BACK", midX, backBtnY + 35);
   }
 }

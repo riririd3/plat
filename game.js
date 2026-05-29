@@ -334,7 +334,6 @@ function drawMenuButtons() {
     context.fillRect(midX - btnW / 2, canvas.height / 2 - 20, btnW, btnH);
     context.fillStyle = "black";
     context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
-    context.restore();
   
     // BACK BUTTON
     context.fillStyle = "#ef4444";

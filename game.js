@@ -310,19 +310,6 @@ function drawRestartButton() {
   context.restore(); 
 }
 
-function drawMuteButton() {
-  const x = canvas.width - RIGHT_UI() / 2; 
-  const y = 120; 
-  context.save();
-  context.fillStyle = isMuted ? "#ef4444" : "#22c55e"; 
-  context.fillRect(x - restartBtn.size / 2, y - restartBtn.size / 2, restartBtn.size, restartBtn.size);
-  context.fillStyle = "black";
-  context.font = "bold 10px Arial";
-  context.textAlign = "center";
-  context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
-  context.restore();
-}
-
 function drawMenuButtons() {
   const midX = GAME_X() + GAME_WIDTH() / 2;
   const btnW = 200;
@@ -342,6 +329,13 @@ function drawMenuButtons() {
     context.fillText("SETTINGS", midX, canvas.height / 2 + 85);
   } 
   else if (menuState === "settings") {
+    // MUTE 
+    context.fillStyle = isMuted ? "#ef4444" : "#22c55e"; 
+    context.fillRect(midX - btnW / 2, canvas.height / 2 - 20, btnW, btnH);
+    context.fillStyle = "black";
+    context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
+    context.restore();
+  
     // BACK BUTTON
     context.fillStyle = "#ef4444";
     context.fillRect(midX - btnW / 2, canvas.height / 2 + 50, btnW, btnH);

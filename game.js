@@ -61,7 +61,7 @@ const song = [
   // Volume
   1
 ];
-let musicPlayer;
+let musicPlayer = null;
 
 // Game State
 let currentLevelIndex = 0;

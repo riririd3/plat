@@ -423,6 +423,9 @@ function handleTouch(e) {
     const muteY = 120;
     if (Math.hypot(x - muteX, y - muteY) < restartBtn.size / 2 && e.type === "touchstart") {
       isMuted = !isMuted;
+      if (musicPlayer !== null) {
+        isMuted ? musicPlayer.disconnect() : musicPlayer.connect(zzfxX.destination);
+      }
       return;
     }
     if (x > canvas.width - RIGHT_UI()) {

@@ -397,7 +397,7 @@ function drawRestartButton() {
   context.fillStyle = "#f59e0b";
   context.fillRect(x - restartBtn.size/2, y - restartBtn.size/2, restartBtn.size, restartBtn.size);
   context.fillStyle = "black";
-  context.font = "bold 12px Arial";
+  context.font = "12px Arial";
   context.textAlign = "center";
   context.fillText("RESTART", x, y + 4);
 }
@@ -405,10 +405,10 @@ function drawRestartButton() {
 function drawPauseButton() {
   const x = canvas.width - RIGHT_UI_WIDTH / 2;
   const y = 120;
-  context.fillStyle = "#f97316";
-  context.fillRect(x - 20, y - 12, 40, 32);
-  context.fillStyle = "white";
-  context.font = "bold 20px Arial";
+  context.fillStyle = "#f59e0b";
+  context.fillRect(x - restartBtn.size/2, y - restartBtn.size/2, restartBtn.size, restartBtn.size);
+  context.fillStyle = "black";
+  context.font = "12px Arial";
   context.textAlign = "center";
   context.fillText("PAUSE", x, y + 8);
 }
@@ -946,8 +946,7 @@ function renderSettings() {
   drawButton(getGameX() + getGameWidth()/2 - 100, 360, 200, 50, "#f59e0b", "BACK", () => {
     appState = "mainMenu";
   });
-}
-drawButton(getGameX() + getGameWidth()/2 - 100, 290, 200, 50, "#ef4444", "RESET PROGRESS", () => {
+  drawButton(getGameX() + getGameWidth()/2 - 100, 290, 200, 50, "#ef4444", "RESET PROGRESS", () => {
     if (confirm("Delete all saved progress? This cannot be undone.")) {
         localStorage.removeItem("lime_levelTimes");
         localStorage.removeItem("lime_levelCompleted");
@@ -957,7 +956,8 @@ drawButton(getGameX() + getGameWidth()/2 - 100, 290, 200, 50, "#ef4444", "RESET 
         totalPlayTime = 0;
         appState = "mainMenu";
     }
-});
+  });
+}
 
 function renderLevelSelect() {
   drawGameBackground();
@@ -1081,7 +1081,7 @@ function handleTouchStartMove(e) {
     }
     const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
     const pauseY = 120;
-    if (Math.hypot(x - pauseX, y - pauseY) < 25 && e.type === "touchstart") {
+    if (Math.hypot(x - pauseX, y - pauseY) < restartBtn.size/2 && e.type === "touchstart") {
       appState = "pause";
       return;
     }

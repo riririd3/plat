@@ -982,7 +982,6 @@ function gameRender() {
     context.fillStyle = "#fbbf24";
     context.font = "bold 20px Arial";
     context.fillText(`${Math.ceil(stateTimer)}s`, getGameX() + getGameWidth()/2, 50);
-    drawFog(); // extra fog overlay during memorize
   }
 }
 

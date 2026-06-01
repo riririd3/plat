@@ -402,15 +402,15 @@ function drawRestartButton() {
   context.fillText("RESTART", x, y + 4);
 }
 
-function drawMuteButton() {
+function drawPauseButton() {
   const x = canvas.width - RIGHT_UI_WIDTH / 2;
   const y = 120;
-  context.fillStyle = isMuted ? "#ef4444" : "#22c55e";
-  context.fillRect(x - restartBtn.size/2, y - restartBtn.size/2, restartBtn.size, restartBtn.size);
-  context.fillStyle = "black";
-  context.font = "bold 10px Arial";
+  context.fillStyle = "#f97316";
+  context.fillRect(x - 20, y - 12, 40, 32);
+  context.fillStyle = "white";
+  context.font = "bold 20px Arial";
   context.textAlign = "center";
-  context.fillText(isMuted ? "MUTE" : "PLAY", x, y + 4);
+  context.fillText("PAUSE", x, y + 8);
 }
 
 // Generic button drawing helper
@@ -872,7 +872,7 @@ function renderGameWorld() {
     drawDpad();
     drawJumpButton();
     drawRestartButton();
-    drawMuteButton();
+    drawPauseButton();
   }
 
   if (appState === "game" && (gamePhase === "play" || gamePhase === "memorize")) {
@@ -943,10 +943,21 @@ function renderSettings() {
     }
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, 220, 200, 50, "#3b82f6", "FULLSCREEN", toggleFullscreen);
-  drawButton(getGameX() + getGameWidth()/2 - 100, 290, 200, 50, "#f59e0b", "BACK", () => {
+  drawButton(getGameX() + getGameWidth()/2 - 100, 360, 200, 50, "#f59e0b", "BACK", () => {
     appState = "mainMenu";
   });
 }
+drawButton(getGameX() + getGameWidth()/2 - 100, 290, 200, 50, "#ef4444", "RESET PROGRESS", () => {
+    if (confirm("Delete all saved progress? This cannot be undone.")) {
+        localStorage.removeItem("lime_levelTimes");
+        localStorage.removeItem("lime_levelCompleted");
+        levelTimes = [];
+        levelCompleted = new Array(LEVEL_MAPS.length).fill(false);
+        currentLevelIndex = 0;
+        totalPlayTime = 0;
+        appState = "mainMenu";
+    }
+});
 
 function renderLevelSelect() {
   drawGameBackground();
@@ -1061,21 +1072,18 @@ function handleTouchStartMove(e) {
     for (let t of activeTouches) {
       const x = (t.clientX - rect.left) * scaleX;
       const y = (t.clientY - rect.top) * scaleY;
-      const muteX = canvas.width - RIGHT_UI_WIDTH/2;
-      const muteY = 120;
-      if (Math.hypot(x - muteX, y - muteY) < restartBtn.size/2 && e.type === "touchstart") {
-        isMuted = !isMuted;
-        if (musicPlayer) {
-          isMuted ? musicPlayer.disconnect() : musicPlayer.connect(zzfxX.destination);
-        }
-        return;
-      }
       const rstX = canvas.width - RIGHT_UI_WIDTH/2;
       const rstY = 60;
       if (Math.hypot(x - rstX, y - rstY) < restartBtn.size/2 && e.type === "touchstart") {
         if (appState === "game") loadLevel(currentLevelIndex);
         return;
       }
+    }
+    const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
+    const pauseY = 120;
+    if (Math.hypot(x - pauseX, y - pauseY) < 25 && e.type === "touchstart") {
+      appState = "pause";
+      return;
     }
   }
 

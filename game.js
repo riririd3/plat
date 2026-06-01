@@ -101,7 +101,7 @@ let audioCtx = null;
 let touch = { left: false, right: false, jump: false };
 const dpadBtn = { size: 50 };
 const jumpBtn = { size: 50 };
-const restartBtn = { size: 40 };
+const restartBtn = { size: 50 };
 const startMenuBtn = { w: 200, h: 50 };
 const centerFullBtn = { w: 200, h: 45 };
 
@@ -1078,12 +1078,12 @@ function handleTouchStartMove(e) {
         if (appState === "game") loadLevel(currentLevelIndex);
         return;
       }
-    }
-    const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
-    const pauseY = 120;
-    if (Math.hypot(x - pauseX, y - pauseY) < restartBtn.size/2 && e.type === "touchstart") {
-      appState = "pause";
-      return;
+      const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
+      const pauseY = 120;
+      if (Math.hypot(x - pauseX, y - pauseY) < restartBtn.size/2 && e.type === "touchstart") {
+        appState = "pause";
+        return;
+      }
     }
   }
 

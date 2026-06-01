@@ -639,9 +639,52 @@ function handleCollisions() {
   // 2) Fragile blocks
   for (let b of fragileBlocks) collideSolid(b, true);
   // 3) Gates (solid when not opened)
+  // 4) GATES (solid when closed, disappear when opened - NO level progression)
   for (let g of gates) {
-    if (!g.opened) collideSolid(g, false);
+  if (!g.opened) {
+    // Gate is closed - act as solid obstacle
+    if (overlap(player.x, player.y, player.width, player.height, g.x, g.y, g.w, g.h)) {
+      const overlapX = Math.min(player.x + player.width - g.x, g.x + g.w - player.x);
+      const overlapY = Math.min(player.y + player.height - g.y, g.y + g.h - player.y);
+      
+      if (overlapX < overlapY) {
+        // Horizontal collision
+        if (player.x + player.width/2 < g.x + g.w/2) player.x -= overlapX;
+        else player.x += overlapX;
+      } else {
+        // Vertical collision
+        if (gravityDir === GRAVITY_NORMAL) {
+          if (player.y + player.height/2 < g.y + g.h/2) {
+            player.y -= overlapY;
+            player.dy = 0;
+            player.grounded = true;
+          } else {
+            player.y += overlapY;
+            player.dy = 0;
+          }
+        } else {
+          if (player.y + player.height/2 > g.y + g.h/2) {
+            player.y += overlapY;
+            player.dy = 0;
+            player.grounded = true;
+          } else {
+            player.y -= overlapY;
+            player.dy = 0;
+          }
+        }
+      }
+    }
+  } else {
+    // Gate is opened - just play effect, NO level progression
+    if (overlap(player.x, player.y, player.width, player.height, g.x, g.y, g.w, g.h)) {
+      playSound('gate');
+      spawnExplosion(g.x + g.w/2, g.y + g.h/2, "#3b82f6", 20);
+      // DO NOT increment level index or load level!
+      // Gate simply disappears when opened (already handled by !g.opened check)
+    }
   }
+}
+}
 
   // Buttons
   for (let b of buttons) {

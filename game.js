@@ -674,17 +674,8 @@ function handleCollisions() {
         }
       }
     }
-  } else {
-    // Gate is opened - just play effect, NO level progression
-    if (overlap(player.x, player.y, player.width, player.height, g.x, g.y, g.w, g.h)) {
-      playSound('gate');
-      spawnExplosion(g.x + g.w/2, g.y + g.h/2, "#3b82f6", 20);
-      // DO NOT increment level index or load level!
-      // Gate simply disappears when opened (already handled by !g.opened check)
-    }
   }
-}
-}
+  }
 
   // Buttons
   for (let b of buttons) {

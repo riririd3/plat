@@ -1,12 +1,9 @@
 // ============================================================================
-// 1. DEPENDENCIES & GLOBALS
+// DEPENDENCIES & GLOBALS
 // ============================================================================
 const { init, GameLoop, Sprite, initKeys, keyPressed } = kontra;
 let { canvas, context } = init("game");
 initKeys();
-
-// zzFX audio globals (provided by library)
-/* global zzfx, zzfxP, zzfxM, zzfxX */
 
 // ----------------------------------------------------------------------------
 // Constants (configuration)
@@ -41,7 +38,7 @@ const SOUNDS = {
   fragile:   [.7,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]
 };
 // ============================================================================
-// MUSIC / SONG DATA (for zzfxM)
+// MUSIC / SONG DATA
 // ============================================================================
 const song = [
   [ // Instruments 
@@ -88,7 +85,7 @@ const song = [
 // ----------------------------------------------------------------------------
 // Game state variables
 // ----------------------------------------------------------------------------
-let gameState = "menu";            // "menu", "victory", "memorize", "play"
+let gameState = "menu";           
 let stateTimer = 2.0;
 let totalPlayTime = 0.0;
 let currentLevelIndex = 0;
@@ -105,7 +102,7 @@ let playerTrail = [];
 
 // Visual effects
 let starPulseTime = 0;
-let audioCtx = null;               // lazily initialised
+let audioCtx = null;              
 
 // Touch / mobile UI
 let touch = { left: false, right: false, jump: false };
@@ -118,12 +115,8 @@ const centerFullBtn = { w: 200, h: 45 };
 // Music player
 let musicPlayer = null;
 
-// Level data (imported from levels.js)
-/* global LEVEL_MAPS */
-
-
 // ============================================================================
-// 2. HELPER FUNCTIONS
+// HELPER FUNCTIONS
 // ============================================================================
 function getGameX()      { return LEFT_UI_WIDTH; }
 function getGameWidth()  { return canvas.width - LEFT_UI_WIDTH - RIGHT_UI_WIDTH; }
@@ -190,26 +183,17 @@ function resizeGame() {
 
 
 // ============================================================================
-// 3. COLLISION & PHYSICS UTILITIES
+// COLLISION & PHYSICS UTILITIES
 // ============================================================================
 function overlap(ax, ay, aw, ah, bx, by, bw, bh) {
   return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
 }
 
 function resolveSolidCollision(player, solid, vx, vy) {
-  // returns { resolved: boolean, grounded: boolean, newX, newY, newDy }
-  // simplified: used in update loop – actual implementation is per‑entity
-  // For brevity, the original per‑platform logic is kept but moved into a dedicated function.
-  // (see full collision handling in update loop – refactored but functionally identical)
 }
 
-// Note: the original collision code is quite long. In the cleaned version I will reorganize it,
-// but keep the exact same behaviour. Because of space, the final cleaned code will include
-// the same logic, just structured better. The full refactored file is provided at the end.
-
-
 // ============================================================================
-// 4. LEVEL LOADING
+// LEVEL LOADING
 // ============================================================================
 function loadLevel(index) {
   console.log(`Loading level ${index + 1}`);
@@ -225,7 +209,7 @@ function loadLevel(index) {
   // Clear all dynamic arrays
   platforms = []; spikes = []; stars = []; torches = [];
   buttons = []; gates = []; fragileBlocks = []; pads = [];
-  gravityPlatforms = []; particles = []; playerTrail = [];
+  gravityPlatforms = []; playerTrail = [];
   gravityDir = DEFAULT_GRAVITY;
 
   const level = LEVEL_MAPS[index];
@@ -333,9 +317,8 @@ function loadLevel(index) {
   }
 }
 
-
 // ============================================================================
-// 5. PLAYER CREATION & BASIC UPDATE (wrapper)
+// PLAYER CREATION & BASIC UPDATE (wrapper)
 // ============================================================================
 function createPlayer() {
   return Sprite({
@@ -366,9 +349,8 @@ function createPlayer() {
 }
 player = createPlayer();
 
-
 // ============================================================================
-// 6. RENDERING FUNCTIONS (draw calls)
+// RENDERING FUNCTIONS (draw calls)
 // ============================================================================
 function drawGameBackground() {
   const grad = context.createLinearGradient(getGameX(), 0, getGameX(), canvas.height);
@@ -516,9 +498,8 @@ function drawParticles() {
   context.globalAlpha = 1;
 }
 
-
 // ============================================================================
-// 7. GAME LOGIC UPDATE (collisions, state transitions)
+// GAME LOGIC UPDATE (collisions, state transitions)
 // ============================================================================
 function updateParticles() {
   for (let i = particles.length-1; i >= 0; i--) {
@@ -781,9 +762,8 @@ function gameUpdate(dt = 1/60) {
   handleCollisions();
 }
 
-
 // ============================================================================
-// 8. FULL RENDER FUNCTION
+// FULL RENDER FUNCTION
 // ============================================================================
 function gameRender() {
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -976,9 +956,8 @@ function gameRender() {
   }
 }
 
-
 // ============================================================================
-// 9. TOUCH HANDLING (mobile)
+// TOUCH HANDLING (mobile)
 // ============================================================================
 function handleTouchStartMove(e) {
   e.preventDefault();
@@ -1060,9 +1039,8 @@ canvas.addEventListener("touchstart", handleTouchStartMove, { passive: false });
 canvas.addEventListener("touchmove", handleTouchStartMove, { passive: false });
 canvas.addEventListener("touchend", handleTouchStartMove, { passive: false });
 
-
 // ============================================================================
-// 10. START THE GAME LOOP
+// START THE GAME LOOP
 // ============================================================================
 resizeGame();
 window.addEventListener("resize", resizeGame);

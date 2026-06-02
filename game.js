@@ -35,7 +35,7 @@ const SOUNDS = {
   button:    [.5,0,292,.1,,.5,2,.7,,,22,,,,5,,.3,.99],
   pad:       [1,,552,,.05,.2,1,1.5,,,-330,.04,,.1,,,.12,.7,.04],
   gate:      [1,,1232,,.08,.3,1,1.8,7,,,,,2,,,.1,.8,.05],
-  fragile:   [.7,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]
+  portals:   [.7,,180,,.02,.15,,1.5,5,,200,.02,,.2,,.05,.2,.5,.01]
 };
 
 // ============================================================================
@@ -101,7 +101,7 @@ let audioCtx = null;
 let touch = { left: false, right: false, jump: false };
 const dpadBtn = { size: 50 };
 const jumpBtn = { size: 50 };
-const restartBtn = { size: 50 };
+const pauseBtn = { size: 50 };
 const startMenuBtn = { w: 200, h: 50 };
 const centerFullBtn = { w: 200, h: 45 };
 
@@ -203,10 +203,9 @@ function loadLevel(index) {
   currentLevelTime = 0;          // reset timer for this level
   resetTouch();
 
-  // Clear dynamic arrays (keep particles for explosion?)
   platforms = []; spikes = []; stars = []; torches = [];
   buttons = []; gates = []; fragileBlocks = []; pads = [];
-  gravityPlatforms = []; playerTrail = [];
+  gravityPlatforms = []; portals = []; playerTrail = [];
   gravityDir = DEFAULT_GRAVITY;
 
   const level = LEVEL_MAPS[index];
@@ -298,12 +297,20 @@ function loadLevel(index) {
     level.pads.forEach(pd => {
       pads.push({
         x: gameX + pd.x, y: pd.y, width: pd.w || 32, height: pd.h || 12,
-        type: pd.type, power: pd.power,
-        color: pd.type === "dash" ? "#06b6d4" : "#a855f7"
+        color: "#a855f7"
       });
     });
   }
-}
+
+  if (level.portals) {
+    level.portals.forEach(p => {
+        portals.push({
+            x: gameX + p.x, y: p.y, w: p.w || 32, h: p.h || 32,
+            targetX: gameX + p.targetX, targetY: p.targetY,
+            color: p.color || "#a855f7"
+        });
+    });
+  }
 
 // ============================================================================
 // PLAYER CREATION (unchanged)
@@ -391,24 +398,13 @@ function drawJumpButton() {
   context.restore();
 }
 
-function drawRestartButton() {
+function drawPauseButton() {
   const x = canvas.width - RIGHT_UI_WIDTH / 2;
   const y = 60;
   context.fillStyle = "#f59e0b";
-  context.fillRect(x - restartBtn.size/2, y - restartBtn.size/2, restartBtn.size, restartBtn.size);
+  context.fillRect(x - pauseBtn.size/2, y - pauseBtn.size/2, pauseBtn.size, pauseBtn.size);
   context.fillStyle = "black";
-  context.font = "12px Arial";
-  context.textAlign = "center";
-  context.fillText("RESTART", x, y + 4);
-}
-
-function drawPauseButton() {
-  const x = canvas.width - RIGHT_UI_WIDTH / 2;
-  const y = 120;
-  context.fillStyle = "#f59e0b";
-  context.fillRect(x - restartBtn.size/2, y - restartBtn.size/2, restartBtn.size, restartBtn.size);
-  context.fillStyle = "black";
-  context.font = "12px Arial";
+  context.font = "bold 12px Arial";
   context.textAlign = "center";
   context.fillText("PAUSE", x, y + 8);
 }
@@ -666,11 +662,20 @@ function handleCollisions() {
         player.grounded = false;
         playSound('pad');
         spawnExplosion(p.x + p.width/2, p.y, "#a855f7", 10);
-      } else if (p.type === "dash") {
-        player.x += p.power;
-        playSound('pad');
-        spawnExplosion(player.x + player.width/2, p.y, "#06b6d4", 10);
-      }
+      } 
+    }
+  }
+
+  for (let p of portals) {
+    if (overlap(player.x, player.y, player.width, player.height, p.x, p.y, p.w, p.h)) {
+        // Teleport player
+        player.x = p.targetX;
+        player.y = p.targetY;
+        // Optional: play sound, spawn particles
+        playSound('portal');
+        spawnExplosion(p.x + p.w/2, p.y + p.h/2, p.color, 15);
+        // Break to avoid multiple teleports in same frame
+        break;
     }
   }
 
@@ -782,6 +787,10 @@ function renderGameWorld() {
     context.fillStyle = p.color;
     context.fillRect(p.x, p.y, p.width, p.height);
   }
+  for (let p of portals) {
+    context.fillStyle = p.color;
+    context.fillRect(p.x, p.y, p.width, p.height);
+  }
   for (let b of buttons) {
     context.fillStyle = b.pressed ? "#475569" : b.color;
     context.fillRect(b.x, b.y, b.w, b.h);
@@ -871,7 +880,6 @@ function renderGameWorld() {
   if (appState === "game") {
     drawDpad();
     drawJumpButton();
-    drawRestartButton();
     drawPauseButton();
   }
 
@@ -1072,15 +1080,9 @@ function handleTouchStartMove(e) {
     for (let t of activeTouches) {
       const x = (t.clientX - rect.left) * scaleX;
       const y = (t.clientY - rect.top) * scaleY;
-      const rstX = canvas.width - RIGHT_UI_WIDTH/2;
-      const rstY = 60;
-      if (Math.hypot(x - rstX, y - rstY) < restartBtn.size/2 && e.type === "touchstart") {
-        if (appState === "game") loadLevel(currentLevelIndex);
-        return;
-      }
       const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
       const pauseY = 120;
-      if (Math.hypot(x - pauseX, y - pauseY) < restartBtn.size/2 && e.type === "touchstart") {
+      if (Math.hypot(x - pauseX, y - pauseY) < pauseBtn.size/2 && e.type === "touchstart") {
         appState = "pause";
         return;
       }

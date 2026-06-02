@@ -167,6 +167,41 @@ function spawnExplosion(originX, originY, color, count = 20) {
   }
 }
 
+function addAmbientParticles() {
+  // Portals - floating orbs
+  for (let p of portals) {
+    if (Math.random() < 0.1) {  // 10% chance per frame
+      const angle = Math.random() * Math.PI * 2;
+      const radius = p.w / 2;
+      particles.push({
+        x: p.x + p.w/2 + Math.cos(angle) * radius,
+        y: p.y + p.h/2 + Math.sin(angle) * radius,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5 - 1,
+        size: 2 + Math.random() * 3,
+        alpha: 0.6,
+        decay: 0.02 + Math.random() * 0.02,
+        color: p.color
+      });
+    }
+  }
+  // Pads - rising sparks
+  for (let p of pads) {
+    if (Math.random() < 0.05) {  // 5% chance per frame
+      particles.push({
+        x: p.x + Math.random() * p.width,
+        y: p.y,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: -0.5 - Math.random() * 1,
+        size: 2 + Math.random() * 3,
+        alpha: 0.5,
+        decay: 0.01 + Math.random() * 0.01,
+        color: p.color
+      });
+    }
+  }
+}
+
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
 
 async function toggleFullscreen() {
@@ -489,6 +524,11 @@ function drawParticles() {
 // GAME LOGIC UPDATE (collisions, state transitions)
 // ============================================================================
 function updateParticles() {
+  // Add ambient particles
+  if (appState === "game" && (gamePhase === "memorize" || gamePhase === "play")) {
+    addAmbientParticles();
+  }
+  // Update existing particles
   for (let i = particles.length-1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx;
@@ -944,11 +984,12 @@ function renderGameWorld() {
 }
 
 function renderMainMenu() {
-  drawGameBackground(); // optional background
+  drawGameBackground();
   context.fillStyle = "#00ff00";
   context.font = "bold 36px Arial";
   context.textAlign = "center";
   context.fillText("Lime Adventure", getGameX() + getGameWidth()/2, canvas.height/2 - 80);
+  
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 - 20, 200, 50, "#10b981", "START GAME", () => {
     if (!musicPlayer) {
         musicPlayer = zzfxP(...zzfxM(...song));
@@ -958,12 +999,39 @@ function renderMainMenu() {
     totalPlayTime = 0;
     loadLevel(0);
   });
+  
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 50, 200, 50, "#3b82f6", "SETTINGS", () => {
     appState = "settings";
   });
+  
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 120, 200, 50, "#8b5cf6", "LEVEL SELECT", () => {
     appState = "levelSelect";
   });
+
+  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 190, 200, 50, "#f97316", "CUSTOM LEVEL", () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const customLevel = JSON.parse(ev.target.result);
+          // Replace the current level slot temporarily
+          LEVEL_MAPS[currentLevelIndex] = customLevel;
+          if (!musicPlayer) {
+            musicPlayer = zzfxP(...zzfxM(...song));
+            musicPlayer.loop = true;
+          }
+          loadLevel(currentLevelIndex);
+        } catch(err) { alert("Invalid level file"); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  });
+  
   const isPortrait = () => window.innerHeight > window.innerWidth;
   if (isPortrait()) {
     const blink = Math.floor(Date.now() / 500) % 2 === 0;

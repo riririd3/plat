@@ -193,9 +193,9 @@ function overlap(ax, ay, aw, ah, bx, by, bw, bh) {
 function loadLevel(index) {
   console.log(`Loading level ${index + 1}`);
   if (index >= LEVEL_MAPS.length) {
-    // No more levels -> victory
     appState = "game";
     gamePhase = "victory";
+    if (musicPlayer) musicPlayer.disconnect();
     return;
   }
 
@@ -922,6 +922,7 @@ function renderGameWorld() {
     context.font = "bold 20px Arial";
     context.fillText(`Total Time: ${totalPlayTime.toFixed(2)}s`, getGameX() + getGameWidth()/2, canvas.height/2 - 60);
     drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 20, 200, 50, "#10b981", "MAIN MENU", () => {
+      if (musicPlayer) musicPlayer.disconnect();
       appState = "mainMenu";
     });
   }
@@ -1021,6 +1022,7 @@ function renderLevelSelect() {
     window._levelButtons.push({ x, y, w, h, index: i, unlocked });
   }
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height - 80, 200, 50, "#f59e0b", "BACK", () => {
+    if (musicPlayer) musicPlayer.disconnect();
     appState = "mainMenu";
   });
 }
@@ -1055,6 +1057,7 @@ function renderLevelComplete() {
     loadLevel(currentLevelIndex);
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, nextY + 70, 200, 50, "#3b82f6", "MAIN MENU", () => {
+    if (musicPlayer) musicPlayer.disconnect();
     appState = "mainMenu";
   });
 }
@@ -1075,6 +1078,7 @@ function renderPause() {
     loadLevel(currentLevelIndex);
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 130, 200, 50, "#3b82f6", "MAIN MENU", () => {
+    if (musicPlayer) musicPlayer.disconnect();
     appState = "mainMenu";
   });
 }
@@ -1135,6 +1139,10 @@ function handleTouchStartMove(e) {
         for (let btn of window._levelButtons) {
           if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
             if (btn.unlocked) {
+              if (!musicPlayer) {
+                musicPlayer = zzfxP(...zzfxM(...song));
+                musicPlayer.loop = true;
+              }
               currentLevelIndex = btn.index;
               loadLevel(currentLevelIndex);
               return;
@@ -1144,7 +1152,6 @@ function handleTouchStartMove(e) {
       }
     }
   }
-
   // In‑game touch controls (only when game is active and not paused)
   if (appState === "game" && gamePhase !== "victory") {
     resetTouch();

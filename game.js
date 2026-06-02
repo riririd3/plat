@@ -200,6 +200,21 @@ function addAmbientParticles() {
       });
     }
   }
+  
+  for (let g of gravityPlatforms) {
+    if (Math.random() < 0.05) {  // 5% chance per frame
+      particles.push({
+        x: g.x + Math.random() * g.width,
+        y: g.y,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: -0.5 - Math.random() * 1,
+        size: 2 + Math.random() * 3,
+        alpha: 0.5,
+        decay: 0.01 + Math.random() * 0.01,
+        color: g.color
+      });
+    }
+  }
 }
 
 function resetTouch() { touch.left = false; touch.right = false; touch.jump = false; }
@@ -988,9 +1003,9 @@ function renderMainMenu() {
   context.fillStyle = "#00ff00";
   context.font = "bold 36px Arial";
   context.textAlign = "center";
-  context.fillText("Lime Adventure", getGameX() + getGameWidth()/2, canvas.height/2 - 80);
+  context.fillText("Lime Adventure", getGameX() + getGameWidth()/2, canvas.height/2 - 200);
   
-  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 - 20, 200, 50, "#10b981", "START GAME", () => {
+  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 - 120, 200, 50, "#10b981", "START GAME", () => {
     if (!musicPlayer) {
         musicPlayer = zzfxP(...zzfxM(...song));
         musicPlayer.loop = true;
@@ -1000,15 +1015,15 @@ function renderMainMenu() {
     loadLevel(0);
   });
   
-  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 50, 200, 50, "#3b82f6", "SETTINGS", () => {
+  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 - 60, 200, 50, "#3b82f6", "SETTINGS", () => {
     appState = "settings";
   });
   
-  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 120, 200, 50, "#8b5cf6", "LEVEL SELECT", () => {
+  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2, 200, 50, "#8b5cf6", "LEVEL SELECT", () => {
     appState = "levelSelect";
   });
 
-  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 190, 200, 50, "#f97316", "CUSTOM LEVEL", () => {
+  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 60, 200, 50, "#f97316", "CUSTOM LEVEL", () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lime Adventure Level Editor</title>
+    <style>
+        * { user-select: none; }
+        body {
+            background: #1e1e2e;
+            color: #ddd;
+            font-family: monospace;
+            display: flex;
+            margin: 0;
+            padding: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .editor-canvas {
+            background: #0f172a;
+            border: 2px solid #6366f1;
+            cursor: crosshair;
+        }
+        .sidebar {
+            width: 300px;
+            background: #111;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        button, select, input {
+            background: #2d2d44;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #4f46e5; }
+        .entity-panel {
+            border-top: 1px solid #333;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+        .property-row {
+            margin: 5px 0;
+        }
+        .property-row label {
+            display: inline-block;
+            width: 80px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #0a0a1a;
+            color: #0f0;
+            font-size: 10px;
+            margin-top: 10px;
+        }
+        .status {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 10px;
+        }
+        hr {
+            border-color: #333;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="levelCanvas" width="960" height="540" class="editor-canvas"></canvas>
+    <div class="sidebar">
+        <h2>Level Editor</h2>
+        <div>
+            <button id="exportBtn">💾 Export JSON</button>
+            <button id="importBtn">📂 Import JSON</button>
+            <button id="clearBtn">🗑️ Clear All</button>
+        </div>
+        <div class="entity-panel">
+            <label>Entity type:</label>
+            <select id="entityType">
+                <option value="platform">Platform</option>
+                <option value="spike">Spike</option>
+                <option value="star">Star</option>
+                <option value="torch">Torch</option>
+                <option value="button">Button</option>
+                <option value="gate">Gate</option>
+                <option value="fragileBlock">Fragile Block</option>
+                <option value="pad">Pad (Jump)</option>
+                <option value="gravityPlatform">Gravity Platform</option>
+                <option value="portal">Portal</option>
+                <option value="playerSpawn">Player Spawn</option>
+            </select>
+            <button id="addBtn">+ Add</button>
+            <button id="deleteBtn">🗑️ Delete Selected</button>
+        </div>
+        <div id="properties"></div>
+        <hr>
+        <h4>Custom Level Loading</h4>
+        <button id="loadCustomBtn">📁 Load Custom Level JSON</button>
+        <div class="status" id="status">Click on canvas to select an entity.</div>
+        <textarea id="jsonOutput" placeholder="Exported JSON will appear here..."></textarea>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('levelCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Current level data
+        let level = {
+            platforms: [],
+            spikes: [],
+            stars: [],
+            torches: [],
+            buttons: [],
+            gates: [],
+            fragileBlocks: [],
+            pads: [],
+            gravityPlatforms: [],
+            portals: [],
+            playerSpawn: { x: 100, y: 400 }
+        };
+
+        let selectedEntity = null;
+
+        function snapToGrid(x, y) {
+            let gameX = Math.min(800, Math.max(160, x));
+            let gameY = Math.min(540, Math.max(0, y));
+            return { x: gameX - 160, y: gameY };
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, 960, 540);
+            // Game area background
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(160, 0, 640, 540);
+            ctx.fillStyle = "#334155";
+            ctx.fillRect(160, 540-40, 640, 40);
+            
+            // Grid
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(99,102,241,0.2)";
+            for (let x = 160; x <= 800; x += 40) {
+                ctx.moveTo(x, 0); ctx.lineTo(x, 540);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= 540; y += 40) {
+                ctx.moveTo(160, y); ctx.lineTo(800, y);
+                ctx.stroke();
+            }
+
+            function drawRect(relX, relY, w, h, color, label) {
+                ctx.fillStyle = color;
+                ctx.fillRect(160 + relX, relY, w, h);
+                ctx.strokeStyle = "white";
+                ctx.strokeRect(160 + relX, relY, w, h);
+                if (label) {
+                    ctx.fillStyle = "white";
+                    ctx.font = "12px monospace";
+                    ctx.fillText(label, 160 + relX + 5, relY + 15);
+                }
+            }
+
+            // Draw all entities
+            level.platforms.forEach(p => drawRect(p.x, p.y, p.w, p.h, "#475569", "P"));
+            level.spikes.forEach(s => drawRect(s.x, s.y, s.w, s.h, "#ef4444", "S"));
+            level.stars.forEach(s => drawRect(s.x, s.y, 20, 20, "gold", "★"));
+            level.torches.forEach(t => {
+                ctx.fillStyle = "#fbbf24";
+                ctx.beginPath();
+                ctx.arc(160 + t.x, t.y, 8, 0, Math.PI*2);
+                ctx.fill();
+            });
+            level.buttons.forEach(b => drawRect(b.x, b.y, b.w||32, b.h||10, "#eab308", "B"));
+            level.gates.forEach(g => drawRect(g.x, g.y, g.w||20, g.h||80, "#3b82f6", "G"));
+            level.fragileBlocks.forEach(f => drawRect(f.x, f.y, f.w, f.h, "#f43f5e", "F"));
+            level.pads.forEach(p => drawRect(p.x, p.y, p.w||32, p.h||12, "#a855f7", "J"));
+            level.gravityPlatforms.forEach(gp => drawRect(gp.x, gp.y, gp.w, gp.h, gp.type==="inverter"?"#06b6d4":"#f97316", gp.type==="inverter"?"I":"R"));
+            level.portals.forEach(p => {
+                ctx.strokeStyle = "#06b6d4";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(160 + p.x + (p.w||32)/2, p.y + (p.h||32)/2, (p.w||32)/2, 0, Math.PI*2);
+                ctx.stroke();
+                ctx.fillStyle = "#06b6d4";
+                ctx.fillText("🌀", 160 + p.x + (p.w||32)/2 - 8, p.y + (p.h||32)/2 + 6);
+            });
+            
+            // Player spawn
+            if (level.playerSpawn) {
+                ctx.fillStyle = "lime";
+                ctx.fillRect(160 + level.playerSpawn.x, level.playerSpawn.y, 32, 32);
+                ctx.strokeStyle = "white";
+                ctx.strokeRect(160 + level.playerSpawn.x, level.playerSpawn.y, 32, 32);
+                ctx.fillStyle = "white";
+                ctx.fillText("START", 160 + level.playerSpawn.x + 4, level.playerSpawn.y + 20);
+            }
+
+            // Highlight selected
+            if (selectedEntity) {
+                let ent = null;
+                const type = selectedEntity.type;
+                const idx = selectedEntity.index;
+                if (type === "platform") ent = level.platforms[idx];
+                else if (type === "spike") ent = level.spikes[idx];
+                else if (type === "star") ent = level.stars[idx];
+                else if (type === "torch") ent = level.torches[idx];
+                else if (type === "button") ent = level.buttons[idx];
+                else if (type === "gate") ent = level.gates[idx];
+                else if (type === "fragileBlock") ent = level.fragileBlocks[idx];
+                else if (type === "pad") ent = level.pads[idx];
+                else if (type === "gravityPlatform") ent = level.gravityPlatforms[idx];
+                else if (type === "portal") ent = level.portals[idx];
+                else if (type === "playerSpawn") ent = level.playerSpawn;
+                if (ent) {
+                    ctx.save();
+                    ctx.strokeStyle = "#ff0";
+                    ctx.lineWidth = 3;
+                    let x = (type === "playerSpawn") ? 160 + ent.x : 160 + ent.x;
+                    let y = (type === "playerSpawn") ? ent.y : ent.y;
+                    let w = (type === "playerSpawn") ? 32 : (ent.w || 20);
+                    let h = (type === "playerSpawn") ? 32 : (ent.h || 20);
+                    ctx.strokeRect(x, y, w, h);
+                    ctx.restore();
+                }
+            }
+        }
+
+        function pickEntity(mouseX, mouseY) {
+            let relX = mouseX - 160;
+            let relY = mouseY;
+            if (mouseX < 160 || mouseX > 800) return null;
+            
+            if (level.playerSpawn && relX >= level.playerSpawn.x && relX <= level.playerSpawn.x+32 &&
+                relY >= level.playerSpawn.y && relY <= level.playerSpawn.y+32)
+                return { type: "playerSpawn", index: 0 };
+            
+            const checkList = [
+                { arr: level.platforms, type: "platform", wKey: "w", hKey: "h" },
+                { arr: level.spikes, type: "spike", wKey: "w", hKey: "h" },
+                { arr: level.stars, type: "star", wKey: "width", hKey: "height", defaultW: 20, defaultH: 20 },
+                { arr: level.buttons, type: "button", wKey: "w", hKey: "h", defaultW: 32, defaultH: 10 },
+                { arr: level.gates, type: "gate", wKey: "w", hKey: "h", defaultW: 20, defaultH: 80 },
+                { arr: level.fragileBlocks, type: "fragileBlock", wKey: "w", hKey: "h" },
+                { arr: level.pads, type: "pad", wKey: "w", hKey: "h", defaultW: 32, defaultH: 12 },
+                { arr: level.gravityPlatforms, type: "gravityPlatform", wKey: "w", hKey: "h" },
+                { arr: level.portals, type: "portal", wKey: "w", hKey: "h", defaultW: 32, defaultH: 32 }
+            ];
+            
+            for (let item of checkList) {
+                for (let i = 0; i < item.arr.length; i++) {
+                    const e = item.arr[i];
+                    const w = e[item.wKey] || item.defaultW || 32;
+                    const h = e[item.hKey] || item.defaultH || 32;
+                    if (relX >= e.x && relX <= e.x + w && relY >= e.y && relY <= e.y + h) {
+                        return { type: item.type, index: i };
+                    }
+                }
+            }
+            
+            for (let i = 0; i < level.torches.length; i++) {
+                let t = level.torches[i];
+                let dx = (160 + t.x) - mouseX, dy = t.y - mouseY;
+                if (Math.hypot(dx, dy) < 12) return { type: "torch", index: i };
+            }
+            return null;
+        }
+
+        function updateProperties() {
+            const propDiv = document.getElementById('properties');
+            if (!selectedEntity) {
+                propDiv.innerHTML = '<div class="status">No entity selected</div>';
+                return;
+            }
+            let ent = null;
+            const type = selectedEntity.type;
+            const idx = selectedEntity.index;
+            if (type === "platform") ent = level.platforms[idx];
+            else if (type === "spike") ent = level.spikes[idx];
+            else if (type === "star") ent = level.stars[idx];
+            else if (type === "torch") ent = level.torches[idx];
+            else if (type === "button") ent = level.buttons[idx];
+            else if (type === "gate") ent = level.gates[idx];
+            else if (type === "fragileBlock") ent = level.fragileBlocks[idx];
+            else if (type === "pad") ent = level.pads[idx];
+            else if (type === "gravityPlatform") ent = level.gravityPlatforms[idx];
+            else if (type === "portal") ent = level.portals[idx];
+            else if (type === "playerSpawn") ent = level.playerSpawn;
+            if (!ent) return;
+
+            let html = `<h4>${type}</h4>`;
+            html += `<div class="property-row"><label>X:</label><input type="number" id="propX" value="${Math.round(ent.x)}" step="1"></div>`;
+            html += `<div class="property-row"><label>Y:</label><input type="number" id="propY" value="${Math.round(ent.y)}" step="1"></div>`;
+            
+            if (type === "platform" || type === "spike") {
+                const w = ent.w || 80;
+                const h = ent.h || 20;
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${w}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${h}" step="4"></div>`;
+                html += `<div class="property-row"><label>vx:</label><input type="number" id="propVx" value="${ent.vx || 0}" step="0.5"></div>`;
+                html += `<div class="property-row"><label>vy:</label><input type="number" id="propVy" value="${ent.vy || 0}" step="0.5"></div>`;
+                html += `<div class="property-row"><label>minX (rel):</label><input type="number" id="propMinX" value="${ent.minX || ''}" placeholder="optional"></div>`;
+                html += `<div class="property-row"><label>maxX (rel):</label><input type="number" id="propMaxX" value="${ent.maxX || ''}" placeholder="optional"></div>`;
+                html += `<div class="property-row"><label>minY:</label><input type="number" id="propMinY" value="${ent.minY || ''}" placeholder="optional"></div>`;
+                html += `<div class="property-row"><label>maxY:</label><input type="number" id="propMaxY" value="${ent.maxY || ''}" placeholder="optional"></div>`;
+            }
+            
+            if (type === "button") {
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${ent.w || 32}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${ent.h || 10}" step="4"></div>`;
+            }
+            
+            if (type === "gate") {
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${ent.w || 20}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${ent.h || 80}" step="4"></div>`;
+            }
+            
+            if (type === "fragileBlock") {
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${ent.w || 40}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${ent.h || 20}" step="4"></div>`;
+            }
+            
+            if (type === "pad") {
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${ent.w || 32}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${ent.h || 12}" step="4"></div>`;
+                html += `<div class="property-row"><label>Power:</label><input type="number" id="propPower" value="${ent.power || -13}" step="1"></div>`;
+            }
+            
+            if (type === "portal") {
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${ent.w || 32}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${ent.h || 32}" step="4"></div>`;
+                html += `<div class="property-row"><label>Target X:</label><input type="number" id="propTargetX" value="${ent.targetX || 0}" step="1"></div>`;
+                html += `<div class="property-row"><label>Target Y:</label><input type="number" id="propTargetY" value="${ent.targetY || 0}" step="1"></div>`;
+            }
+            
+            if (type === "gravityPlatform") {
+                html += `<div class="property-row"><label>Width:</label><input type="number" id="propW" value="${ent.w || 60}" step="4"></div>`;
+                html += `<div class="property-row"><label>Height:</label><input type="number" id="propH" value="${ent.h || 20}" step="4"></div>`;
+                html += `<div class="property-row"><label>Type:</label><select id="propGravityType"><option ${ent.type==="inverter"?"selected":""}>inverter</option><option ${ent.type==="restorer"?"selected":""}>restorer</option></select></div>`;
+            }
+            
+            if (type === "torch") {
+                html += `<div class="property-row"><label>Radius:</label><input type="number" id="propRadius" value="${ent.radius || 85}" step="5"></div>`;
+            }
+            
+            if (type === "star") {
+                // No extra props needed
+            }
+            
+            propDiv.innerHTML = html;
+            
+            // Bind events
+            document.getElementById('propX')?.addEventListener('change', (e) => { ent.x = parseInt(e.target.value); draw(); });
+            document.getElementById('propY')?.addEventListener('change', (e) => { ent.y = parseInt(e.target.value); draw(); });
+            if (document.getElementById('propW')) document.getElementById('propW').addEventListener('change', (e) => { ent.w = parseInt(e.target.value); draw(); });
+            if (document.getElementById('propH')) document.getElementById('propH').addEventListener('change', (e) => { ent.h = parseInt(e.target.value); draw(); });
+            if (document.getElementById('propVx')) document.getElementById('propVx').addEventListener('change', (e) => { ent.vx = parseFloat(e.target.value); });
+            if (document.getElementById('propVy')) document.getElementById('propVy').addEventListener('change', (e) => { ent.vy = parseFloat(e.target.value); });
+            if (document.getElementById('propMinX')) document.getElementById('propMinX').addEventListener('change', (e) => { ent.minX = e.target.value ? parseInt(e.target.value) : null; });
+            if (document.getElementById('propMaxX')) document.getElementById('propMaxX').addEventListener('change', (e) => { ent.maxX = e.target.value ? parseInt(e.target.value) : null; });
+            if (document.getElementById('propMinY')) document.getElementById('propMinY').addEventListener('change', (e) => { ent.minY = e.target.value ? parseInt(e.target.value) : null; });
+            if (document.getElementById('propMaxY')) document.getElementById('propMaxY').addEventListener('change', (e) => { ent.maxY = e.target.value ? parseInt(e.target.value) : null; });
+            if (document.getElementById('propPower')) document.getElementById('propPower').addEventListener('change', (e) => { ent.power = parseInt(e.target.value); });
+            if (document.getElementById('propTargetX')) document.getElementById('propTargetX').addEventListener('change', (e) => { ent.targetX = parseInt(e.target.value); draw(); });
+            if (document.getElementById('propTargetY')) document.getElementById('propTargetY').addEventListener('change', (e) => { ent.targetY = parseInt(e.target.value); draw(); });
+            if (document.getElementById('propGravityType')) document.getElementById('propGravityType').addEventListener('change', (e) => { ent.type = e.target.value; draw(); });
+            if (document.getElementById('propRadius')) document.getElementById('propRadius').addEventListener('change', (e) => { ent.radius = parseInt(e.target.value); });
+        }
+
+        function addEntity() {
+            const type = document.getElementById('entityType').value;
+            const defaultX = 200, defaultY = 300;
+            let newEntity;
+            switch(type) {
+                case 'platform': newEntity = { x: defaultX, y: defaultY, w: 80, h: 20, vx:0, vy:0, minX:null, maxX:null, minY:null, maxY:null }; break;
+                case 'spike': newEntity = { x: defaultX, y: defaultY, w: 32, h: 20, vx:0, vy:0, minX:null, maxX:null, minY:null, maxY:null }; break;
+                case 'star': newEntity = { x: defaultX, y: defaultY }; break;
+                case 'torch': newEntity = { x: defaultX, y: defaultY, radius: 85 }; break;
+                case 'button': newEntity = { x: defaultX, y: defaultY, w: 32, h: 10 }; break;
+                case 'gate': newEntity = { x: defaultX, y: defaultY, w: 20, h: 80 }; break;
+                case 'fragileBlock': newEntity = { x: defaultX, y: defaultY, w: 40, h: 20 }; break;
+                case 'pad': newEntity = { x: defaultX, y: defaultY, w: 32, h: 12, power: -13 }; break;
+                case 'gravityPlatform': newEntity = { x: defaultX, y: defaultY, w: 60, h: 20, type: 'inverter' }; break;
+                case 'portal': newEntity = { x: defaultX, y: defaultY, w: 32, h: 32, targetX: defaultX + 100, targetY: defaultY }; break;
+                case 'playerSpawn': newEntity = { x: 100, y: 400 }; break;
+                default: return;
+            }
+            if (type === 'playerSpawn') {
+                level.playerSpawn = newEntity;
+            } else {
+                const arrKey = type + 's';
+                if (!level[arrKey]) level[arrKey] = [];
+                level[arrKey].push(newEntity);
+            }
+            draw();
+            document.getElementById('status').innerText = `Added ${type}`;
+        }
+
+        function deleteSelected() {
+            if (!selectedEntity) return;
+            const type = selectedEntity.type;
+            const idx = selectedEntity.index;
+            if (type === 'playerSpawn') {
+                level.playerSpawn = { x: 100, y: 400 };
+            } else {
+                const arr = level[type + 's'];
+                if (arr && arr.length > idx) arr.splice(idx, 1);
+            }
+            selectedEntity = null;
+            draw();
+            updateProperties();
+        }
+
+        function exportLevel() {
+            const output = JSON.stringify(level, null, 2);
+            document.getElementById('jsonOutput').value = output;
+            navigator.clipboard.writeText(output);
+            document.getElementById('status').innerText = "JSON copied to clipboard!";
+        }
+
+        function importLevel() {
+            try {
+                const imported = JSON.parse(document.getElementById('jsonOutput').value);
+                level = imported;
+                selectedEntity = null;
+                draw();
+                updateProperties();
+                document.getElementById('status').innerText = "Level imported!";
+            } catch(e) { alert("Invalid JSON"); }
+        }
+
+        function clearLevel() {
+            if (confirm("Clear all entities?")) {
+                level = {
+                    platforms: [], spikes: [], stars: [], torches: [],
+                    buttons: [], gates: [], fragileBlocks: [], pads: [],
+                    gravityPlatforms: [], portals: [],
+                    playerSpawn: { x: 100, y: 400 }
+                };
+                selectedEntity = null;
+                draw();
+                updateProperties();
+            }
+        }
+
+        function loadCustomLevel() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const customLevel = JSON.parse(ev.target.result);
+                        level = customLevel;
+                        selectedEntity = null;
+                        draw();
+                        updateProperties();
+                        document.getElementById('status').innerText = "Custom level loaded!";
+                    } catch(err) { alert("Invalid level file"); }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Mouse/Touch events
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            selectedEntity = pickEntity(mouseX, mouseY);
+            updateProperties();
+            draw();
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touch = e.touches[0];
+            const mouseX = (touch.clientX - rect.left) * scaleX;
+            const mouseY = (touch.clientY - rect.top) * scaleY;
+            selectedEntity = pickEntity(mouseX, mouseY);
+            updateProperties();
+            draw();
+        });
+
+        document.getElementById('addBtn').addEventListener('click', addEntity);
+        document.getElementById('deleteBtn').addEventListener('click', deleteSelected);
+        document.getElementById('exportBtn').addEventListener('click', exportLevel);
+        document.getElementById('importBtn').addEventListener('click', importLevel);
+        document.getElementById('clearBtn').addEventListener('click', clearLevel);
+        document.getElementById('loadCustomBtn').addEventListener('click', loadCustomLevel);
+
+        draw();
+        updateProperties();
+    </script>
+</body>
+</html>

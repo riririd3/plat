@@ -793,12 +793,25 @@ function renderGameWorld() {
     context.fillStyle = p.color;
     context.fillRect(p.x, p.y, p.width, p.height);
   }
-    for (let p of portals) {
-    context.fillStyle = p.color;
-    context.fillRect(p.x, p.y, p.w, p.h);
-    context.strokeStyle = "white";
-    context.lineWidth = 1;
-    context.strokeRect(p.x, p.y, p.w, p.h);
+  for (let p of portals) {
+    context.save();
+    context.strokeStyle = p.color;
+    context.lineWidth = 3;
+    context.beginPath();
+    context.arc(p.x + p.w/2, p.y + p.h/2, p.w/2, 0, Math.PI * 2);
+    context.stroke();
+    const pulse = Math.sin(Date.now() * 0.003) * 2;
+    context.beginPath();
+    context.arc(p.x + p.w/2, p.y + p.h/2, p.w/2 - 4 + pulse, 0, Math.PI * 2);
+    context.stroke();
+    context.strokeStyle = p.color;
+    context.lineWidth = 2;
+    context.setLineDash([6, 8]);
+    context.beginPath();
+    context.arc(p.targetX + p.w/2, p.targetY + p.h/2, p.w/2, 0, Math.PI * 2);
+    context.stroke();
+    context.setLineDash([]);
+    context.restore();
   }
   for (let b of buttons) {
     context.fillStyle = b.pressed ? "#475569" : b.color;
@@ -927,6 +940,11 @@ function renderMainMenu() {
   context.textAlign = "center";
   context.fillText("Lime Adventure", getGameX() + getGameWidth()/2, canvas.height/2 - 80);
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 - 20, 200, 50, "#10b981", "START GAME", () => {
+    if (!musicPlayer) {
+        musicPlayer = zzfxP(...zzfxM(...song));
+        musicPlayer.loop = true;
+        if (isMuted) musicPlayer.disconnect();
+    }
     currentLevelIndex = 0;
     totalPlayTime = 0;
     loadLevel(0);

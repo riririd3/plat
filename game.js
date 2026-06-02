@@ -793,9 +793,12 @@ function renderGameWorld() {
     context.fillStyle = p.color;
     context.fillRect(p.x, p.y, p.width, p.height);
   }
-  for (let p of portals) {
+    for (let p of portals) {
     context.fillStyle = p.color;
-    context.fillRect(p.x, p.y, p.width, p.height);
+    context.fillRect(p.x, p.y, p.w, p.h);
+    context.strokeStyle = "white";
+    context.lineWidth = 1;
+    context.strokeRect(p.x, p.y, p.w, p.h);
   }
   for (let b of buttons) {
     context.fillStyle = b.pressed ? "#475569" : b.color;
@@ -1087,7 +1090,7 @@ function handleTouchStartMove(e) {
       const x = (t.clientX - rect.left) * scaleX;
       const y = (t.clientY - rect.top) * scaleY;
       const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
-      const pauseY = 120;
+      const pauseY = 60;
       if (Math.hypot(x - pauseX, y - pauseY) < pauseBtn.size/2 && e.type === "touchstart") {
         appState = "pause";
         return;

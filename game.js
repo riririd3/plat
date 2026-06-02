@@ -93,6 +93,7 @@ let platforms = [], spikes = [], stars = [], torches = [];
 let buttons = [], gates = [], fragileBlocks = [], pads = [], gravityPlatforms = [];
 let particles = [];
 let playerTrail = [];
+let portals = [];
 
 // Visual effects
 let starPulseTime = 0;
@@ -276,6 +277,7 @@ function loadLevel(index) {
       });
     });
   }
+  
   if (level.gates) {
     level.gates.forEach(g => {
       gates.push({
@@ -298,6 +300,8 @@ function loadLevel(index) {
     level.pads.forEach(pd => {
       pads.push({
         x: gameX + pd.x, y: pd.y, width: pd.w || 32, height: pd.h || 12,
+        type: pd.type || "jump",
+        power: pd.power || -13,
         color: "#a855f7"
       });
     });
@@ -312,6 +316,7 @@ function loadLevel(index) {
         });
     });
   }
+}
 
 // ============================================================================
 // PLAYER CREATION (unchanged)

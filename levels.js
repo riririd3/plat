@@ -29,11 +29,13 @@ const LEVEL_MAPS = [
     ],
     // Launch Pads: "jump" launches up, "dash" forces horizontal speed
     pads: [
-      { x: 420, y: 488, type: "jump", power: -13 },
-      { x: 50,  y: 488, type: "dash", power: 15 }
+      { x: 420, y: 488, type: "jump", power: -13 }
     ],
     spikes: [
       { x: 320, y: 460, w: 40, h: 40 }
+    ],
+    portals: [
+    { x: 100, y: 200, w: 32, h: 32, targetX: 500, targetY: 200, color: "#a855f7" }
     ],
     stars: [
       { x: 580, y: 250 }

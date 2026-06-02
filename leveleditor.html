@@ -269,6 +269,157 @@
             return null;
         }
 
+// Dragging functionality
+let dragTarget = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mouseX = (e.clientX - rect.left) * scaleX;
+    const mouseY = (e.clientY - rect.top) * scaleY;
+    
+    const picked = pickEntity(mouseX, mouseY);
+    if (picked) {
+        dragTarget = picked;
+        selectedEntity = picked;
+        updateProperties();
+        
+        // Calculate drag offset
+        let ent = getEntityFromPick(picked);
+        if (ent) {
+            const w = (ent.w || ent.width || 32);
+            const h = (ent.h || ent.height || 32);
+            const screenX = 160 + ent.x;
+            const screenY = ent.y;
+            dragOffsetX = mouseX - screenX;
+            dragOffsetY = mouseY - screenY;
+        }
+        draw();
+    } else {
+        selectedEntity = null;
+        updateProperties();
+        draw();
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (!dragTarget) return;
+    e.preventDefault();
+    
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    let mouseX = (e.clientX - rect.left) * scaleX;
+    let mouseY = (e.clientY - rect.top) * scaleY;
+    
+    // Apply drag offset
+    let newX = mouseX - dragOffsetX - 160;
+    let newY = mouseY - dragOffsetY;
+    
+    // Snap to grid (optional: change 20 to 10 for finer grid)
+    const gridSize = 10;
+    newX = Math.round(newX / gridSize) * gridSize;
+    newY = Math.round(newY / gridSize) * gridSize;
+    
+    // Clamp to game area
+    newX = Math.min(640 - 10, Math.max(0, newX));
+    newY = Math.min(540 - 10, Math.max(0, newY));
+    
+    // Update entity position
+    const ent = getEntityFromPick(dragTarget);
+    if (ent) {
+        ent.x = newX;
+        ent.y = newY;
+        draw();
+        updateProperties();
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    dragTarget = null;
+});
+
+// Touch events for dragging
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const touch = e.touches[0];
+    const mouseX = (touch.clientX - rect.left) * scaleX;
+    const mouseY = (touch.clientY - rect.top) * scaleY;
+    
+    const picked = pickEntity(mouseX, mouseY);
+    if (picked) {
+        dragTarget = picked;
+        selectedEntity = picked;
+        updateProperties();
+        
+        let ent = getEntityFromPick(picked);
+        if (ent) {
+            const screenX = 160 + ent.x;
+            const screenY = ent.y;
+            dragOffsetX = mouseX - screenX;
+            dragOffsetY = mouseY - screenY;
+        }
+        draw();
+    }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    if (!dragTarget) return;
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const touch = e.touches[0];
+    let mouseX = (touch.clientX - rect.left) * scaleX;
+    let mouseY = (touch.clientY - rect.top) * scaleY;
+    
+    let newX = mouseX - dragOffsetX - 160;
+    let newY = mouseY - dragOffsetY;
+    
+    const gridSize = 10;
+    newX = Math.round(newX / gridSize) * gridSize;
+    newY = Math.round(newY / gridSize) * gridSize;
+    
+    newX = Math.min(640 - 10, Math.max(0, newX));
+    newY = Math.min(540 - 10, Math.max(0, newY));
+    
+    const ent = getEntityFromPick(dragTarget);
+    if (ent) {
+        ent.x = newX;
+        ent.y = newY;
+        draw();
+        updateProperties();
+    }
+});
+
+canvas.addEventListener('touchend', () => {
+    dragTarget = null;
+});
+
+// Helper function to get entity from pick
+function getEntityFromPick(pick) {
+    if (!pick) return null;
+    const type = pick.type;
+    const idx = pick.index;
+    if (type === "platform") return level.platforms[idx];
+    if (type === "spike") return level.spikes[idx];
+    if (type === "star") return level.stars[idx];
+    if (type === "torch") return level.torches[idx];
+    if (type === "button") return level.buttons[idx];
+    if (type === "gate") return level.gates[idx];
+    if (type === "fragileBlock") return level.fragileBlocks[idx];
+    if (type === "pad") return level.pads[idx];
+    if (type === "gravityPlatform") return level.gravityPlatforms[idx];
+    if (type === "portal") return level.portals[idx];
+    if (type === "playerSpawn") return level.playerSpawn;
+    return null;
+}
+        
         function updateProperties() {
             const propDiv = document.getElementById('properties');
             if (!selectedEntity) {

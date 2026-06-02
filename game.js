@@ -141,6 +141,16 @@ function playSound(type) {
   } catch (err) { console.warn("Sound error:", err); }
 }
 
+function updateMusic() {
+  if (!musicPlayer) return;
+  const shouldPlay = (appState === "game" && (gamePhase === "memorize" || gamePhase === "play")) && !isMuted;
+  if (shouldPlay) {
+    musicPlayer.connect(zzfxX.destination);
+  } else {
+    musicPlayer.disconnect();
+  }
+}
+
 function spawnExplosion(originX, originY, color, count = 20) {
   for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
@@ -195,7 +205,6 @@ function loadLevel(index) {
   if (index >= LEVEL_MAPS.length) {
     appState = "game";
     gamePhase = "victory";
-    if (musicPlayer) musicPlayer.disconnect();
     return;
   }
 
@@ -720,6 +729,7 @@ function handleCollisions() {
 }
 
 function gameUpdate(dt = 1/60) {
+  updateMusic();
   updateParticles();
   if (appState !== "game") return;
 
@@ -922,7 +932,6 @@ function renderGameWorld() {
     context.font = "bold 20px Arial";
     context.fillText(`Total Time: ${totalPlayTime.toFixed(2)}s`, getGameX() + getGameWidth()/2, canvas.height/2 - 60);
     drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 20, 200, 50, "#10b981", "MAIN MENU", () => {
-      if (musicPlayer) musicPlayer.disconnect();
       appState = "mainMenu";
     });
   }
@@ -944,7 +953,6 @@ function renderMainMenu() {
     if (!musicPlayer) {
         musicPlayer = zzfxP(...zzfxM(...song));
         musicPlayer.loop = true;
-        if (isMuted) musicPlayer.disconnect();
     }
     currentLevelIndex = 0;
     totalPlayTime = 0;
@@ -974,9 +982,7 @@ function renderSettings() {
   context.fillText("Settings", getGameX() + getGameWidth()/2, 80);
   drawButton(getGameX() + getGameWidth()/2 - 100, 150, 200, 50, isMuted ? "#ef4444" : "#22c55e", isMuted ? "UNMUTE" : "MUTE", () => {
     isMuted = !isMuted;
-    if (musicPlayer) {
-      isMuted ? musicPlayer.disconnect() : musicPlayer.connect(zzfxX.destination);
-    }
+    updateMusic();
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, 220, 200, 50, "#3b82f6", "FULLSCREEN", toggleFullscreen);
   drawButton(getGameX() + getGameWidth()/2 - 100, 360, 200, 50, "#f59e0b", "BACK", () => {
@@ -1022,7 +1028,6 @@ function renderLevelSelect() {
     window._levelButtons.push({ x, y, w, h, index: i, unlocked });
   }
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height - 80, 200, 50, "#f59e0b", "BACK", () => {
-    if (musicPlayer) musicPlayer.disconnect();
     appState = "mainMenu";
   });
 }
@@ -1057,7 +1062,6 @@ function renderLevelComplete() {
     loadLevel(currentLevelIndex);
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, nextY + 70, 200, 50, "#3b82f6", "MAIN MENU", () => {
-    if (musicPlayer) musicPlayer.disconnect();
     appState = "mainMenu";
   });
 }
@@ -1078,7 +1082,6 @@ function renderPause() {
     loadLevel(currentLevelIndex);
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 130, 200, 50, "#3b82f6", "MAIN MENU", () => {
-    if (musicPlayer) musicPlayer.disconnect();
     appState = "mainMenu";
   });
 }
@@ -1139,10 +1142,6 @@ function handleTouchStartMove(e) {
         for (let btn of window._levelButtons) {
           if (x >= btn.x && x <= btn.x + btn.w && y >= btn.y && y <= btn.y + btn.h) {
             if (btn.unlocked) {
-              if (!musicPlayer) {
-                musicPlayer = zzfxP(...zzfxM(...song));
-                musicPlayer.loop = true;
-              }
               currentLevelIndex = btn.index;
               loadLevel(currentLevelIndex);
               return;

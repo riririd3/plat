@@ -81,6 +81,7 @@ let currentLevelIndex = 0;
 let gravityDir = DEFAULT_GRAVITY;
 let isMuted = false;
 let freezeFrames = 0;
+let isCustomLevel = false;
 
 // Per-level timing
 let currentLevelTime = 0;       // time spent on current level (seconds)
@@ -187,7 +188,7 @@ function addAmbientParticles() {
   }
   // Pads - rising sparks
   for (let p of pads) {
-    if (Math.random() < 0.05) {  // 5% chance per frame
+    if (Math.random() < 0.1) {  // 5% chance per frame
       particles.push({
         x: p.x + Math.random() * p.width,
         y: p.y,
@@ -202,7 +203,7 @@ function addAmbientParticles() {
   }
   
   for (let g of gravityPlatforms) {
-    if (Math.random() < 0.05) {  // 5% chance per frame
+    if (Math.random() < 0.1) {  // 5% chance per frame
       particles.push({
         x: g.x + Math.random() * g.width,
         y: g.y,
@@ -252,6 +253,13 @@ function overlap(ax, ay, aw, ah, bx, by, bw, bh) {
 // ============================================================================
 function loadLevel(index) {
   console.log(`Loading level ${index + 1}`);
+  if (isCustomLevel && index > 0) {
+    isCustomLevel = false;
+    appState = "mainMenu";
+    if (musicPlayer) musicPlayer.disconnect();
+    return;
+  }
+  
   if (index >= LEVEL_MAPS.length) {
     appState = "game";
     gamePhase = "victory";
@@ -269,7 +277,12 @@ function loadLevel(index) {
   gravityPlatforms = []; portals = []; playerTrail = [];
   gravityDir = DEFAULT_GRAVITY;
 
-  const level = LEVEL_MAPS[index];
+  let level;
+  if (isCustomLevel) {
+    level = window.customLevelData;
+  } else {
+    level = LEVEL_MAPS[index];
+  }
   const gameX = getGameX();
 
   if (level.gravityPlatforms) {
@@ -1033,19 +1046,22 @@ function renderMainMenu() {
       reader.onload = (ev) => {
         try {
           const customLevel = JSON.parse(ev.target.result);
-          // Replace the current level slot temporarily
-          LEVEL_MAPS[currentLevelIndex] = customLevel;
-          if (!musicPlayer) {
-            musicPlayer = zzfxP(...zzfxM(...song));
-            musicPlayer.loop = true;
-          }
-          loadLevel(currentLevelIndex);
-        } catch(err) { alert("Invalid level file"); }
-      };
-      reader.readAsText(file);
+          window.customLevelData = customLevel;
+                isCustomLevel = true;
+                
+                if (!musicPlayer) {
+                    musicPlayer = zzfxP(...zzfxM(...song));
+                    musicPlayer.loop = true;
+                }
+                currentLevelIndex = 0;
+                totalPlayTime = 0;
+                loadLevel(0);
+            } catch(err) { alert("Invalid level file"); }
+        };
+        reader.readAsText(file);
     };
     input.click();
-  });
+});
   
   const isPortrait = () => window.innerHeight > window.innerWidth;
   if (isPortrait()) {

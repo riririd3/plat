@@ -782,13 +782,15 @@ function handleCollisions() {
       playSound('star');
       spawnExplosion(s.x + s.width/2, s.y + s.height/2, "gold", 40);
       if (isCustomLevel) {
-            // Custom level: don't save progress, just go back to menu
-            setTimeout(() => {
-                isCustomLevel = false;
-                appState = "mainMenu";
-                if (musicPlayer) musicPlayer.disconnect();
-            }, 600); // small delay to see the explosion
-            return;
+        context.fillStyle = "white";
+        context.font = "20px Arial";
+        context.fillText(`Completed in ${currentLevelTime.toFixed(2)}s`, ...);
+        setTimeout(() => {
+          isCustomLevel = false;
+          appState = "mainMenu";
+          if (musicPlayer) musicPlayer.disconnect();
+        }, 1500); // small delay to see the explosion
+        return;
       }
       // Record completion and time
       if (!levelCompleted[currentLevelIndex]) {

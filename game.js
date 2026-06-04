@@ -782,15 +782,16 @@ function handleCollisions() {
       playSound('star');
       spawnExplosion(s.x + s.width/2, s.y + s.height/2, "gold", 40);
       if (isCustomLevel) {
-        context.fillStyle = "white";
-        context.font = "20px Arial";
-        context.fillText(`Completed in ${currentLevelTime.toFixed(2)}s`, ...);
-        setTimeout(() => {
-          isCustomLevel = false;
-          appState = "mainMenu";
-        }, 1500); // small delay to see the explosion
-        return;
-      }
+    // Show time briefly
+    context.fillStyle = "white";
+    context.font = "20px Arial";
+    context.fillText(`Completed in ${currentLevelTime.toFixed(2)}s`, ...);
+    setTimeout(() => {
+        isCustomLevel = false;
+        appState = "mainMenu";
+    }, 1500);
+    return;
+}
       // Record completion and time
       if (!levelCompleted[currentLevelIndex]) {
         levelCompleted[currentLevelIndex] = true;

@@ -187,21 +187,6 @@ function addAmbientParticles() {
       });
     }
   }
-  // Pads - rising sparks
-  for (let p of pads) {
-    if (Math.random() < 0.1) {  // 5% chance per frame
-      particles.push({
-        x: p.x + Math.random() * p.width,
-        y: p.y,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: -0.5 - Math.random() * 1,
-        size: 2 + Math.random() * 3,
-        alpha: 0.5,
-        decay: 0.01 + Math.random() * 0.01,
-        color: p.color
-      });
-    }
-  }
   
   for (let g of gravityPlatforms) {
     if (Math.random() < 0.1) {  // 5% chance per frame
@@ -487,7 +472,7 @@ function drawPauseButton() {
   context.fillStyle = "black";
   context.font = "bold 12px Arial";
   context.textAlign = "center";
-  context.fillText("PAUSE", x, y + 8);
+  context.fillText("PAUSE");
 }
 
 // Generic button drawing helper
@@ -784,7 +769,6 @@ function handleCollisions() {
       spawnExplosion(s.x + s.width/2, s.y + s.height/2, "gold", 40);
       if (isCustomLevel) {
         customLevelMessage = `Completed in ${currentLevelTime.toFixed(2)}s!`;
-        customLevelMessage = null;
         setTimeout(() => {
         isCustomLevel = false;
         appState = "mainMenu";
@@ -840,14 +824,7 @@ function gameUpdate(dt = 1/60) {
 function renderGameWorld() {
   drawGameBackground();
   drawGround();
-  // Show custom level completion message
-  if (customLevelMessage) {
-    context.fillStyle = "white";
-    context.font = "24px Arial";
-    context.textAlign = "center";
-    context.fillText(customLevelMessage, getGameX() + getGameWidth() / 2, canvas.height / 2);
-  }
-
+  
   // Player aura
   const auraScale = 1 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
   context.save();
@@ -976,6 +953,12 @@ function renderGameWorld() {
     context.fill();
   }
   drawParticles();
+  if (customLevelMessage) {
+    context.fillStyle = "white";
+    context.font = "24px Arial";
+    context.textAlign = "center";
+    context.fillText(customLevelMessage, getGameX() + getGameWidth() / 2, canvas.height / 2);
+  }
 
   if (appState === "game") {
     for (let t of playerTrail) {
@@ -1235,7 +1218,8 @@ function handleTouchStartMove(e) {
       const y = (t.clientY - rect.top) * scaleY;
       const pauseX = canvas.width - RIGHT_UI_WIDTH/2;
       const pauseY = 60;
-      if (Math.hypot(x - pauseX, y - pauseY) < pauseBtn.size/2 && e.type === "touchstart") {
+      if (x >= pauseX - pauseBtn.size/2 && x <= pauseX + pauseBtn.size/2 &&
+          y >= pauseY - pauseBtn.size/2 && y <= pauseY + pauseBtn.size/2 && e.type === "touchstart") {
         appState = "pause";
         return;
       }

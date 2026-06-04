@@ -259,13 +259,13 @@ function loadLevel(index) {
     if (musicPlayer) musicPlayer.disconnect();
     return;
   }
-  var level = windowCustomLevelData;
+  var level = window.customLevelData;
 } else {
   if (index >= LEVEL_MAPS.length) {
     appState = "game";
     gamePhase = "victory";
     if (musicPlayer) musicPlayer.disconnect();
-      return;
+    return;
     }
     var level = LEVEL_MAPS[index];
   }

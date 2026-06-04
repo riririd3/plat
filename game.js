@@ -788,7 +788,6 @@ function handleCollisions() {
         setTimeout(() => {
           isCustomLevel = false;
           appState = "mainMenu";
-          if (musicPlayer) musicPlayer.disconnect();
         }, 1500); // small delay to see the explosion
         return;
       }

@@ -82,6 +82,7 @@ let gravityDir = DEFAULT_GRAVITY;
 let isMuted = false;
 let freezeFrames = 0;
 let isCustomLevel = false;
+let customLevelMessage = null;
 
 // Per-level timing
 let currentLevelTime = 0;       // time spent on current level (seconds)
@@ -782,16 +783,14 @@ function handleCollisions() {
       playSound('star');
       spawnExplosion(s.x + s.width/2, s.y + s.height/2, "gold", 40);
       if (isCustomLevel) {
-    // Show time briefly
-    context.fillStyle = "white";
-    context.font = "20px Arial";
-    context.fillText(`Completed in ${currentLevelTime.toFixed(2)}s`, ...);
-    setTimeout(() => {
+        customLevelMessage = `Completed in ${currentLevelTime.toFixed(2)}s!`;
+        customLevelMessage = null;
+        setTimeout(() => {
         isCustomLevel = false;
         appState = "mainMenu";
-    }, 1500);
-    return;
-}
+        }, 1500);
+        return;
+      }
       // Record completion and time
       if (!levelCompleted[currentLevelIndex]) {
         levelCompleted[currentLevelIndex] = true;
@@ -841,6 +840,13 @@ function gameUpdate(dt = 1/60) {
 function renderGameWorld() {
   drawGameBackground();
   drawGround();
+  // Show custom level completion message
+  if (customLevelMessage) {
+    context.fillStyle = "white";
+    context.font = "24px Arial";
+    context.textAlign = "center";
+    context.fillText(customLevelMessage, getGameX() + getGameWidth() / 2, canvas.height / 2);
+  }
 
   // Player aura
   const auraScale = 1 + Math.abs(Math.sin(starPulseTime * 0.5)) * 0.6;
@@ -1050,6 +1056,7 @@ function renderMainMenu() {
   });
 
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 60, 200, 50, "#f97316", "CUSTOM LEVEL", () => {
+    customLevelMessage = null;
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';

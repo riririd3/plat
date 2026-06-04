@@ -473,7 +473,7 @@ function drawPauseButton() {
   context.fillStyle = "black";
   context.font = "bold 12px Arial";
   context.textAlign = "center";
-  context.fillText("PAUSE");
+  context.fillText("PAUSE",x ,y );
 }
 
 // Generic button drawing helper

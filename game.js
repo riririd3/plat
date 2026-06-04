@@ -253,17 +253,21 @@ function overlap(ax, ay, aw, ah, bx, by, bw, bh) {
 // ============================================================================
 function loadLevel(index) {
   console.log(`Loading level ${index + 1}`);
-  if (isCustomLevel && index > 0) {
+  if (isCustomLevel && index >= 1) {
     isCustomLevel = false;
     appState = "mainMenu";
     if (musicPlayer) musicPlayer.disconnect();
     return;
   }
-  
+  var level = windowCustomLevelData;
+} else {
   if (index >= LEVEL_MAPS.length) {
     appState = "game";
     gamePhase = "victory";
-    return;
+    if (musicPlayer) musicPlayer.disconnect();
+      return;
+    }
+    var level = LEVEL_MAPS[index];
   }
 
   appState = "game";
@@ -779,6 +783,15 @@ function handleCollisions() {
       s.pickedUp = true;
       playSound('star');
       spawnExplosion(s.x + s.width/2, s.y + s.height/2, "gold", 40);
+      if (isCustomLevel) {
+            // Custom level: don't save progress, just go back to menu
+            setTimeout(() => {
+                isCustomLevel = false;
+                appState = "mainMenu";
+                if (musicPlayer) musicPlayer.disconnect();
+            }, 600); // small delay to see the explosion
+            return;
+      }
       // Record completion and time
       if (!levelCompleted[currentLevelIndex]) {
         levelCompleted[currentLevelIndex] = true;

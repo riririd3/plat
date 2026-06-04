@@ -253,19 +253,23 @@ function overlap(ax, ay, aw, ah, bx, by, bw, bh) {
 // ============================================================================
 function loadLevel(index) {
   console.log(`Loading level ${index + 1}`);
-  if (isCustomLevel && index >= 1) {
-    isCustomLevel = false;
-    appState = "mainMenu";
-    if (musicPlayer) musicPlayer.disconnect();
-    return;
-  }
-  var level = window.customLevelData;
-} else {
-  if (index >= LEVEL_MAPS.length) {
-    appState = "game";
-    gamePhase = "victory";
-    if (musicPlayer) musicPlayer.disconnect();
-    return;
+  
+  // Custom level mode: only one level, then back to menu
+  if (isCustomLevel) {
+    if (index >= 1) {
+      isCustomLevel = false;
+      appState = "mainMenu";
+      if (musicPlayer) musicPlayer.disconnect();
+      return;
+    }
+    var level = window.customLevelData;  // Note: customLevelData, not CustomLevelData
+  } else {
+    // Normal mode: check bounds
+    if (index >= LEVEL_MAPS.length) {
+      appState = "game";
+      gamePhase = "victory";
+      if (musicPlayer) musicPlayer.disconnect();
+      return;
     }
     var level = LEVEL_MAPS[index];
   }
@@ -273,7 +277,7 @@ function loadLevel(index) {
   appState = "game";
   gamePhase = "memorize";
   stateTimer = MEMORIZE_DURATION;
-  currentLevelTime = 0;          // reset timer for this level
+  currentLevelTime = 0;
   resetTouch();
 
   platforms = []; spikes = []; stars = []; torches = [];
@@ -281,12 +285,6 @@ function loadLevel(index) {
   gravityPlatforms = []; portals = []; playerTrail = [];
   gravityDir = DEFAULT_GRAVITY;
 
-  let level;
-  if (isCustomLevel) {
-    level = window.customLevelData;
-  } else {
-    level = LEVEL_MAPS[index];
-  }
   const gameX = getGameX();
 
   if (level.gravityPlatforms) {
@@ -393,7 +391,7 @@ function loadLevel(index) {
     });
   }
 }
-
+    
 // ============================================================================
 // PLAYER CREATION (unchanged)
 // ============================================================================

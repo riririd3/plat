@@ -83,6 +83,7 @@ let isMuted = false;
 let freezeFrames = 0;
 let isCustomLevel = false;
 let customLevelMessage = null;
+let customLevelCompleted = false;
 
 // Per-level timing
 let currentLevelTime = 0;       // time spent on current level (seconds)
@@ -770,6 +771,7 @@ function handleCollisions() {
       if (isCustomLevel) {
         customLevelMessage = `Completed in ${currentLevelTime.toFixed(2)}s!`;
         setTimeout(() => {
+        customLevelCompleted = false;
         isCustomLevel = false;
         appState = "mainMenu";
         }, 1500);

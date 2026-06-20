@@ -53,7 +53,6 @@ const LEVEL_MAPS = [
     ],
     stars: [
     { x: 320, y: 460 }
-    ],
-    timeLimit: [15.0]
+    ]
   } 
 ];

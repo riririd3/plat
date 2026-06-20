@@ -37,6 +37,11 @@ const LEVEL_MAPS = [
     portals: [
     { x: 100, y: 200, w: 32, h: 32, targetX: 500, targetY: 200, color: "#a855f7" }
     ],
+    coins: [
+    { x: 200, y: 400, w: 12, h: 12 },
+    { x: 350, y: 300, w: 12, h: 12 },
+    { x: 500, y: 480, w: 12, h: 12 }
+  ],
     stars: [
       { x: 580, y: 250 }
     ]
@@ -48,6 +53,7 @@ const LEVEL_MAPS = [
     ],
     stars: [
     { x: 320, y: 460 }
-    ]
+    ],
+    timeLimit: [15.0]
   } 
 ];

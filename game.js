@@ -87,7 +87,7 @@ let customLevelCompleted = false;
 let levelStars = [];            // 0-3 stars per level (loaded from localStorage)
 let coinsCollected = 0;
 let totalCoins = 0;
-let currentTimeLimit = Infinity
+let currentTimeLimit = Infinity;
 // Per-level timing
 
 let currentLevelTime = 0;       // time spent on current level (seconds)
@@ -390,7 +390,6 @@ function loadLevel(index) {
         });
     });
   }
-}
 
   if (level.coins) {
     level.coins.forEach(c => {
@@ -401,6 +400,7 @@ function loadLevel(index) {
     });
     totalCoins = coins.length;
   }
+}
     
 // ============================================================================
 // PLAYER CREATION (unchanged)
@@ -1169,6 +1169,21 @@ function renderLevelSelect() {
   const startX = getGameX() + 60;
   const startY = 130;
   const w = 70, h = 70;
+  for (let i = 0; i < LEVEL_MAPS.length; i++) {
+    const x = startX + (i % cols) * (w + 15);
+    const y = startY + Math.floor(i / cols) * (h + 15);
+    const unlocked = levelCompleted[i] || i === 0;
+    context.fillStyle = unlocked ? "#22c55e" : "#444";
+    context.fillRect(x, y, w, h);
+    context.fillStyle = "white";
+    context.font = "bold 18px Arial";
+    context.fillText(i+1, x + w/2, y + h/2);
+    if (unlocked && levelTimes[i]) {
+      context.font = "12px Arial";
+      context.fillText(levelTimes[i].toFixed(1)+"s", x + w/2, y + h - 10);
+    }
+    
+    // --- Draw stars for this level ---
     const starCount = levelStars[i] || 0;
     for (let si = 0; si < starCount; si++) {
       context.fillStyle = "gold";
@@ -1185,19 +1200,7 @@ function renderLevelSelect() {
       context.lineTo(x + 12 + si*12, y + 56);
       context.fill();
     }
-  for (let i = 0; i < LEVEL_MAPS.length; i++) {
-    const x = startX + (i % cols) * (w + 15);
-    const y = startY + Math.floor(i / cols) * (h + 15);
-    const unlocked = levelCompleted[i] || i === 0; // first level always unlocked
-    context.fillStyle = unlocked ? "#22c55e" : "#444";
-    context.fillRect(x, y, w, h);
-    context.fillStyle = "white";
-    context.font = "bold 18px Arial";
-    context.fillText(i+1, x + w/2, y + h/2);
-    if (unlocked && levelTimes[i]) {
-      context.font = "12px Arial";
-      context.fillText(levelTimes[i].toFixed(1)+"s", x + w/2, y + h - 10);
-    }
+    
     // store click area for level selection
     if (!window._levelButtons) window._levelButtons = [];
     window._levelButtons.push({ x, y, w, h, index: i, unlocked });

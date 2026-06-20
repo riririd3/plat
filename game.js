@@ -84,8 +84,12 @@ let freezeFrames = 0;
 let isCustomLevel = false;
 let customLevelMessage = null;
 let customLevelCompleted = false;
-
+let levelStars = [];            // 0-3 stars per level (loaded from localStorage)
+let coinsCollected = 0;
+let totalCoins = 0;
+let currentTimeLimit = Infinity
 // Per-level timing
+
 let currentLevelTime = 0;       // time spent on current level (seconds)
 let levelTimes = [];            // best times per level (loaded from localStorage)
 let levelCompleted = [];        // which levels have been completed at least once
@@ -97,6 +101,7 @@ let buttons = [], gates = [], fragileBlocks = [], pads = [], gravityPlatforms = 
 let particles = [];
 let playerTrail = [];
 let portals = [];
+let coins = [];
 
 // Visual effects
 let starPulseTime = 0;
@@ -120,13 +125,20 @@ let fogCanvas = null, fogCtx = null;
 function loadProgress() {
   const storedTimes = localStorage.getItem("lime_levelTimes");
   if (storedTimes) levelTimes = JSON.parse(storedTimes);
+  
   const storedCompleted = localStorage.getItem("lime_levelCompleted");
   if (storedCompleted) levelCompleted = JSON.parse(storedCompleted);
   else levelCompleted = new Array(LEVEL_MAPS.length).fill(false);
+  
+  const storedStars = localStorage.getItem("lime_levelStars");
+  if (storedStars) levelStars = JSON.parse(storedStars);
+  else levelStars = new Array(LEVEL_MAPS.length).fill(0);
 }
+
 function saveProgress() {
   localStorage.setItem("lime_levelTimes", JSON.stringify(levelTimes));
   localStorage.setItem("lime_levelCompleted", JSON.stringify(levelCompleted));
+  localStorage.setItem("lime_levelStars", JSON.stringify(levelStars));
 }
 
 // ============================================================================
@@ -270,7 +282,8 @@ function loadLevel(index) {
   platforms = []; spikes = []; stars = []; torches = [];
   buttons = []; gates = []; fragileBlocks = []; pads = [];
   gravityPlatforms = []; portals = []; playerTrail = [];
-  gravityDir = DEFAULT_GRAVITY;
+  gravityDir = DEFAULT_GRAVITY; coins = []; coinsCollected = 0;
+  totalCoins = 0; currentTimeLimit = level.timeLimit || Infinity;
 
   const gameX = getGameX();
 
@@ -378,6 +391,16 @@ function loadLevel(index) {
     });
   }
 }
+
+  if (level.coins) {
+    level.coins.forEach(c => {
+      coins.push(Sprite({
+        x: gameX + c.x, y: c.y, width: c.w || 12, height: c.h || 12,
+        color: "#fbbf24", collected: false
+      }));
+    });
+    totalCoins = coins.length;
+  }
     
 // ============================================================================
 // PLAYER CREATION (unchanged)
@@ -761,32 +784,55 @@ function handleCollisions() {
     }
   }
 
-  // Star collected -> level complete
+    // Coins
+  for (let i = 0; i < coins.length; i++) {
+    const c = coins[i];
+    if (!c.collected && overlap(player.x, player.y, player.width, player.height, c.x, c.y, c.width, c.height)) {
+      c.collected = true;
+      coinsCollected++;
+      playSound('star');   // you can change to 'coin' later
+      spawnExplosion(c.x + c.width/2, c.y + c.height/2, "#fbbf24", 8);
+    }
+  }
+
+    // Star collected -> level complete
   for (let i=0; i<stars.length; i++) {
     const s = stars[i];
     if (!s.pickedUp && overlap(player.x, player.y, player.width, player.height, s.x, s.y, s.width, s.height)) {
       s.pickedUp = true;
       playSound('star');
       spawnExplosion(s.x + s.width/2, s.y + s.height/2, "gold", 40);
+      
       if (isCustomLevel) {
         customLevelMessage = `Completed in ${currentLevelTime.toFixed(2)}s!`;
         setTimeout(() => {
-        customLevelCompleted = false;
-        isCustomLevel = false;
-        appState = "mainMenu";
+          customLevelCompleted = false;
+          isCustomLevel = false;
+          appState = "mainMenu";
         }, 1500);
         return;
       }
-      // Record completion and time
+      
+      // Calculate stars earned: 1 base + coin bonus + time bonus
+      let starsEarned = 1;
+      if (coinsCollected === totalCoins && totalCoins > 0) starsEarned++;
+      if (currentLevelTime <= currentTimeLimit && currentTimeLimit !== Infinity) starsEarned++;
+      
+      // Update best stars for this level
+      if (starsEarned > (levelStars[currentLevelIndex] || 0)) {
+        levelStars[currentLevelIndex] = starsEarned;
+      }
+      
+      // Record best time (if faster)
       if (!levelCompleted[currentLevelIndex]) {
         levelCompleted[currentLevelIndex] = true;
         levelTimes[currentLevelIndex] = currentLevelTime;
       } else {
-        // Keep best time
         if (currentLevelTime < (levelTimes[currentLevelIndex] || Infinity))
           levelTimes[currentLevelIndex] = currentLevelTime;
       }
       saveProgress();
+      
       // Go to level complete screen
       appState = "levelComplete";
       return;
@@ -918,6 +964,15 @@ function renderGameWorld() {
       context.strokeStyle = "#60a5fa";
       context.strokeRect(g.x, g.y, g.w, g.h);
     }
+  }
+    // Draw coins
+  for (let c of coins) {
+    if (c.collected) continue;
+    context.fillStyle = c.color;
+    context.fillRect(c.x, c.y, c.width, c.height);
+    // optional: small shine
+    context.fillStyle = "gold";
+    context.fillRect(c.x + 3, c.y + 3, 4, 4);
   }
   for (let s of spikes) {
     context.save();
@@ -1114,6 +1169,22 @@ function renderLevelSelect() {
   const startX = getGameX() + 60;
   const startY = 130;
   const w = 70, h = 70;
+    const starCount = levelStars[i] || 0;
+    for (let si = 0; si < starCount; si++) {
+      context.fillStyle = "gold";
+      context.beginPath();
+      context.moveTo(x + 15 + si*12, y + 50);
+      context.lineTo(x + 18 + si*12, y + 56);
+      context.lineTo(x + 25 + si*12, y + 56);
+      context.lineTo(x + 20 + si*12, y + 60);
+      context.lineTo(x + 22 + si*12, y + 67);
+      context.lineTo(x + 15 + si*12, y + 63);
+      context.lineTo(x + 8 + si*12, y + 67);
+      context.lineTo(x + 10 + si*12, y + 60);
+      context.lineTo(x + 5 + si*12, y + 56);
+      context.lineTo(x + 12 + si*12, y + 56);
+      context.fill();
+    }
   for (let i = 0; i < LEVEL_MAPS.length; i++) {
     const x = startX + (i % cols) * (w + 15);
     const y = startY + Math.floor(i / cols) * (h + 15);
@@ -1151,6 +1222,10 @@ function renderLevelComplete() {
   const bestTime = levelTimes[currentLevelIndex] ? levelTimes[currentLevelIndex].toFixed(2) : "--";
   context.fillText(`Your time: ${currentLevelTime.toFixed(2)}s  (Best: ${bestTime}s)`, getGameX() + getGameWidth()/2, canvas.height/2 - 20);
   const nextY = canvas.height/2 + 40;
+    const earnedStars = levelStars[currentLevelIndex] || 0;
+  context.fillStyle = "gold";
+  context.font = "24px Arial";
+  context.fillText(`Stars: ${earnedStars} / 3`, getGameX() + getGameWidth()/2, canvas.height/2 - 50);
   if (currentLevelIndex + 1 < LEVEL_MAPS.length) {
     drawButton(getGameX() + getGameWidth()/2 - 120, nextY, 100, 50, "#10b981", "NEXT", () => {
       currentLevelIndex++;

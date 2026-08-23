@@ -1173,9 +1173,12 @@ function renderSettings() {
     if (confirm("Delete all saved progress? This cannot be undone.")) {
         localStorage.removeItem("lime_levelTimes");
         localStorage.removeItem("lime_levelCompleted");
+      localStorage.removeItem("lime_levelStars");  
       localStorage.removeItem("lime_bestCoins");
         levelTimes = [];
         levelCompleted = new Array(LEVEL_MAPS.length).fill(false);
+      levelStars = new Array(LEVEL_MAPS.length).fill(0);
+    window.bestCoins = {};
         currentLevelIndex = 0;
         totalPlayTime = 0;
         appState = "mainMenu";
@@ -1187,59 +1190,64 @@ function renderLevelSelect() {
   drawGameBackground();
   context.fillStyle = "white";
   context.font = "bold 28px Arial";
+  context.textAlign = "center";
   context.fillText("Level Select", getGameX() + getGameWidth()/2, 80);
+  
   const cols = 5;
   const startX = getGameX() + 60;
   const startY = 130;
   const w = 70, h = 70;
+  
   for (let i = 0; i < LEVEL_MAPS.length; i++) {
     const x = startX + (i % cols) * (w + 15);
     const y = startY + Math.floor(i / cols) * (h + 15);
     const unlocked = levelCompleted[i] || i === 0;
+    
+    // Level box background
     context.fillStyle = unlocked ? "#22c55e" : "#444";
     context.fillRect(x, y, w, h);
-    context.fillStyle = "white";
-    context.font = "bold 18px Arial";
-    context.fillText(i+1, x + w/2, y + h/2);
-    if (unlocked && levelTimes[i]) {
-      context.font = "12px Arial";
-      context.fillText(levelTimes[i].toFixed(1)+"s", x + w/2, y + h - 10);
+    
+    // --- Draw stars for this level (at the TOP) ---
+    const starCount = levelStars[i] || 0;
+    
+    // Draw filled stars
+    for (let si = 0; si < starCount; si++) {
+      context.fillStyle = "gold";
+      context.beginPath();
+      context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
+      context.fill();
     }
     
-    // --- Draw stars for this level ---
-    const starCount = levelStars[i] || 0;
-for (let si = 0; si < starCount; si++) {
-  context.fillStyle = "gold";
-  // Draw simple circle stars at the top
-  context.beginPath();
-  context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
-  context.fill();
-
-  for (let si = starCount; si < 3; si++) {
-  context.strokeStyle = "#555";
-  context.lineWidth = 1.5;
-  context.beginPath();
-  context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
-  context.stroke();
-  }
-
-  context.fillStyle = "white";
-context.font = "bold 18px Arial";
-context.textAlign = "center";
-context.textBaseline = "middle";
-context.fillText(i+1, x + w/2, y + h/2);
-
-  if (unlocked && levelTimes[i]) {
-  context.font = "12px Arial";
-  context.textBaseline = "bottom";
-  context.fillStyle = "#aaa";
-  context.fillText(levelTimes[i].toFixed(1)+"s", x + w/2, y + h - 8);
-  }
+    // Draw empty stars
+    for (let si = starCount; si < 3; si++) {
+      context.strokeStyle = "#555";
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
+      context.stroke();
+    }
     
-    // store click area for level selection
+    // Level number (centered)
+    context.fillStyle = "white";
+    context.font = "bold 18px Arial";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText(i+1, x + w/2, y + h/2);
+    
+    // Best time (at the bottom)
+    if (unlocked && levelTimes[i]) {
+      context.font = "12px Arial";
+      context.textBaseline = "bottom";
+      context.fillStyle = "#aaa";
+      context.fillText(levelTimes[i].toFixed(1)+"s", x + w/2, y + h - 8);
+    }
+    
+    // Store click area for level selection
     if (!window._levelButtons) window._levelButtons = [];
     window._levelButtons.push({ x, y, w, h, index: i, unlocked });
   }
+  
+  // Back button
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height - 80, 200, 50, "#f59e0b", "BACK", () => {
     appState = "mainMenu";
   });

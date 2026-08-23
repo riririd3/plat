@@ -133,12 +133,20 @@ function loadProgress() {
   const storedStars = localStorage.getItem("lime_levelStars");
   if (storedStars) levelStars = JSON.parse(storedStars);
   else levelStars = new Array(LEVEL_MAPS.length).fill(0);
+
+  const storedBestCoins = localStorage.getItem("lime_bestCoins");
+  if (storedBestCoins) {
+    window.bestCoins = JSON.parse(storedBestCoins);
+  } else {
+    window.bestCoins = {};
+  }
 }
 
 function saveProgress() {
   localStorage.setItem("lime_levelTimes", JSON.stringify(levelTimes));
   localStorage.setItem("lime_levelCompleted", JSON.stringify(levelCompleted));
   localStorage.setItem("lime_levelStars", JSON.stringify(levelStars));
+  localStorage.setItem("lime_bestCoins", JSON.stringify(window.bestCoins || {}));
 }
 
 // ============================================================================
@@ -813,24 +821,38 @@ function handleCollisions() {
         return;
       }
       
-      // Calculate stars earned: 1 base + coin bonus + time bonus
-      let starsEarned = 1;
-      if (coinsCollected === totalCoins && totalCoins > 0) starsEarned++;
-      if (currentLevelTime <= currentTimeLimit && currentTimeLimit !== Infinity) starsEarned++;
-      
-      // Update best stars for this level
-      if (starsEarned > (levelStars[currentLevelIndex] || 0)) {
-        levelStars[currentLevelIndex] = starsEarned;
-      }
-      
-      // Record best time (if faster)
       if (!levelCompleted[currentLevelIndex]) {
-        levelCompleted[currentLevelIndex] = true;
-        levelTimes[currentLevelIndex] = currentLevelTime;
+    levelCompleted[currentLevelIndex] = true;
+    levelTimes[currentLevelIndex] = currentLevelTime;
       } else {
-        if (currentLevelTime < (levelTimes[currentLevelIndex] || Infinity))
-          levelTimes[currentLevelIndex] = currentLevelTime;
-      }
+    if (currentLevelTime < (levelTimes[currentLevelIndex] || Infinity)) {
+      levelTimes[currentLevelIndex] = currentLevelTime;
+    }
+  }
+      
+      if (!window.bestCoins) window.bestCoins = {};
+  if (!window.bestCoins[currentLevelIndex]) window.bestCoins[currentLevelIndex] = 0;
+  
+  if (coinsCollected > window.bestCoins[currentLevelIndex]) {
+    window.bestCoins[currentLevelIndex] = coinsCollected;
+  }
+
+      let starsEarned = 1;
+
+      const bestTime = levelTimes[currentLevelIndex] || Infinity;
+  if (bestTime <= currentTimeLimit && currentTimeLimit !== Infinity) {
+    starsEarned++;
+  }
+
+                     const bestCoinCount = window.bestCoins[currentLevelIndex] || 0;
+  if (totalCoins === 0 || bestCoinCount === totalCoins) {
+    starsEarned++;
+  }
+
+      if (starsEarned > (levelStars[currentLevelIndex] || 0)) {
+    levelStars[currentLevelIndex] = starsEarned;
+        }                         
+      
       saveProgress();
       
       // Go to level complete screen
@@ -1151,6 +1173,7 @@ function renderSettings() {
     if (confirm("Delete all saved progress? This cannot be undone.")) {
         localStorage.removeItem("lime_levelTimes");
         localStorage.removeItem("lime_levelCompleted");
+      localStorage.removeItem("lime_bestCoins");
         levelTimes = [];
         levelCompleted = new Array(LEVEL_MAPS.length).fill(false);
         currentLevelIndex = 0;
@@ -1185,21 +1208,33 @@ function renderLevelSelect() {
     
     // --- Draw stars for this level ---
     const starCount = levelStars[i] || 0;
-    for (let si = 0; si < starCount; si++) {
-      context.fillStyle = "gold";
-      context.beginPath();
-      context.moveTo(x + 15 + si*12, y + 50);
-      context.lineTo(x + 18 + si*12, y + 56);
-      context.lineTo(x + 25 + si*12, y + 56);
-      context.lineTo(x + 20 + si*12, y + 60);
-      context.lineTo(x + 22 + si*12, y + 67);
-      context.lineTo(x + 15 + si*12, y + 63);
-      context.lineTo(x + 8 + si*12, y + 67);
-      context.lineTo(x + 10 + si*12, y + 60);
-      context.lineTo(x + 5 + si*12, y + 56);
-      context.lineTo(x + 12 + si*12, y + 56);
-      context.fill();
-    }
+for (let si = 0; si < starCount; si++) {
+  context.fillStyle = "gold";
+  // Draw simple circle stars at the top
+  context.beginPath();
+  context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
+  context.fill();
+
+  for (let si = starCount; si < 3; si++) {
+  context.strokeStyle = "#555";
+  context.lineWidth = 1.5;
+  context.beginPath();
+  context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
+  context.stroke();
+  }
+
+  context.fillStyle = "white";
+context.font = "bold 18px Arial";
+context.textAlign = "center";
+context.textBaseline = "middle";
+context.fillText(i+1, x + w/2, y + h/2);
+
+  if (unlocked && levelTimes[i]) {
+  context.font = "12px Arial";
+  context.textBaseline = "bottom";
+  context.fillStyle = "#aaa";
+  context.fillText(levelTimes[i].toFixed(1)+"s", x + w/2, y + h - 8);
+  }
     
     // store click area for level selection
     if (!window._levelButtons) window._levelButtons = [];

@@ -1181,6 +1181,7 @@ function renderSettings() {
     window.bestCoins = {};
         currentLevelIndex = 0;
         totalPlayTime = 0;
+        saveProgress();
         appState = "mainMenu";
     }
   });
@@ -1209,12 +1210,15 @@ function renderLevelSelect() {
     
     // --- Draw stars for this level (at the TOP) ---
     const starCount = levelStars[i] || 0;
+    const starSpacing = 14;
+const totalStarWidth = 3 * starSpacing; // 3 stars total
+const startOffsetX = (w - totalStarWidth) / 2 + starSpacing / 2;
     
     // Draw filled stars
     for (let si = 0; si < starCount; si++) {
       context.fillStyle = "gold";
       context.beginPath();
-      context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
+      context.arc(x + startOffsetX + si * starSpacing, y + 15, 6, 0, Math.PI * 2);
       context.fill();
     }
     
@@ -1223,7 +1227,7 @@ function renderLevelSelect() {
       context.strokeStyle = "#555";
       context.lineWidth = 1.5;
       context.beginPath();
-      context.arc(x + 12 + si*14, y + 15, 6, 0, Math.PI * 2);
+      context.arc(x + startOffsetX + si * starSpacing, y + 15, 6, 0, Math.PI * 2);
       context.stroke();
     }
     

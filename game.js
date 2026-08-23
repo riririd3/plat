@@ -1095,33 +1095,33 @@ function renderMainMenu() {
     appState = "levelSelect";
   });
 
-  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 60, 200, 50, "#f97316", "CUSTOM LEVEL", () => {
-    customLevelMessage = null;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const customLevel = JSON.parse(ev.target.result);
-          window.customLevelData = customLevel;
-                isCustomLevel = true;
-                
-                if (!musicPlayer) {
-                    musicPlayer = zzfxP(...zzfxM(...song));
-                    musicPlayer.loop = true;
-                }
-                currentLevelIndex = 0;
-                totalPlayTime = 0;
-                loadLevel(0);
-            } catch(err) { alert("Invalid level file"); }
-        };
-        reader.readAsText(file);
-    };
-    input.click();
-});
+//  drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2 + 60, 200, 50, "#f97316", "CUSTOM LEVEL", () => {
+//    customLevelMessage = null;
+//    const input = document.createElement('input');
+//    input.type = 'file';
+//    input.accept = '.json';
+//    input.onchange = (e) => {
+//      const file = e.target.files[0];
+//      const reader = new FileReader();
+//      reader.onload = (ev) => {
+//        try {
+//          const customLevel = JSON.parse(ev.target.result);
+//          window.customLevelData = customLevel;
+//                isCustomLevel = true;
+//                
+//                if (!musicPlayer) {
+//                    musicPlayer = zzfxP(...zzfxM(...song));
+//                    musicPlayer.loop = true;
+//                }
+//                currentLevelIndex = 0;
+//                totalPlayTime = 0;
+//                loadLevel(0);
+//            } catch(err) { alert("Invalid level file"); }
+//        };
+//        reader.readAsText(file);
+//    };
+//    input.click();
+//});
   
   const isPortrait = () => window.innerHeight > window.innerWidth;
   if (isPortrait()) {
@@ -1129,7 +1129,7 @@ function renderMainMenu() {
     if (blink) {
       context.fillStyle = "#ff4757";
       context.font = "bold 20px Arial";
-      context.fillText("Please rotate your phone to Landscape!", getGameX() + getGameWidth()/2, canvas.height - 50);
+      context.fillText("Settings -> Fullscreen!", getGameX() + getGameWidth()/2, canvas.height - 50);
     }
   }
 }

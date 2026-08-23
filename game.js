@@ -1291,6 +1291,7 @@ function renderLevelComplete() {
     loadLevel(currentLevelIndex);
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, nextY + 70, 200, 50, "#3b82f6", "MAIN MENU", () => {
+    saveProgress();
     appState = "mainMenu";
   });
 }

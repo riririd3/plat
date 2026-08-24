@@ -1114,6 +1114,7 @@ function renderMainMenu() {
   });
   
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height/2, 200, 50, "#8b5cf6", "LEVEL SELECT", () => {
+    loadProgress();
     appState = "levelSelect";
   });
 
@@ -1167,6 +1168,7 @@ function renderSettings() {
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, 220, 200, 50, "#3b82f6", "FULLSCREEN", toggleFullscreen);
   drawButton(getGameX() + getGameWidth()/2 - 100, 360, 200, 50, "#f59e0b", "BACK", () => {
+    loadProgress();
     appState = "mainMenu";
   });
   drawButton(getGameX() + getGameWidth()/2 - 100, 290, 200, 50, "#ef4444", "RESET PROGRESS", () => {
@@ -1253,6 +1255,7 @@ const startOffsetX = (w - totalStarWidth) / 2 + starSpacing / 2;
   
   // Back button
   drawButton(getGameX() + getGameWidth()/2 - 100, canvas.height - 80, 200, 50, "#f59e0b", "BACK", () => {
+    loadProgress();
     appState = "mainMenu";
   });
 }
